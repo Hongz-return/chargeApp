@@ -43,6 +43,10 @@ function loadPrivateDomain() {
 
 const { storage, mock, charging } = loadPrivateDomain();
 
+// 把服务端的数据钉在进程内存里：storage 默认会惰性去找全局 wx，同进程里跑着
+// 小程序运行时模拟器（tests/）时那份 wx 会被注入，服务端就会误写进小程序的本机 Storage。
+storage.useMemoryStorage();
+
 /** 播种演示数据：与小程序 app.js 首次启动写入的是同一批订单 */
 function seed() {
   demo.buildDemoOrders().forEach((order) => storage.saveOrder(order));

@@ -56,10 +56,26 @@ const memoryStorage = {
   }
 };
 
+/** 被 useMemoryStorage() 钉住后，即使全局有 wx 也不再回到它 */
+let pinnedStorage = null;
+
 function resolveStorage() {
+  if (pinnedStorage) return pinnedStorage;
   const g = typeof globalThis !== 'undefined' ? globalThis : {};
   const api = typeof wx !== 'undefined' ? wx : g.wx;
   return api && typeof api.getStorageSync === 'function' ? api : memoryStorage;
+}
+
+/**
+ * 强制使用内存实现，忽略全局 `wx`。
+ *
+ * server/ 用它把自己的数据钉死在进程内存里：同一个进程里如果还跑着小程序运行时模拟器
+ * （tests/ 会注入 global.wx），服务端本来会顺着惰性解析写进小程序的本机 Storage，
+ * 两边状态就串了。真实部署时进程里没有 wx，这个调用没有副作用。
+ */
+function useMemoryStorage() {
+  pinnedStorage = memoryStorage;
+  return pinnedStorage;
 }
 
 function read(key, fallback) {
@@ -447,6 +463,7 @@ module.exports = {
   read,
   write,
   remove,
+  useMemoryStorage,
   getUser,
   updateUser,
   getWallet,

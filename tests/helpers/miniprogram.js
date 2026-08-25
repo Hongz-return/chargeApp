@@ -6,6 +6,7 @@
  * 与事件处理函数，捕获「函数不存在」「字段读取报错」这类只有真机才会暴露的问题。
  */
 
+const http = require('http');
 const path = require('path');
 
 function clone(value) {
@@ -30,6 +31,7 @@ function createEnv(options) {
     tabBarRedDot: [],
     leaveAlert: [],
     networkListeners: [],
+    request: [],
     back: []
   };
 
@@ -135,6 +137,53 @@ function createEnv(options) {
     },
     getSystemInfoSync() {
       return { statusBarHeight: 44, windowWidth: 375, windowHeight: 812 };
+    },
+    /**
+     * `wx.request` 的等价实现：用 Node 的 http 模块真的发出去。
+     * 远程数据源的测试因此走的是真实 HTTP，而不是把请求层 stub 掉。
+     */
+    request(o) {
+      calls.request.push(`${(o.method || 'GET').toUpperCase()} ${o.url}`);
+      let url;
+      try {
+        url = new URL(o.url);
+      } catch (err) {
+        if (o.fail) o.fail({ errMsg: `request:fail invalid url ${o.url}` });
+        return;
+      }
+      const payload = o.data === undefined || o.data === null ? null : Buffer.from(JSON.stringify(o.data), 'utf8');
+      const req = http.request(
+        {
+          hostname: url.hostname,
+          port: url.port,
+          path: `${url.pathname}${url.search}`,
+          method: (o.method || 'GET').toUpperCase(),
+          headers: payload
+            ? Object.assign({ 'Content-Length': payload.length }, o.header)
+            : Object.assign({}, o.header)
+        },
+        (res) => {
+          const chunks = [];
+          res.on('data', (c) => chunks.push(c));
+          res.on('end', () => {
+            const text = Buffer.concat(chunks).toString('utf8');
+            let data = text;
+            try {
+              data = JSON.parse(text);
+            } catch (err) {
+              /* 非 JSON 原样返回，交给调用方判断 */
+            }
+            if (o.success) o.success({ statusCode: res.statusCode, data, header: res.headers });
+            if (o.complete) o.complete({});
+          });
+        }
+      );
+      req.on('error', (err) => {
+        if (o.fail) o.fail({ errMsg: `request:fail ${err.message}` });
+        if (o.complete) o.complete({});
+      });
+      if (payload) req.write(payload);
+      req.end();
     }
   };
 
