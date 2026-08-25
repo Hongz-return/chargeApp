@@ -4,6 +4,55 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.4.0] - 2026-08-25
+
+**正式交付版本。** 内容全部是交付前的收尾：修完最后一轮自查出来的缺陷、把「怎么跑起来」
+提到 README 最前面、给校验脚本补上能拦住这类问题的规则。没有新功能，默认数据源仍然是
+`local`，导入微信开发者工具即可完整演示。
+
+### 修复
+
+- **发票页在 `remote` 数据源下拿不到候选订单**：这一页此前直接 `storage.listOrders()`，
+  而订单在远程模式下由服务端持有，所以「申请开票」永远是空列表。改走 `utils/repo.js`
+  并加上请求乱序保护；开票记录与用户资料仍是纯本机的演示数据，两种数据源都读 Storage。
+- **加载遮罩会跟着用户跑到下一个页面**：详情页握手（600ms）、充电页停止（600ms）与支付
+  （900ms）、钱包充值（800ms）、发票提交（700ms）都是先 `showLoading` 再延时。用户在
+  这个窗口里返回时，`hideLoading` 的回调已被 `onUnload` 清掉，遮罩就一直挂着。
+  现在这四个页面的 `onUnload` 会按状态位补一次 `wx.hideLoading()`。
+- **发票页的提交定时器没有登记**：它是唯一一个还在裸用 `setTimeout` 的页面，
+  卸载后仍会写入开票记录并 `setData` 到已销毁的页面。改用 `nav.delay` 并补 `onUnload`。
+- **订单详情页在订单不存在时白屏**：只有一句 toast，页面本体是空的，1.2 秒后才退回。
+  现在渲染统一空态组件，并提供「去看订单」入口。
+- **「清除本地数据」后首页的演示声明提示条要冷启动才回来**：`showNotice` 只在 `onLoad`
+  读一次。改成 `onShow` 也对一遍，清完数据切回首页就能看到初始演示状态。
+
+### 变更
+
+- `project.config.json` 补齐「我的收藏」「优惠券」两个编译模式，10 个编译模式覆盖除
+  充电页与订单详情页（需要运行时产生的会话/订单 id）之外的全部页面。
+- `pages/order-detail` 的 `onRecharge` 更名为 `onChargeAgain`——它做的是「再次充电」，
+  和钱包充值没有关系。
+- README 顶部新增「交付说明」：一段话说清这是可交付版本、两条命令的快速开始、
+  可选后端的三步切换。新增 [`docs/DELIVERY.md`](docs/DELIVERY.md)：交付清单、验收路径、
+  联调步骤与已知限制。
+
+### 新增（校验）
+
+`tools/validate.js` 增加两组检查，让上面这类问题下次能在 CI 里被拦下：
+
+- **`project.config.json` 的可导入性**：`editorSetting.tabIndent` 必须是
+  `insertSpaces` / `tab`（写成 `"space"` 会让开发者工具在导入时直接报错）、
+  每个编译模式的 `pathName` 都要在 `app.json` 里注册过、`packOptions.ignore`
+  不能指向不存在的路径。
+- **Markdown 死链**：仓库内所有 `.md` 的相对链接与章节锚点都要能打开。
+
+### 测试
+
+- 用例数 115 → 120。新增：订单详情页空态、首页提示条随清除数据复位、
+  详情页与发票页在动画途中离开时不留遮罩/不写数据、`remote` 下发票页候选订单来自服务端。
+- `tests/helpers/miniprogram.js` 的 `wx.showLoading` / `wx.hideLoading` 现在维护
+  `calls.loadingVisible`，遮罩泄漏可以被断言抓到。
+
 ## [1.3.0] - 2026-08-25
 
 补齐后端：项目从「只有前端」变成「默认纯前端、可选前后端分离」。**默认行为没有变化**，
@@ -24,8 +73,8 @@
 - **前端接入层**：`utils/api.js` 是 `wx.request` 的 Promise 封装，统一 `{ ok, data }` /
   `{ ok, error }` 剥壳与超时/网络/格式三类中文错误；`utils/repo.js` 是数据仓储层，
   页面读写业务数据的唯一入口。
-- **数据源开关**：`utils/config.js` 新增 `dataSource`（`'local'` | `'remote'`，**默认 `local`**）、
-  `apiBaseUrl` 与 `setDataSource()` / `setApiBaseUrl()`，可在调试控制台运行时切换。
+- **数据源开关**：`utils/config.js` 新增 `API.dataSource`（`'local'` | `'remote'`，**默认 `local`**）、
+  `API.baseUrl` 与 `setDataSource()` / `setApiBaseUrl()`，可在调试控制台运行时切换。
 - **冒烟脚本** `npm run smoke`：在随机空闲端口起一个实例，走一遍
   health → 站点 → 扫码 → 启停 → 支付 → 订单 → 钱包 → 收藏 → 重置，30 项检查逐条打印实际返回值。
 

@@ -18,7 +18,7 @@ HOST=0.0.0.0 npm start   # 允许局域网 / 真机访问
 
 ```bash
 curl http://127.0.0.1:3000/api/health
-# {"ok":true,"data":{"status":"ok","name":"charging-pile-mock-server","version":"1.3.0",...}}
+# {"ok":true,"data":{"status":"ok","name":"charging-pile-mock-server","version":"1.4.0",...}}
 ```
 
 冒烟（会自己在随机空闲端口起一个实例，不和你正在跑的抢端口）：

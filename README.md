@@ -1,9 +1,24 @@
 # 充电桩微信小程序（可交付演示版）
 
 [![CI](https://github.com/Hongz-return/-/actions/workflows/ci.yml/badge.svg)](https://github.com/Hongz-return/-/actions/workflows/ci.yml)
-![tests](https://img.shields.io/badge/tests-115%20passing-07c160)
+![version](https://img.shields.io/badge/version-1.4.0-07c160)
+![tests](https://img.shields.io/badge/tests-120%20passing-07c160)
 ![deps](https://img.shields.io/badge/runtime%20deps-0-07c160)
 ![license](https://img.shields.io/badge/license-MIT-blue)
+
+> ## 交付说明
+>
+> **v1.4.0 就是可交付版本，不需要再做任何准备工作。** 用微信开发者工具的测试号导入本仓库根目录、
+> 点「编译」，就能按下面的[5 分钟演示路径](#5-分钟演示路径建议按此顺序走查)走完
+> 找站 → 选枪 → 扫码/手动启动 → 实时充电 → 结算支付 → 开票归档的全流程。默认数据源是 `local`：
+> 不装依赖、不起服务、不联网也能跑，所有数据只写在本机。
+>
+> **想看前后端分离的版本**：仓库根目录 `npm start` 起自带的零依赖本地后端，
+> 把 `utils/config.js` 里的 `dataSource` 改成 `DATA_SOURCE.REMOTE`，重新编译即可——
+> 页面代码一行都不用动。详见[想顺便跑一下后端（可选）](#想顺便跑一下后端可选)。
+>
+> **验收清单、走查路径与已知限制**集中在 [`docs/DELIVERY.md`](docs/DELIVERY.md)。
+> 校验与测试：`npm run check`（工程校验 + 120 个用例）、`npm run smoke`（后端 30 项闭环检查）。
 
 一个「充电桩」微信小程序 Demo：找站 → 选枪 → 扫码/手动启动 → 实时充电 → 结算支付 → 订单归档。
 用微信开发者工具的**测试号**即可直接导入运行，**不引入任何 npm 运行时依赖**。
@@ -48,8 +63,9 @@
 3. AppID 选择 **测试号**（仓库已配置 `touristappid`，无需注册小程序账号）。
 4. 点击「编译」，模拟器中即可体验完整流程。
 
-> 项目已在 `project.config.json` 的 `condition` 中预置了 8 个编译模式（首页、站点详情、扫码进入、订单、
-> 我的、钱包、发票管理、演示说明），可在工具右上角「普通编译」下拉框中直接切换到指定页面调试。
+> 项目已在 `project.config.json` 的 `condition` 中预置了 10 个编译模式（首页、站点详情、扫码进入、订单、
+> 我的、钱包、收藏、优惠券、发票管理、演示说明），可在工具右上角「普通编译」下拉框中直接切换到指定页面调试。
+> 充电页与订单详情页需要运行时产生的会话 / 订单 id，没法预置，从订单列表点进去即可。
 > `packOptions.ignore` 已排除 `tests/`、`tools/`、`server/`、`docs/`、`.github/` 等仅用于开发的目录，不会打进小程序包。
 
 ### 想顺便跑一下后端（可选）
@@ -150,10 +166,22 @@ curl http://127.0.0.1:3000/api/health   # 确认已就绪
 | 维度 | 内容 |
 | --- | --- |
 | 后端 | `server/`：Node 内置 `http` 模块、零依赖、内存态；20 个接口覆盖站点/扫码/启停/订单/支付/钱包/券/收藏；`npm start` 起、`npm run smoke` 验 |
-| 接入层 | `utils/api.js`（`wx.request` 的 Promise 封装）+ `utils/repo.js`（数据仓储层）；9 个页面不再直接 `require` 领域模块 |
+| 接入层 | `utils/api.js`（`wx.request` 的 Promise 封装）+ `utils/repo.js`（数据仓储层）；页面不再直接 `require` 领域模块 |
 | 开关 | `utils/config.js` 的 `dataSource: 'local' \| 'remote'`，**默认 `local`**；不启动后端时演示与全部测试照常绿 |
 | 一致性 | 后端复用小程序的领域层，不重写业务逻辑；错误码与本地 `reason` 同名，页面错误分支只写一遍 |
 | 测试 | 85 → 115 个用例，新增接口契约（真实 HTTP）、remote 模式页面闭环、仓储层契约三组 |
+
+### 交付收尾（v1.4.0）
+
+最后一轮交付自查，**没有新功能**，只有缺陷修复与文档收口，明细见
+[CHANGELOG](CHANGELOG.md#140---2026-08-25)：
+
+| 维度 | 发现与处理 |
+| --- | --- |
+| 正确性 | 发票页在 `remote` 下读的是本机订单所以候选永远为空；四个页面的加载遮罩会跟着用户跑到下一页；发票提交是唯一还在裸用 `setTimeout` 的地方；订单不存在时订单详情页白屏 —— 均已修复并补回归测试 |
+| 体验 | 「清除本地数据」后首页的演示声明提示条不再要冷启动才回来；`project.config.json` 补齐「我的收藏」「优惠券」编译模式 |
+| 可维护性 | `validate` 新增 `project.config.json` 可导入性检查（`tabIndent` 枚举、编译模式指向已注册页面、`packOptions.ignore` 路径存在）与 Markdown 死链检查 |
+| 交付物 | README 顶部「交付说明」+ 新增 [`docs/DELIVERY.md`](docs/DELIVERY.md)（验收清单、走查路径、联调步骤、已知限制）；用例 115 → 120 |
 
 ---
 
@@ -171,7 +199,9 @@ npm run docs   # = npm run preview && npm run screenshots
 2. `npm run screenshots` 用本机 Chrome 无头模式对预览页逐屏截图，输出 750×1624（375×812 @2x）PNG。
 
 因此图里的价格、电量、订单号、SOC、余额都是业务代码算出来的真实结果。生成时时间与随机数被固定
-（`2026-08-25 14:30`，`Asia/Shanghai`），重跑得到字节一致的产物，CI 会校验这一点。
+（`2026-08-25 14:30`，`Asia/Shanghai`），动画一律停在第一帧，所以同一台机器上重跑得到的是字节一致的产物。
+CI 的 `assets` job 会重跑 `npm run build:assets` 并比对 `docs/preview/` 与 `assets/`；
+PNG 不进 CI 比对——它由本机 Chrome 渲染，跨 Chrome 版本的字体栅格化本来就会有像素级差异。
 
 | 首页列表 | 首页地图 | 站点详情 |
 | --- | --- | --- |
@@ -264,10 +294,11 @@ npm run docs   # = npm run preview && npm run screenshots
 │   └── validate.js            # 工程静态校验（JSON/JS/页面四件套/组件/WXML/资源）
 │
 ├── docs/
+│   ├── DELIVERY.md            # 交付说明：验收走查路径、交付清单、已知限制
 │   ├── preview/               # 生成物：可在浏览器打开的静态预览页
 │   └── screenshots/           # 生成物：12 张 750×1624 界面图（README 引用）
 │
-└── tests/                     # node:test 测试（115 个用例）
+└── tests/                     # node:test 测试（120 个用例）
     ├── helpers/miniprogram.js  # 小程序运行时模拟器（wx.* 存根 + App/Page/Component + wx.request）
     ├── format.test.js
     ├── storage.test.js
@@ -418,7 +449,7 @@ SOC = 100%  : 功率 = 0，自动结束充电并进入结算
 npm start             # 启动可选的本地后端（server/），默认 http://127.0.0.1:3000
 npm run smoke         # 后端冒烟：起一个临时实例走完 health → 站点 → 启停 → 支付 → 订单闭环
 npm run validate      # 工程静态校验：JSON / JS 语法 / 页面四件套 / 组件引用 / WXML / 静态资源
-npm test              # 运行 115 个测试用例
+npm test              # 运行 120 个测试用例
 npm run check         # 上面两项一起跑（CI 跑的就是这个）
 npm run assets        # 重新生成 tabBar 与 marker 图标（改图标只需改 tools/gen-assets.js）
 npm run preview       # 重新生成 docs/preview 静态预览页
@@ -446,7 +477,11 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 5. tabBar 图标、`sitemap.json`、代码中引用的 `/assets/**` 资源均存在；
 6. 所有 `.wxml` 标签正确闭合，且 `bindtap` / `catchtap` 等绑定的处理函数在对应 `.js` 中确实有定义；
 7. `pages/` 下没有未在 `app.json` 注册的页面目录（注册不上的页面在小程序里打不开，属于死代码）；
-8. `package.json` / `utils/config.js` / `CHANGELOG.md` 的版本号一致。
+8. `package.json` / `utils/config.js` / `CHANGELOG.md` 的版本号一致；
+9. `project.config.json` 能被开发者工具接受：`editorSetting.tabIndent` 取值合法（写成 `"space"`
+   会在导入项目时直接报错）、每个编译模式的 `pathName` 都已在 `app.json` 注册、
+   `packOptions.ignore` 不指向不存在的路径；
+10. 仓库内所有 Markdown 的相对链接与章节锚点都能打开（防文档死链）。
 
 ### 测试覆盖
 
@@ -460,13 +495,13 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | `tests/storage.test.js` | 18 | 用户资料、钱包充值与支付（含余额不足）、订单增删改查与统计、收藏、枪状态覆盖表、会话、优惠券挑选与核销、**券有效期与门槛校验**、**id 唯一性**、开票记录去重、**损坏数据兜底与脏数据过滤**、重置 |
 | `tests/mock.test.js` | 13 | 站点字段完整性与排序、关键词搜索、筛选、枪状态覆盖生效、**marker 灰/绿图标与空闲数一致**、`toStationCards`、扫码解析（含非法输入）、Haversine 距离 |
 | `tests/charging.test.js` | 20 | 开始充电占枪与建单、重复开单拦截、恒功率/涓流/充满三段曲线、结束充电放枪、余额/微信支付、优惠券抵扣、余额不足、**重复支付不重复扣款**、**券全额抵扣的 0 元订单**、**已核销/过期券不可用**、**三种会话对账场景**、完整闭环 |
-| `tests/pages.test.js` | 27 | 11 个页面 + 3 个组件的生命周期与交互：搜索/筛选/排序/地图/扫码、选枪与启动、充电结算支付、订单增删、我的与钱包、收藏与优惠券、**开票校验与提交**、**结算页券失效重算**、**卸载后延时任务不执行**、**栈内唯一页时退回首页**、**连点充值只充一次**、**悬浮条不空转**、**启动时收尾中断订单**、**演示声明页与 storage 清单一致性**、**断网提示** |
+| `tests/pages.test.js` | 31 | 11 个页面 + 3 个组件的生命周期与交互：搜索/筛选/排序/地图/扫码、选枪与启动、充电结算支付、订单增删、我的与钱包、收藏与优惠券、**开票校验与提交**、**结算页券失效重算**、**卸载后延时任务不执行**、**动画途中离开不留加载遮罩**、**订单不存在时给空态**、**清除数据后提示条复位**、**栈内唯一页时退回首页**、**连点充值只充一次**、**悬浮条不空转**、**启动时收尾中断订单**、**演示声明页与 storage 清单一致性**、**断网提示** |
 | `tests/repo.test.js` | 10 | 数据仓储层契约：默认数据源、`buildUrl` 拼接、**local 回调的同步性**、业务原因码在两种数据源下同形、网络/超时/非本项目后端三类错误提示、**会话镜像** |
 | `tests/server.test.js` | 15 | 本地后端接口契约（真实 HTTP）：健康检查、CORS / 405 / 400、站点查询与排序、三种二维码、**start→tick→stop→pay 闭环与枪位余额同步**、余额不足不扣款、订单增删查、钱包与统计、收藏、reset、**服务端 store 与本机 Storage 的隔离** |
-| `tests/remote.test.js` | 5 | 把数据源切到 `remote` 后在运行时模拟器里跑页面（`wx.request` 是基于 Node http 的真实实现）：**订单/收藏/余额确实落在服务端**、详情→充电→结算→支付闭环、会话镜像、**后端没启动时给可排查提示而不是卡在骨架屏** |
+| `tests/remote.test.js` | 6 | 把数据源切到 `remote` 后在运行时模拟器里跑页面（`wx.request` 是基于 Node http 的真实实现）：**订单/收藏/余额确实落在服务端**、详情→充电→结算→支付闭环、会话镜像、**发票页候选订单来自服务端而开票记录留在本机**、**后端没启动时给可排查提示而不是卡在骨架屏** |
 
-合计 **115 个用例，全部通过**，在 Node 18 / 20 / 22 上结果一致。
-后端相关的 30 个用例会自己在随机空闲端口起服务，跑测试前**不需要**先 `npm start`。
+合计 **120 个用例，全部通过**，在 Node 18 / 20 / 22 上结果一致。
+后端相关的 31 个用例会自己在随机空闲端口起服务，跑测试前**不需要**先 `npm start`。
 
 > `npm test` 用的是不带参数的 `node --test`（由测试运行器自己递归发现 `*.test.js`）。
 > 不要改成 `node --test "tests/*.test.js"`：`--test` 参数里的 glob 展开要 Node 21+ 才支持，
@@ -475,6 +510,8 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 ---
 
 ## 八、交付清单
+
+> 面向验收的完整版（含走查路径与自动化验收命令）在 [`docs/DELIVERY.md`](docs/DELIVERY.md)。
 
 | 项目 | 状态 |
 | --- | --- |
@@ -494,7 +531,7 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | `project.config.json` 测试号可直接导入 | ✅ |
 | README 完整文档 | ✅ |
 | JSON 合法性 + JS 语法 + WXML 校验脚本 | ✅ |
-| 单元测试 + 页面级冒烟测试 | ✅ 115 个用例 |
+| 单元测试 + 页面级冒烟测试 | ✅ 120 个用例 |
 | 可运行的本地后端（零依赖，内存态，含冒烟脚本） | ✅ v1.3.0 `server/` |
 | 前端数据源可切换（`local` / `remote`，默认 `local`） | ✅ v1.3.0 `utils/repo.js` |
 | GitHub Actions CI（Node 18/20/22 + 生成物一致性） | ✅ |
@@ -507,8 +544,9 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | 界面无装饰性 emoji（改为纯 CSS 图标 + 中文文案） | ✅ |
 | 边界处理（Storage 损坏、重复支付、结算防误返回、断网声明） | ✅ |
 | 会话对账自愈（中断订单结转、孤儿会话清理、枪位释放） | ✅ v1.2.0 |
-| 定时器生命周期（页面卸载清理延时任务、悬浮条不空转） | ✅ v1.2.0 |
+| 定时器生命周期（页面卸载清理延时任务、悬浮条不空转、离开时收掉加载遮罩） | ✅ v1.4.0 |
 | 分享入口（`onShareAppMessage` / `button open-type="share"`） | ✅ |
+| 交付说明（验收走查路径 / 交付清单 / 已知限制） | ✅ [`docs/DELIVERY.md`](docs/DELIVERY.md) |
 
 ---
 
@@ -527,7 +565,8 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
   地图与原生 `input` 以等价占位呈现。需要严格的真机效果请用微信开发者工具按上面的演示路径走查。
 
 接入真实后端时不用改页面：把 `utils/config.js` 的 `baseUrl` 指过去，
-按 `server/README.md` 的接口契约实现同名接口即可；契约不一致的地方在 `utils/repo.js` 一处适配。
+按 [`server/README.md`](server/README.md) 的接口契约实现同名接口即可；
+契约不一致的地方在 `utils/repo.js` 一处适配。
 
 ---
 

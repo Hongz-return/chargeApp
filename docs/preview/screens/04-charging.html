@@ -44,6 +44,19 @@ img { display: block; }
 
 .screen .page { min-height: 100%; }
 
+/*
+ * 预览页是静态的：动画停在第一帧。
+ * 充电页的呼吸灯、骨架屏的流光都是 infinite 动画，不冻住的话
+ * 无头 Chrome 每次会截到不同的一帧，同样的输入截出不同的 PNG。
+ */
+.screen *,
+.screen *::before,
+.screen *::after {
+  animation-play-state: paused !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+}
+
 .wx-comp { display: contents; }
 
 /* ------------------------------------------------------------- 状态栏 */
