@@ -85,6 +85,11 @@ Page({
   },
 
   onShow() {
+    // 余额不足时会引导去钱包充值，回来必须重算余额，否则页面还停在「余额不足」
+    if (this.data.phase === 'settle') {
+      this.recalcPayment();
+      return;
+    }
     if (this.data.phase !== 'charging' || !repo.getSession()) return;
     // 先补一帧再起定时器：从后台回来时不该先看到一秒钟的旧数据
     this.tick();

@@ -307,12 +307,44 @@ test('充电页：余额不足时提示充值且订单保持待支付', async ()
   assert.strictEqual(env.calls.navigate.pop(), '/pages/wallet/wallet');
   assert.strictEqual(storage.getOrderById(page.data.order.id).status, 'unpaid');
 
-  // 改用微信支付可以完成
+  // 去钱包充完值回来，结算页必须重新读余额，而不是还停在「余额不足」
+  storage.recharge(200, '测试充值');
+  page.onShow();
+  assert.strictEqual(page.data.balanceEnough, true);
+  assert.strictEqual(page.data.balance, '200.50');
+
+  const balanceBefore = storage.getWallet().balance;
+  page.onPay();
+  await wait(1000);
+  assert.strictEqual(page.data.phase, 'paid');
+  assert.strictEqual(page.data.order.payMethod, '余额支付');
+  assert.strictEqual(
+    storage.getWallet().balance,
+    +(balanceBefore - Number(page.data.order.payAmount)).toFixed(2)
+  );
+  page.onUnload();
+});
+
+test('充电页：余额不足改用微信支付可以完成', async () => {
+  await startChargingFromDetail('st-002');
+
+  const page = env.loadPage('pages/charging/charging.js');
+  page.onLoad({});
+  rewindSession(10);
+  page.tick();
+  page.onStopCharging();
+  await wait(700);
+
+  storage.saveWallet({ balance: 0.5, transactions: [] });
+  page.recalcPayment();
+  assert.strictEqual(page.data.balanceEnough, false);
+
   page.onPayMethodTap({ currentTarget: { dataset: { method: 'wechat' } } });
   page.onPay();
   await wait(1000);
   assert.strictEqual(page.data.phase, 'paid');
   assert.strictEqual(page.data.order.payMethod, '微信支付');
+  assert.strictEqual(storage.getWallet().balance, 0.5, '微信支付不动余额');
   page.onUnload();
 });
 
