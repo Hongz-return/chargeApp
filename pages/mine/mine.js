@@ -16,6 +16,8 @@ Page({
     invoiceCount: 0,
     stats: { orderCount: 0, unpaidCount: 0, totalEnergy: 0, totalCost: 0 },
     hasCharging: false,
+    // 说清这几个数字是从哪来的：remote 数据源下订单在服务端，写「本机」就不对了
+    statsSource: config.isRemote() ? '数据来自本地后端 server/' : '数据来自本机订单记录',
     version: config.VERSION
   },
 

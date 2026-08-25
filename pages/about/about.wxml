@@ -20,6 +20,18 @@
     </view>
   </view>
 
+  <!-- 当前运行配置 -->
+  <view class="card">
+    <view class="section-title">
+      运行配置
+      <text class="section-sub">在 utils/config.js 一处切换</text>
+    </view>
+    <view wx:for="{{runtime}}" wx:key="label" class="info-row">
+      <text class="info-label">{{item.label}}</text>
+      <text class="info-value">{{item.value}}</text>
+    </view>
+  </view>
+
   <!-- 本机保存了哪些数据 -->
   <view class="card">
     <view class="section-title">

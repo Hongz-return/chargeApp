@@ -40,7 +40,7 @@
   <view class="card">
     <view class="section-title">
       我的充电
-      <text class="section-sub">数据来自本地订单记录</text>
+      <text class="section-sub">{{statsSource}}</text>
     </view>
     <view class="stat-grid">
       <view class="stat-cell">

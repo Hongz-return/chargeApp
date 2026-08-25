@@ -31,15 +31,26 @@ Page({
     support: config.SUPPORT,
     statements: config.DEMO_STATEMENTS,
     limits: LIMITS,
-    storageKeys: []
+    storageKeys: [],
+    runtime: []
   },
 
   onLoad() {
+    const remote = config.isRemote();
     this.setData({
       storageKeys: Object.keys(STORAGE_DESC).map((name) => ({
         key: storage.KEYS[name],
         desc: STORAGE_DESC[name]
-      }))
+      })),
+      // 验收时一眼看出当前跑的是哪套数据，不用去翻 utils/config.js
+      runtime: [
+        { label: '版本', value: `v${config.VERSION}` },
+        {
+          label: '数据源',
+          value: remote ? 'remote（本地后端 server/）' : 'local（本机 mock，默认）'
+        },
+        { label: remote ? '后端地址' : '网络请求', value: remote ? config.getApiBaseUrl() : '无（断网可用）' }
+      ]
     });
   },
 

@@ -187,6 +187,17 @@ test('remote：发票页的候选订单来自服务端，开票记录仍留在�
   page.onUnload();
 });
 
+test('remote：演示说明页与「我的」如实标注当前数据源', () => {
+  const about = env.loadPage('pages/about/about.js');
+  about.onLoad();
+  const runtime = about.data.runtime.reduce((acc, r) => Object.assign(acc, { [r.label]: r.value }), {});
+  assert.match(runtime['数据源'], /^remote/);
+  assert.strictEqual(runtime['后端地址'], ctx.baseUrl);
+
+  const mine = env.loadPage('pages/mine/mine.js');
+  assert.strictEqual(mine.data.statsSource, '数据来自本地后端 server/');
+});
+
 test('remote：后端没启动时给出可排查的提示，而不是卡在骨架屏', async () => {
   // 指向一个没人监听的端口，模拟「忘了 npm start」
   config.setApiBaseUrl('http://127.0.0.1:1');

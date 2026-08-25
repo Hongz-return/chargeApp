@@ -690,6 +690,12 @@ test('演示说明页：声明条目、本机数据清单与客服信息', () =>
   assert.ok(page.data.limits.length >= 5);
   assert.ok(page.data.version.length > 0);
 
+  // 验收时要能一眼确认当前跑的是哪套数据
+  const runtime = page.data.runtime.reduce((acc, r) => Object.assign(acc, { [r.label]: r.value }), {});
+  assert.strictEqual(runtime['版本'], `v${page.data.version}`);
+  assert.match(runtime['数据源'], /^local/, '默认数据源是 local');
+  assert.strictEqual(runtime['网络请求'], '无（断网可用）');
+
   // 列出的 Key 必须都是 storage 真实在用的，避免声明与实现脱节
   const declared = page.data.storageKeys.map((k) => k.key);
   const actual = Object.keys(storage.KEYS).map((name) => storage.KEYS[name]);
