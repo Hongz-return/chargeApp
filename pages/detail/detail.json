@@ -1,3 +1,8 @@
 {
-  "navigationBarTitleText": "充电站详情"
+  "navigationBarTitleText": "充电站详情",
+  "usingComponents": {
+    "empty": "/components/empty/empty",
+    "skeleton": "/components/skeleton/skeleton",
+    "charging-bar": "/components/charging-bar/charging-bar"
+  }
 }

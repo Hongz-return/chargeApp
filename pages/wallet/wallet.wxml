@@ -1,0 +1,61 @@
+<view class="page page-with-footer">
+  <view class="balance-card">
+    <view class="balance-label">账户余额（元）</view>
+    <view class="balance-value">{{balance}}</view>
+    <view class="balance-tip">余额可直接用于充电订单支付</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">
+      选择充值金额
+      <text class="section-sub">演示环境，不会真实扣款</text>
+    </view>
+    <view class="amount-grid">
+      <view
+        wx:for="{{options}}"
+        wx:key="*this"
+        class="amount-item {{selectedAmount === item ? 'active' : ''}}"
+        data-amount="{{item}}"
+        bindtap="onAmountTap"
+      >
+        <text class="amount-num">{{item}}</text>
+        <text class="amount-unit">元</text>
+      </view>
+      <view class="amount-item custom {{customAmount ? 'active' : ''}}">
+        <input
+          class="amount-input"
+          type="digit"
+          value="{{customAmount}}"
+          placeholder="其它金额"
+          placeholder-class="amount-placeholder"
+          bindinput="onCustomInput"
+        />
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">交易记录</view>
+    <view wx:for="{{transactions}}" wx:key="id" class="tx-row">
+      <view class="tx-main">
+        <view class="tx-type">{{item.typeText}}</view>
+        <view class="tx-note">{{item.note}}</view>
+        <view class="tx-time">{{item.timeText}}</view>
+      </view>
+      <view class="tx-amount {{item.className}}">{{item.sign}}{{item.amountText}}</view>
+    </view>
+
+    <empty
+      wx:if="{{transactions.length === 0}}"
+      icon="📄"
+      text="暂无交易记录"
+      sub="充值或完成一次充电支付后会显示在这里"
+    />
+  </view>
+
+  <view class="footer-bar">
+    <view class="btn-primary {{recharging ? 'disabled' : ''}}" bindtap="onRecharge">
+      {{recharging ? '处理中…' : '立即充值'}}
+    </view>
+  </view>
+</view>

@@ -1,0 +1,9 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.tip {
+  font-size: 22rpx;
+  color: var(--muted);
+  padding: 24rpx 32rpx 0;
+}

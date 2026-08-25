@@ -1,0 +1,188 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+/* --------------------------------------------------------------- 汇总 */
+
+.summary {
+  display: flex;
+  background: linear-gradient(135deg, #07c160, #06a557);
+  padding: 34rpx 0;
+  color: #fff;
+}
+
+.summary-cell {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.22);
+}
+
+.summary-cell:last-child {
+  border-right: none;
+}
+
+.summary-value {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.summary-label {
+  font-size: 21rpx;
+  opacity: 0.9;
+  margin-top: 8rpx;
+}
+
+/* --------------------------------------------------------------- 分类 */
+
+.tabs {
+  display: flex;
+  background: #fff;
+  padding: 6rpx 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2rpx 10rpx rgba(15, 34, 58, 0.04);
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 22rpx 0 18rpx;
+  font-size: 27rpx;
+  color: var(--text-2);
+  position: relative;
+}
+
+.tab.active {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 48rpx;
+  height: 5rpx;
+  border-radius: 3rpx;
+  background: var(--brand);
+}
+
+.tab-count {
+  font-size: 20rpx;
+  margin-left: 6rpx;
+  color: #fff;
+  background: #c8ccd0;
+  border-radius: 999rpx;
+  padding: 0 10rpx;
+  line-height: 28rpx;
+  display: inline-block;
+  vertical-align: 2rpx;
+}
+
+.tab.active .tab-count {
+  background: var(--brand);
+}
+
+/* --------------------------------------------------------------- 订单 */
+
+.order-card:active {
+  opacity: 0.92;
+}
+
+.oc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.oc-station {
+  font-size: 30rpx;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+}
+
+.oc-status {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.oc-status.charging {
+  color: #fff;
+  background: var(--brand);
+}
+
+.oc-status.unpaid {
+  color: #ff6f00;
+  background: var(--accent-light);
+}
+
+.oc-status.paid {
+  color: var(--muted);
+  background: #f2f3f5;
+}
+
+.oc-meta {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 12rpx;
+}
+
+.oc-body {
+  display: flex;
+  margin-top: 20rpx;
+  padding: 20rpx 0;
+  background: #fafbfc;
+  border-radius: 14rpx;
+}
+
+.oc-cell {
+  flex: 1;
+  text-align: center;
+}
+
+.oc-value {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.oc-label {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+
+.oc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20rpx;
+}
+
+.oc-no {
+  font-size: 21rpx;
+  color: #b6bbc0;
+}
+
+.oc-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.btn-mini.pay {
+  background: var(--brand);
+  color: #fff;
+}
+
+.list-end {
+  text-align: center;
+  font-size: 22rpx;
+  color: #c2c7cc;
+  padding: 24rpx 0 40rpx;
+}

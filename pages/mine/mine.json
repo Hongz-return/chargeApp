@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "charging-bar": "/components/charging-bar/charging-bar"
+  }
+}

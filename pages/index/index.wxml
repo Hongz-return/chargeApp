@@ -1,52 +1,124 @@
 <view class="page">
-  <!-- 快慢充筛选 -->
-  <view class="filter-bar">
-    <view
-      class="filter-item {{filter === 'all' ? 'active' : ''}}"
-      data-filter="all"
-      bindtap="onFilterTap"
-    >全部</view>
-    <view
-      class="filter-item {{filter === 'fast' ? 'active' : ''}}"
-      data-filter="fast"
-      bindtap="onFilterTap"
-    >快充</view>
-    <view
-      class="filter-item {{filter === 'slow' ? 'active' : ''}}"
-      data-filter="slow"
-      bindtap="onFilterTap"
-    >慢充</view>
-  </view>
-
-  <!-- 充电站卡片列表 -->
-  <view
-    wx:for="{{stations}}"
-    wx:key="id"
-    class="card station-card"
-    data-id="{{item.id}}"
-    bindtap="onStationTap"
-  >
-    <view class="station-header">
-      <text class="station-name">{{item.name}}</text>
-      <text class="station-distance">{{item.distanceKm}}km</text>
-    </view>
-    <view class="station-address">{{item.address}}</view>
-    <view class="station-tags">
-      <text wx:if="{{item.fastCount > 0}}" class="tag tag-fast">快充 {{item.fastCount}}</text>
-      <text wx:if="{{item.slowCount > 0}}" class="tag tag-slow">慢充 {{item.slowCount}}</text>
-    </view>
-    <view class="station-footer">
-      <view class="price">
-        <text class="price-num">{{item.totalPricePerKwh}}</text>
-        <text class="price-unit">元/度</text>
+  <!-- 顶部搜索区 -->
+  <view class="header">
+    <view class="header-top">
+      <view class="location">
+        <text class="location-icon">📍</text>
+        <text class="location-text">深圳 · 南山科技园</text>
       </view>
-      <view class="idle {{item.idle > 0 ? '' : 'idle-none'}}">
-        空闲 {{item.idle}}/{{item.total}}
+      <view class="view-toggle" bindtap="onToggleView">
+        {{viewMode === 'list' ? '🗺 地图' : '📋 列表'}}
       </view>
     </view>
+
+    <view class="search-row">
+      <view class="search-box">
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          value="{{keyword}}"
+          placeholder="搜索充电站名称 / 地址 / 运营商"
+          placeholder-class="search-placeholder"
+          confirm-type="search"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+        />
+        <text wx:if="{{keyword}}" class="search-clear" catchtap="onClearKeyword">✕</text>
+      </view>
+      <view class="scan-btn" bindtap="onScanTap">
+        <text class="scan-icon">⛶</text>
+        <text class="scan-text">扫码</text>
+      </view>
+    </view>
+
+    <!-- 筛选 -->
+    <scroll-view class="chip-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="chip-row">
+        <view
+          wx:for="{{filters}}"
+          wx:key="key"
+          class="chip {{filter === item.key ? 'active' : ''}}"
+          data-filter="{{item.key}}"
+          bindtap="onFilterTap"
+        >{{item.label}}</view>
+      </view>
+    </scroll-view>
+
+    <!-- 排序 -->
+    <scroll-view class="chip-scroll sort-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="chip-row">
+        <text class="sort-label">排序</text>
+        <view
+          wx:for="{{sorts}}"
+          wx:key="key"
+          class="sort-item {{sort === item.key ? 'active' : ''}}"
+          data-sort="{{item.key}}"
+          bindtap="onSortTap"
+        >{{item.label}}</view>
+      </view>
+    </scroll-view>
   </view>
 
-  <view wx:if="{{stations.length === 0}}" class="empty">
-    附近暂无符合条件的充电站
-  </view>
+  <!-- 列表模式 -->
+  <block wx:if="{{viewMode === 'list'}}">
+    <skeleton wx:if="{{loading}}" count="{{4}}" />
+
+    <block wx:else>
+      <view wx:if="{{stations.length > 0}}" class="result-bar">
+        为你找到 <text class="result-num">{{stats.total}}</text> 个充电站，共 <text class="result-num">{{stats.idle}}</text> 个空闲枪
+      </view>
+
+      <station-card
+        wx:for="{{stations}}"
+        wx:key="id"
+        station="{{item}}"
+        favorite="{{item.isFavorite}}"
+        show-favorite="{{true}}"
+        bind:select="onStationTap"
+        bind:favorite="onFavoriteTap"
+      />
+
+      <empty
+        wx:if="{{stations.length === 0}}"
+        icon="🔌"
+        text="没有找到符合条件的充电站"
+        sub="换个关键词，或把筛选条件调整为「全部」试试"
+      />
+
+      <view wx:if="{{stations.length > 0}}" class="list-end">— 已显示全部站点 —</view>
+    </block>
+  </block>
+
+  <!-- 地图模式 -->
+  <block wx:else>
+    <view class="map-wrap">
+      <map
+        id="stationMap"
+        class="station-map"
+        latitude="{{mapCenter.latitude}}"
+        longitude="{{mapCenter.longitude}}"
+        scale="{{12}}"
+        markers="{{markers}}"
+        show-location="{{false}}"
+        enable-poi="{{false}}"
+        bindmarkertap="onMarkerTap"
+        bindtap="onMapTap"
+      ></map>
+
+      <view class="map-recenter" bindtap="onRecenter">🎯</view>
+
+      <view wx:if="{{selectedStation}}" class="map-preview">
+        <station-card
+          station="{{selectedStation}}"
+          favorite="{{selectedStation.isFavorite}}"
+          show-favorite="{{true}}"
+          bind:select="onStationTap"
+          bind:favorite="onFavoriteTap"
+        />
+      </view>
+      <view wx:else class="map-tip">点击地图上的 📍 查看充电站详情</view>
+    </view>
+  </block>
+
+  <charging-bar bottom="{{40}}" />
 </view>

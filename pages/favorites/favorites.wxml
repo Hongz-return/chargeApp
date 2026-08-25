@@ -1,0 +1,26 @@
+<view class="page">
+  <skeleton wx:if="{{loading}}" count="{{2}}" />
+
+  <block wx:else>
+    <view wx:if="{{stations.length > 0}}" class="tip">共收藏 {{stations.length}} 个充电站，点击 ♥ 可取消收藏</view>
+
+    <station-card
+      wx:for="{{stations}}"
+      wx:key="id"
+      station="{{item}}"
+      favorite="{{true}}"
+      show-favorite="{{true}}"
+      bind:select="onStationTap"
+      bind:favorite="onFavoriteTap"
+    />
+
+    <empty
+      wx:if="{{stations.length === 0}}"
+      icon="♡"
+      text="还没有收藏的充电站"
+      sub="在充电站列表或详情页点击 ♡ 即可收藏常用站点"
+      action-text="去逛逛"
+      bind:action="onGoCharge"
+    />
+  </block>
+</view>

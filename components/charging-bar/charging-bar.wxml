@@ -1,0 +1,16 @@
+<view
+  wx:if="{{visible}}"
+  class="charging-bar"
+  style="bottom: {{bottom}}rpx"
+  bindtap="onTap"
+>
+  <view class="cb-pulse">⚡</view>
+  <view class="cb-main">
+    <view class="cb-title">充电中 · {{stationName}}</view>
+    <view class="cb-sub">{{duration}} · {{energyKwh}} 度 · SOC {{soc}}%</view>
+  </view>
+  <view class="cb-right">
+    <view class="cb-cost">¥{{totalCost}}</view>
+    <view class="cb-link">查看 ›</view>
+  </view>
+</view>

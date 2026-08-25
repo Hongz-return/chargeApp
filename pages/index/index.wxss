@@ -1,99 +1,233 @@
 .page {
-  padding-bottom: 40rpx;
+  padding-bottom: 60rpx;
 }
 
-/* 筛选栏 */
-.filter-bar {
+/* -------------------------------------------------------------- 顶部区域 */
+
+.header {
+  background: linear-gradient(160deg, #07c160 0%, #06ad56 58%, #f3f5f7 58%, #f3f5f7 100%);
+  padding: 20rpx 24rpx 4rpx;
+}
+
+.header-top {
   display: flex;
-  background: #fff;
-  padding: 16rpx 24rpx;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.filter-item {
-  padding: 10rpx 36rpx;
-  margin-right: 20rpx;
-  border-radius: 32rpx;
-  font-size: 26rpx;
-  color: #666;
-  background: #f2f3f5;
-}
-
-.filter-item.active {
+  align-items: center;
+  justify-content: space-between;
   color: #fff;
-  background: var(--brand);
+  padding: 4rpx 4rpx 18rpx;
 }
 
-/* 站点卡片 */
-.station-card {
-  transition: opacity 0.1s;
+.location {
+  display: flex;
+  align-items: center;
+  font-size: 27rpx;
 }
 
-.station-card:active {
+.location-icon {
+  margin-right: 6rpx;
+}
+
+.view-toggle {
+  font-size: 24rpx;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+}
+
+.view-toggle:active {
   opacity: 0.8;
 }
 
-.station-header {
+.search-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
-.station-name {
-  font-size: 32rpx;
-  font-weight: 600;
+.search-box {
   flex: 1;
-  margin-right: 16rpx;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 999rpx;
+  padding: 0 24rpx;
+  height: 76rpx;
+  box-shadow: 0 4rpx 14rpx rgba(15, 34, 58, 0.08);
 }
 
-.station-distance {
+.search-icon {
   font-size: 26rpx;
-  color: var(--muted);
+  margin-right: 12rpx;
+  opacity: 0.6;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 27rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+}
+
+.search-placeholder {
+  color: #b6bbc0;
+  font-size: 26rpx;
+}
+
+.search-clear {
+  font-size: 26rpx;
+  color: #b6bbc0;
+  padding: 0 4rpx 0 12rpx;
+}
+
+.scan-btn {
+  margin-left: 16rpx;
+  width: 108rpx;
+  height: 76rpx;
+  border-radius: 20rpx;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 14rpx rgba(15, 34, 58, 0.08);
+}
+
+.scan-btn:active {
+  opacity: 0.85;
+}
+
+.scan-icon {
+  font-size: 30rpx;
+  line-height: 1;
+  color: #07c160;
+}
+
+.scan-text {
+  font-size: 20rpx;
+  color: #576068;
+  margin-top: 4rpx;
+}
+
+/* ------------------------------------------------------------ 筛选 / 排序 */
+
+.chip-scroll {
+  width: 100%;
+  white-space: nowrap;
+  margin-top: 22rpx;
+}
+
+.chip-row {
+  display: flex;
+  align-items: center;
+  padding-bottom: 4rpx;
+}
+
+.chip {
+  flex-shrink: 0;
+  padding: 10rpx 30rpx;
+  margin-right: 16rpx;
+  border-radius: 999rpx;
+  font-size: 25rpx;
+  color: #576068;
+  background: #fff;
+  border: 1rpx solid #eef0f2;
+}
+
+.chip.active {
+  color: #fff;
+  background: #07c160;
+  border-color: #07c160;
+  font-weight: 500;
+}
+
+.sort-scroll {
+  margin-top: 14rpx;
+}
+
+.sort-label {
+  font-size: 23rpx;
+  color: #9aa0a6;
+  margin-right: 16rpx;
   flex-shrink: 0;
 }
 
-.station-address {
+.sort-item {
+  flex-shrink: 0;
   font-size: 24rpx;
-  color: var(--muted);
+  color: #9aa0a6;
+  margin-right: 28rpx;
+  padding-bottom: 6rpx;
+}
+
+.sort-item.active {
+  color: #07c160;
+  font-weight: 600;
+  border-bottom: 4rpx solid #07c160;
+}
+
+/* -------------------------------------------------------------- 结果列表 */
+
+.result-bar {
+  font-size: 24rpx;
+  color: #9aa0a6;
+  padding: 24rpx 32rpx 0;
+}
+
+.result-num {
+  color: #07c160;
+  font-weight: 600;
+}
+
+.list-end {
+  text-align: center;
+  font-size: 22rpx;
+  color: #c2c7cc;
+  padding: 24rpx 0 40rpx;
+}
+
+/* ---------------------------------------------------------------- 地图 */
+
+.map-wrap {
+  position: relative;
+  height: calc(100vh - 400rpx);
   margin-top: 8rpx;
 }
 
-.station-tags {
-  margin-top: 16rpx;
+.station-map {
+  width: 100%;
+  height: 100%;
 }
 
-.station-footer {
+.map-recenter {
+  position: absolute;
+  right: 28rpx;
+  bottom: 320rpx;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: #fff;
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 16rpx;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 34, 58, 0.16);
 }
 
-.price-num {
-  color: #ff6f00;
-  font-size: 36rpx;
-  font-weight: 700;
+.map-preview {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20rpx;
 }
 
-.price-unit {
-  color: var(--muted);
-  font-size: 22rpx;
-  margin-left: 4rpx;
-}
-
-.idle {
-  font-size: 26rpx;
-  color: var(--brand);
-}
-
-.idle-none {
-  color: var(--muted);
-}
-
-.empty {
-  text-align: center;
-  color: var(--muted);
-  padding: 120rpx 0;
+.map-tip {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 40rpx;
+  font-size: 23rpx;
+  color: #576068;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 14rpx 28rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 16rpx rgba(15, 34, 58, 0.12);
 }

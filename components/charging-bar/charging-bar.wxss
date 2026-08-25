@@ -1,0 +1,71 @@
+.charging-bar {
+  position: fixed;
+  left: 24rpx;
+  right: 24rpx;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #13cd73, #06a557);
+  box-shadow: 0 10rpx 28rpx rgba(7, 169, 92, 0.32);
+  color: #fff;
+}
+
+.charging-bar:active {
+  opacity: 0.92;
+}
+
+.cb-pulse {
+  font-size: 40rpx;
+  margin-right: 18rpx;
+  animation: cb-breathe 1.4s ease-in-out infinite;
+}
+
+@keyframes cb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.75;
+  }
+}
+
+.cb-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cb-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cb-sub {
+  font-size: 22rpx;
+  opacity: 0.88;
+  margin-top: 6rpx;
+}
+
+.cb-right {
+  text-align: right;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+.cb-cost {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.cb-link {
+  font-size: 22rpx;
+  opacity: 0.85;
+  margin-top: 4rpx;
+}

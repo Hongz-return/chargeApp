@@ -1,0 +1,135 @@
+<view class="page">
+  <!-- 用户信息 -->
+  <view class="profile">
+    <view class="profile-main">
+      <view class="avatar">{{user.avatarText}}</view>
+      <view class="profile-info">
+        <view class="nickname">
+          {{user.nickName}}
+          <text class="level">{{user.memberLevel}}</text>
+        </view>
+        <view class="phone">{{phoneText}}</view>
+      </view>
+      <view class="plate" bindtap="onEditPlate">
+        <text class="plate-no">{{user.plateNo}}</text>
+        <text class="plate-edit">修改</text>
+      </view>
+    </view>
+
+    <!-- 钱包 -->
+    <view class="wallet-card">
+      <view class="wallet-left" bindtap="onWalletTap">
+        <view class="wallet-label">账户余额（元）</view>
+        <view class="wallet-balance">{{balance}}</view>
+      </view>
+      <view class="wallet-right">
+        <view class="wallet-cell" bindtap="onCouponTap">
+          <view class="wallet-cell-value">{{couponCount}}</view>
+          <view class="wallet-cell-label">优惠券</view>
+        </view>
+        <view class="wallet-cell" bindtap="onFavoriteTap">
+          <view class="wallet-cell-value">{{favoriteCount}}</view>
+          <view class="wallet-cell-label">收藏</view>
+        </view>
+        <view class="recharge-btn" bindtap="onWalletTap">充值</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 充电统计 -->
+  <view class="card">
+    <view class="section-title">
+      我的充电
+      <text class="section-sub">数据来自本地订单记录</text>
+    </view>
+    <view class="stat-grid">
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.orderCount}}</view>
+        <view class="stat-label">充电次数</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value">{{stats.totalEnergy}}</view>
+        <view class="stat-label">累计电量(度)</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value">¥{{stats.totalCost}}</view>
+        <view class="stat-label">累计消费</view>
+      </view>
+      <view class="stat-cell">
+        <view class="stat-value {{stats.unpaidCount > 0 ? 'warn' : ''}}">{{stats.unpaidCount}}</view>
+        <view class="stat-label">待支付</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="card">
+    <view class="quick-grid">
+      <view class="quick-item" bindtap="onOrdersTap">
+        <view class="quick-icon bg-green">🧾</view>
+        <view class="quick-label">全部订单</view>
+      </view>
+      <view class="quick-item" bindtap="onChargingTap">
+        <view class="quick-icon bg-orange">⚡</view>
+        <view class="quick-label">
+          充电中
+          <text wx:if="{{hasCharging}}" class="quick-dot"></text>
+        </view>
+      </view>
+      <view class="quick-item" bindtap="onFavoriteTap">
+        <view class="quick-icon bg-red">♥</view>
+        <view class="quick-label">我的收藏</view>
+      </view>
+      <view class="quick-item" bindtap="onCouponTap">
+        <view class="quick-icon bg-blue">🎟</view>
+        <view class="quick-label">优惠券</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 常用功能 -->
+  <view class="card">
+    <view class="list-row" bindtap="onWalletTap">
+      <text class="row-icon">💰</text>
+      <text class="row-label">我的钱包</text>
+      <text class="row-value">¥{{balance}}</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" data-name="我的车辆" bindtap="onMockEntry">
+      <text class="row-icon">🚗</text>
+      <text class="row-label">我的车辆</text>
+      <text class="row-value">{{user.carModel}}</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" data-name="发票管理" bindtap="onMockEntry">
+      <text class="row-icon">📮</text>
+      <text class="row-label">发票管理</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" data-name="帮助中心" bindtap="onMockEntry">
+      <text class="row-icon">💬</text>
+      <text class="row-label">帮助与客服</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" bindtap="onAbout">
+      <text class="row-icon">ℹ️</text>
+      <text class="row-label">关于本 Demo</text>
+      <text class="row-value">v1.0.0</text>
+      <text class="row-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="list-row danger-row" bindtap="onResetData">
+      <text class="row-icon">🗑</text>
+      <text class="row-label">清除本地数据</text>
+      <text class="row-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="footer-note">
+    注册于 {{user.joinedAt}} · 本 Demo 所有数据仅保存在本机
+  </view>
+
+  <charging-bar bottom="{{40}}" />
+</view>

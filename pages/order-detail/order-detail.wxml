@@ -1,0 +1,124 @@
+<view class="page page-with-footer">
+  <skeleton wx:if="{{loading}}" count="{{2}}" />
+
+  <block wx:elif="{{order}}">
+    <view class="od-hero {{order.statusClass}}">
+      <view class="od-status">{{order.statusText}}</view>
+      <view class="od-desc">{{order.statusDesc}}</view>
+      <view class="od-amount">¥{{order.payText}}</view>
+    </view>
+
+    <!-- 充电概况 -->
+    <view class="card">
+      <view class="od-grid">
+        <view class="od-cell">
+          <view class="od-cell-value">{{order.energyText}}</view>
+          <view class="od-cell-label">充电量（度）</view>
+        </view>
+        <view class="od-cell">
+          <view class="od-cell-value">{{order.durationText}}</view>
+          <view class="od-cell-label">充电时长</view>
+        </view>
+        <view class="od-cell">
+          <view class="od-cell-value">{{order.powerKw}}kW</view>
+          <view class="od-cell-label">额定功率</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 站点信息 -->
+    <view class="card">
+      <view class="section-title">充电信息</view>
+      <view class="info-row">
+        <text class="info-label">充电站</text>
+        <text class="info-value">{{order.stationName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">地址</text>
+        <text class="info-value">{{order.stationAddress}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">充电枪</text>
+        <text class="info-value">{{order.pileName}} 号枪 · {{order.typeText}}</text>
+      </view>
+      <view class="info-row" wx:if="{{order.endSoc}}">
+        <text class="info-label">电量变化</text>
+        <text class="info-value">SOC {{order.startSoc}}% → {{order.endSoc}}%</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">开始时间</text>
+        <text class="info-value">{{order.startTimeText}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">结束时间</text>
+        <text class="info-value">{{order.endTimeText}}</text>
+      </view>
+    </view>
+
+    <!-- 费用明细 -->
+    <view class="card">
+      <view class="section-title">费用明细</view>
+      <view class="bill-row">
+        <text class="bill-label">电费（{{order.energyText}} 度 × ¥{{order.pricePerKwh}}）</text>
+        <text class="bill-value">¥{{order.electricityText}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">服务费（{{order.energyText}} 度 × ¥{{order.serviceFeePerKwh}}）</text>
+        <text class="bill-value">¥{{order.serviceText}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">订单金额</text>
+        <text class="bill-value">¥{{order.totalText}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">优惠减免</text>
+        <text class="bill-value">-¥{{order.couponText}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="bill-row bill-total">
+        <text class="bill-label">{{order.status === 'paid' ? '实付金额' : '应付金额'}}</text>
+        <text class="bill-value">¥{{order.payText}}</text>
+      </view>
+      <view wx:if="{{order.payMethod}}" class="bill-row">
+        <text class="bill-label">支付方式</text>
+        <text class="bill-value">{{order.payMethod}}</text>
+      </view>
+    </view>
+
+    <!-- 进度 -->
+    <view class="card">
+      <view class="section-title">订单进度</view>
+      <view class="timeline">
+        <view wx:for="{{timeline}}" wx:key="label" class="tl-item {{item.done ? 'done' : ''}}">
+          <view class="tl-dot"></view>
+          <view class="tl-main">
+            <view class="tl-label">{{item.label}}</view>
+            <view class="tl-time">{{item.time}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 其它 -->
+    <view class="card">
+      <view class="list-row" bindtap="onCopyOrderNo">
+        <text class="row-icon">🧾</text>
+        <text class="row-label">订单号</text>
+        <text class="row-value">{{order.orderNo}}</text>
+        <text class="row-arrow">复制</text>
+      </view>
+      <view class="list-row" bindtap="onInvoice">
+        <text class="row-icon">📮</text>
+        <text class="row-label">申请开票</text>
+        <text class="row-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="footer-bar footer-double">
+      <view wx:if="{{order.status === 'paid'}}" class="btn-ghost" bindtap="onDelete">删除订单</view>
+      <view wx:if="{{order.status === 'charging'}}" class="btn-primary" bindtap="onViewCharging">查看充电进度</view>
+      <view wx:elif="{{order.status === 'unpaid'}}" class="btn-primary" bindtap="onPay">立即支付 ¥{{order.payText}}</view>
+      <view wx:else class="btn-primary" bindtap="onRecharge">再次充电</view>
+    </view>
+  </block>
+</view>

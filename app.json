@@ -1,14 +1,47 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/orders/orders",
+    "pages/mine/mine",
     "pages/detail/detail",
-    "pages/charging/charging"
+    "pages/charging/charging",
+    "pages/order-detail/order-detail",
+    "pages/wallet/wallet",
+    "pages/favorites/favorites",
+    "pages/coupons/coupons"
   ],
   "window": {
     "navigationBarBackgroundColor": "#07c160",
     "navigationBarTitleText": "充电桩",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f5f6f8"
+    "backgroundColor": "#f3f5f7",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#9aa0a6",
+    "selectedColor": "#07c160",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "充电",
+        "iconPath": "assets/tabbar/charge.png",
+        "selectedIconPath": "assets/tabbar/charge-active.png"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单",
+        "iconPath": "assets/tabbar/order.png",
+        "selectedIconPath": "assets/tabbar/order-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "assets/tabbar/mine.png",
+        "selectedIconPath": "assets/tabbar/mine-active.png"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

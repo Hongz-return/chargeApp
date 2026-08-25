@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "我的订单",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "empty": "/components/empty/empty",
+    "skeleton": "/components/skeleton/skeleton",
+    "charging-bar": "/components/charging-bar/charging-bar"
+  }
+}

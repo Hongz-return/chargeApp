@@ -1,0 +1,16 @@
+{
+  "name": "charging-pile-miniprogram",
+  "version": "1.0.0",
+  "private": true,
+  "description": "充电桩微信小程序演示版（纯前端 mock，无后端）。本文件仅用于本地校验脚本与单元测试，小程序运行时不依赖任何 npm 包。",
+  "scripts": {
+    "assets": "node tools/gen-assets.js",
+    "validate": "node tools/validate.js",
+    "test": "node --test \"tests/*.test.js\"",
+    "check": "npm run validate && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

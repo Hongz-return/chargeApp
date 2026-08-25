@@ -1,66 +1,205 @@
-/* 全局样式 */
+/**
+ * 全局设计系统
+ * 主题色 / 间距 / 卡片 / 按钮 / 标签 / 空态 / 骨架屏
+ * 页面样式统一复用这里的类名，避免各页面重复造轮子。
+ */
+
 page {
-  background-color: #f5f6f8;
-  font-size: 28rpx;
-  color: #333;
+  /* 品牌与语义色 */
   --brand: #07c160;
   --brand-dark: #06ad56;
+  --brand-light: #e8f8ee;
+  --accent: #ff8a00;
+  --accent-light: #fff3e0;
   --danger: #fa5151;
+  --danger-light: #ffecec;
   --warn: #ff9d00;
-  --muted: #999;
+  --info: #3a7afe;
+  --info-light: #e8f0ff;
+
+  /* 中性色 */
+  --text: #1f2429;
+  --text-2: #576068;
+  --muted: #9aa0a6;
+  --line: #eef0f2;
+  --bg: #f3f5f7;
+  --card-bg: #ffffff;
+
+  /* 间距与圆角 */
+  --gap-xs: 8rpx;
+  --gap-sm: 16rpx;
+  --gap: 24rpx;
+  --gap-lg: 32rpx;
+  --radius-sm: 10rpx;
+  --radius: 20rpx;
+  --radius-lg: 28rpx;
+
+  background-color: var(--bg);
+  font-size: 28rpx;
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
 }
 
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 底部固定操作栏预留空间 */
+.page-with-footer {
+  padding-bottom: 200rpx;
+}
+
+/* ------------------------------------------------------------------ 卡片 */
+
 .card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx;
-  margin: 20rpx 24rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: var(--gap);
+  margin: 20rpx var(--gap);
+  box-shadow: 0 2rpx 12rpx rgba(15, 34, 58, 0.05);
+}
+
+.card-tight {
+  padding: 20rpx var(--gap);
+}
+
+.card-flat {
+  box-shadow: none;
+  border: 1rpx solid var(--line);
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.section-title .section-sub {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.divider {
+  height: 1rpx;
+  background: var(--line);
+  margin: 20rpx 0;
+}
+
+/* ------------------------------------------------------------------ 按钮 */
+
+.btn {
+  border-radius: 999rpx;
+  font-size: 32rpx;
+  line-height: 88rpx;
+  text-align: center;
+  transition: opacity 0.15s ease;
+}
+
+.btn:active {
+  opacity: 0.85;
 }
 
 .btn-primary {
-  background: var(--brand);
+  background: linear-gradient(135deg, #13cd73, #07a95c);
   color: #fff;
-  border-radius: 48rpx;
+  border-radius: 999rpx;
   font-size: 32rpx;
   line-height: 88rpx;
   text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(7, 193, 96, 0.24);
 }
 
-.btn-primary.disabled {
-  background: #c8c9cc;
+.btn-primary:active {
+  opacity: 0.88;
+}
+
+.btn-primary.disabled,
+.btn.disabled {
+  background: #d5d8dc;
+  color: #fff;
+  box-shadow: none;
+  pointer-events: none;
 }
 
 .btn-danger {
-  background: var(--danger);
+  background: linear-gradient(135deg, #ff6b6b, #fa5151);
   color: #fff;
-  border-radius: 48rpx;
+  border-radius: 999rpx;
   font-size: 32rpx;
   line-height: 88rpx;
   text-align: center;
+  box-shadow: 0 8rpx 20rpx rgba(250, 81, 81, 0.22);
 }
+
+.btn-ghost {
+  background: #fff;
+  color: var(--text-2);
+  border: 1rpx solid #dfe2e6;
+  border-radius: 999rpx;
+  font-size: 30rpx;
+  line-height: 80rpx;
+  text-align: center;
+}
+
+.btn-mini {
+  display: inline-block;
+  padding: 0 28rpx;
+  line-height: 56rpx;
+  font-size: 24rpx;
+  border-radius: 999rpx;
+  border: 1rpx solid var(--brand);
+  color: var(--brand);
+  background: #fff;
+}
+
+.btn-mini.ghost {
+  border-color: #dfe2e6;
+  color: var(--text-2);
+}
+
+/* 底部固定操作栏 */
+.footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  padding: 20rpx var(--gap-lg) calc(20rpx + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -2rpx 16rpx rgba(15, 34, 58, 0.06);
+}
+
+/* ------------------------------------------------------------------ 标签 */
 
 .tag {
   display: inline-block;
   font-size: 20rpx;
-  padding: 4rpx 12rpx;
+  line-height: 32rpx;
+  padding: 0 12rpx;
   border-radius: 6rpx;
   margin-right: 12rpx;
+  color: var(--text-2);
+  background: #f2f3f5;
 }
 
 .tag-fast {
   color: #ff6f00;
-  background: #fff3e0;
+  background: var(--accent-light);
 }
 
 .tag-slow {
-  color: #1976d2;
-  background: #e3f2fd;
+  color: var(--info);
+  background: var(--info-light);
 }
 
 .tag-idle {
   color: var(--brand);
-  background: #e8f8ee;
+  background: var(--brand-light);
 }
 
 .tag-busy {
@@ -71,4 +210,144 @@ page {
 .tag-offline {
   color: var(--muted);
   background: #f0f0f0;
+}
+
+.tag-plain {
+  color: var(--text-2);
+  background: #f4f5f7;
+}
+
+/* ------------------------------------------------------------ 价格与数字 */
+
+.price-num {
+  color: #ff6f00;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.price-unit {
+  color: var(--muted);
+  font-size: 22rpx;
+  margin-left: 4rpx;
+}
+
+.money {
+  color: #ff6f00;
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------- 空态/加载 */
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 60rpx;
+  color: var(--muted);
+}
+
+.empty-icon {
+  font-size: 88rpx;
+  opacity: 0.5;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+}
+
+.empty-sub {
+  font-size: 24rpx;
+  margin-top: 12rpx;
+  color: #b6bbc0;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #eef0f2 25%, #f6f7f8 37%, #eef0f2 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.2s ease infinite;
+  border-radius: 8rpx;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.loading-line {
+  height: 28rpx;
+  margin-bottom: 16rpx;
+}
+
+/* ------------------------------------------------------------ 列表行样式 */
+
+.list-row {
+  display: flex;
+  align-items: center;
+  padding: 26rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.list-row:last-child {
+  border-bottom: none;
+}
+
+.list-row .row-icon {
+  width: 56rpx;
+  font-size: 34rpx;
+  text-align: center;
+}
+
+.list-row .row-label {
+  flex: 1;
+  font-size: 28rpx;
+  margin-left: 12rpx;
+}
+
+.list-row .row-value {
+  font-size: 26rpx;
+  color: var(--muted);
+}
+
+.list-row .row-arrow {
+  color: #c8ccd0;
+  font-size: 28rpx;
+  margin-left: 10rpx;
+}
+
+/* 键值信息行 */
+.info-row {
+  display: flex;
+  margin-top: 14rpx;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.info-label {
+  color: var(--muted);
+  width: 140rpx;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+  color: var(--text);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.text-brand {
+  color: var(--brand);
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

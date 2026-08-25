@@ -1,0 +1,41 @@
+<view class="station-card" bindtap="onTap">
+  <view class="sc-head">
+    <view class="sc-icon theme-{{station.theme}}">{{station.icon}}</view>
+    <view class="sc-title-wrap">
+      <view class="sc-name">{{station.name}}</view>
+      <view class="sc-meta">
+        <text class="sc-operator">{{station.operator}}</text>
+        <text class="sc-dot">·</text>
+        <text class="sc-rating">★ {{station.rating}}</text>
+        <text class="sc-dot">·</text>
+        <text>最大 {{station.maxPowerKw}}kW</text>
+      </view>
+    </view>
+    <view class="sc-right">
+      <view wx:if="{{showFavorite}}" class="sc-fav {{favorite ? 'on' : ''}}" catchtap="onFavoriteTap">
+        {{favorite ? '♥' : '♡'}}
+      </view>
+      <view class="sc-distance">{{station.distanceText}}</view>
+    </view>
+  </view>
+
+  <view class="sc-address">{{station.address}}</view>
+
+  <view class="sc-tags">
+    <text wx:if="{{station.fastCount > 0}}" class="tag tag-fast">快充 {{station.fastCount}}</text>
+    <text wx:if="{{station.slowCount > 0}}" class="tag tag-slow">慢充 {{station.slowCount}}</text>
+    <text wx:for="{{station.tags}}" wx:key="*this" wx:if="{{index < 2}}" class="tag tag-plain">{{item}}</text>
+  </view>
+
+  <view class="sc-footer">
+    <view class="sc-price">
+      <text class="price-num">{{station.totalPricePerKwh}}</text>
+      <text class="price-unit">元/度</text>
+      <text class="sc-price-detail">电费{{station.pricePerKwh}}+服务费{{station.serviceFeePerKwh}}</text>
+    </view>
+    <view class="sc-idle {{station.idle > 0 ? '' : 'none'}}">
+      <text class="sc-idle-num">{{station.idle}}</text>
+      <text class="sc-idle-total">/{{station.total}} 空闲</text>
+    </view>
+  </view>
+</view>

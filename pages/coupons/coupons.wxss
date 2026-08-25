@@ -1,0 +1,126 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+.tabs {
+  display: flex;
+  background: #fff;
+  box-shadow: 0 2rpx 10rpx rgba(15, 34, 58, 0.04);
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 26rpx 0 22rpx;
+  font-size: 27rpx;
+  color: var(--text-2);
+  position: relative;
+}
+
+.tab.active {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 56rpx;
+  height: 5rpx;
+  border-radius: 3rpx;
+  background: var(--brand);
+}
+
+/* ------------------------------------------------------------- 优惠券 */
+
+.coupon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 20rpx 24rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(15, 34, 58, 0.05);
+}
+
+.coupon-left {
+  width: 210rpx;
+  padding: 34rpx 0;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(135deg, #ff9a3d, #ff7a00);
+  flex-shrink: 0;
+}
+
+.coupon.used .coupon-left {
+  background: linear-gradient(135deg, #b8bfc6, #9aa0a6);
+}
+
+.coupon-amount {
+  font-size: 56rpx;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.yuan {
+  font-size: 28rpx;
+  margin-right: 4rpx;
+}
+
+.coupon-threshold {
+  font-size: 21rpx;
+  opacity: 0.92;
+  margin-top: 6rpx;
+}
+
+.coupon-right {
+  flex: 1;
+  padding: 26rpx 24rpx;
+  min-width: 0;
+}
+
+.coupon-title {
+  font-size: 29rpx;
+  font-weight: 600;
+}
+
+.coupon-desc {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+.coupon-expire {
+  font-size: 21rpx;
+  color: #b6bbc0;
+  margin-top: 8rpx;
+}
+
+.coupon-use {
+  margin-right: 24rpx;
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #fff;
+  background: var(--brand);
+  padding: 10rpx 26rpx;
+  border-radius: 999rpx;
+}
+
+.coupon-stamp {
+  margin-right: 24rpx;
+  flex-shrink: 0;
+  font-size: 22rpx;
+  color: var(--muted);
+  border: 2rpx solid #d5d8dc;
+  padding: 8rpx 18rpx;
+  border-radius: 8rpx;
+  transform: rotate(-8deg);
+}
+
+.coupon.used {
+  opacity: 0.75;
+}

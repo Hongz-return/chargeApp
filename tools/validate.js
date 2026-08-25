@@ -1,0 +1,167 @@
+/**
+ * 小程序工程静态校验（不依赖微信开发者工具，可在 CI / Node 中运行）：
+ *  1. 所有 .json 文件 JSON 合法
+ *  2. 所有 .js 文件通过 node --check 语法检查
+ *  3. app.json 中注册的页面，四件套（js/json/wxml/wxss）齐全
+ *  4. 页面/组件 json 里 usingComponents 指向的组件文件存在
+ *  5. tabBar 图标、地图 marker 等静态资源存在
+ *
+ *   node tools/validate.js
+ */
+
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+
+const ROOT = path.join(__dirname, '..');
+const SKIP_DIRS = new Set(['.git', 'node_modules', '.cursor']);
+
+const errors = [];
+const checked = { json: 0, js: 0, pages: 0, components: 0, assets: 0 };
+
+function walk(dir, out) {
+  fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+    if (SKIP_DIRS.has(entry.name)) return;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, out);
+    else out.push(full);
+  });
+  return out;
+}
+
+function rel(file) {
+  return path.relative(ROOT, file);
+}
+
+function fail(message) {
+  errors.push(message);
+}
+
+const files = walk(ROOT, []);
+
+/* 1. JSON 合法性 */
+files
+  .filter((f) => f.endsWith('.json'))
+  .forEach((file) => {
+    checked.json++;
+    try {
+      JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      fail(`JSON 解析失败: ${rel(file)} -> ${err.message}`);
+    }
+  });
+
+/* 2. JS 语法检查 */
+files
+  .filter((f) => f.endsWith('.js'))
+  .forEach((file) => {
+    checked.js++;
+    const res = spawnSync(process.execPath, ['--check', file], { encoding: 'utf8' });
+    if (res.status !== 0) {
+      fail(`JS 语法错误: ${rel(file)}\n${(res.stderr || '').trim()}`);
+    }
+  });
+
+/* 3. 页面四件套 */
+const appJsonPath = path.join(ROOT, 'app.json');
+let appJson = null;
+try {
+  appJson = JSON.parse(fs.readFileSync(appJsonPath, 'utf8'));
+} catch (err) {
+  fail(`无法读取 app.json: ${err.message}`);
+}
+
+if (appJson) {
+  (appJson.pages || []).forEach((page) => {
+    checked.pages++;
+    ['js', 'json', 'wxml', 'wxss'].forEach((ext) => {
+      const file = path.join(ROOT, `${page}.${ext}`);
+      if (!fs.existsSync(file)) fail(`页面文件缺失: ${page}.${ext}`);
+    });
+  });
+
+  /* 5. tabBar 图标 */
+  const tabList = (appJson.tabBar && appJson.tabBar.list) || [];
+  if (tabList.length < 2) fail('tabBar 至少需要 2 个 tab');
+  tabList.forEach((tab) => {
+    if ((appJson.pages || []).indexOf(tab.pagePath) < 0) {
+      fail(`tabBar 页面未在 pages 中注册: ${tab.pagePath}`);
+    }
+    ['iconPath', 'selectedIconPath'].forEach((key) => {
+      if (!tab[key]) return;
+      checked.assets++;
+      if (!fs.existsSync(path.join(ROOT, tab[key]))) fail(`tabBar 图标缺失: ${tab[key]}`);
+    });
+  });
+
+  if (appJson.sitemapLocation && !fs.existsSync(path.join(ROOT, appJson.sitemapLocation))) {
+    fail(`sitemap 文件缺失: ${appJson.sitemapLocation}`);
+  }
+}
+
+/* 4. usingComponents */
+files
+  .filter((f) => f.endsWith('.json'))
+  .forEach((file) => {
+    let json;
+    try {
+      json = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (err) {
+      return; // 已在第 1 步报告
+    }
+    const using = json.usingComponents;
+    if (!using) return;
+    Object.keys(using).forEach((name) => {
+      checked.components++;
+      const target = using[name];
+      const base = target.startsWith('/')
+        ? path.join(ROOT, target.slice(1))
+        : path.resolve(path.dirname(file), target);
+      ['js', 'json', 'wxml'].forEach((ext) => {
+        if (!fs.existsSync(`${base}.${ext}`)) {
+          fail(`组件文件缺失: ${rel(file)} 中的 "${name}" -> ${target}.${ext}`);
+        }
+      });
+      try {
+        const compJson = JSON.parse(fs.readFileSync(`${base}.json`, 'utf8'));
+        if (compJson.component !== true) {
+          fail(`组件未声明 "component": true -> ${target}.json`);
+        }
+      } catch (err) {
+        /* 文件缺失已在上面报告 */
+      }
+    });
+  });
+
+/* 额外检查：代码中引用的 /assets 资源存在 */
+const assetRefs = new Set();
+files
+  .filter((f) => f.endsWith('.js') || f.endsWith('.wxml'))
+  .forEach((file) => {
+    const content = fs.readFileSync(file, 'utf8');
+    const re = /['"](\/assets\/[\w./-]+)['"]/g;
+    let m;
+    while ((m = re.exec(content))) assetRefs.add(m[1]);
+  });
+assetRefs.forEach((ref) => {
+  checked.assets++;
+  if (!fs.existsSync(path.join(ROOT, ref.slice(1)))) fail(`静态资源缺失: ${ref}`);
+});
+
+/* 输出 */
+console.log('小程序工程校验');
+console.log('----------------------------------------');
+console.log(`JSON 文件      : ${checked.json}`);
+console.log(`JS 文件        : ${checked.js}`);
+console.log(`注册页面       : ${checked.pages}`);
+console.log(`组件引用       : ${checked.components}`);
+console.log(`静态资源引用   : ${checked.assets}`);
+console.log('----------------------------------------');
+
+if (errors.length) {
+  console.error(`校验未通过，共 ${errors.length} 个问题：`);
+  errors.forEach((e, i) => console.error(`  ${i + 1}. ${e}`));
+  process.exit(1);
+}
+
+console.log('全部校验通过 ✅');

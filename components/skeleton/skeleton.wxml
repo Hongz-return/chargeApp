@@ -1,0 +1,11 @@
+<view class="skeleton-list">
+  <view wx:for="{{items}}" wx:key="*this" class="skeleton-card">
+    <view class="sk sk-title"></view>
+    <view class="sk sk-line"></view>
+    <view class="sk sk-line short"></view>
+    <view class="sk-footer">
+      <view class="sk sk-chip"></view>
+      <view class="sk sk-chip"></view>
+    </view>
+  </view>
+</view>

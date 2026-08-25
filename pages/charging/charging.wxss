@@ -1,34 +1,31 @@
 .page {
-  padding-bottom: 160rpx;
+  padding-bottom: 240rpx;
 }
 
-/* 充电中圆环 */
-.ring-wrap {
+/* ------------------------------------------------------------ 充电中 */
+
+.charge-hero {
+  background: linear-gradient(165deg, #13cd73 0%, #06a557 60%, #f3f5f7 60%, #f3f5f7 100%);
+  padding: 40rpx 0 20rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60rpx 0 20rpx;
 }
 
 .ring {
-  width: 360rpx;
-  height: 360rpx;
+  width: 380rpx;
+  height: 380rpx;
   border-radius: 50%;
-  background: conic-gradient(var(--brand) 0deg, #a6e8c3 200deg, #e8f8ee 360deg);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: breathe 2s ease-in-out infinite;
-}
-
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  box-shadow: 0 12rpx 40rpx rgba(6, 140, 76, 0.28);
+  transition: background 0.6s linear;
 }
 
 .ring-inner {
-  width: 300rpx;
-  height: 300rpx;
+  width: 312rpx;
+  height: 312rpx;
   border-radius: 50%;
   background: #fff;
   display: flex;
@@ -37,25 +34,66 @@
   justify-content: center;
 }
 
-.energy-num {
-  font-size: 64rpx;
+.soc-num {
+  font-size: 84rpx;
   font-weight: 700;
-  color: var(--brand);
+  color: #07c160;
+  line-height: 1.1;
 }
 
-.energy-unit {
+.soc-unit {
+  font-size: 32rpx;
+  margin-left: 4rpx;
+}
+
+.soc-label {
   font-size: 24rpx;
   color: var(--muted);
-  margin-top: 8rpx;
+  margin-top: 6rpx;
+}
+
+.energy-line {
+  margin-top: 16rpx;
+  font-size: 26rpx;
+  color: var(--text-2);
+  background: var(--brand-light);
+  padding: 6rpx 22rpx;
+  border-radius: 999rpx;
 }
 
 .charging-hint {
-  margin-top: 24rpx;
+  margin-top: 28rpx;
   font-size: 26rpx;
-  color: var(--muted);
+  color: #fff;
+  display: flex;
+  align-items: center;
 }
 
-/* 数据统计 */
+.hint-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #fff;
+  margin-right: 12rpx;
+  animation: blink 1.2s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
+  }
+}
+
+.stat-card {
+  margin-top: -10rpx;
+}
+
 .stat-row {
   display: flex;
 }
@@ -63,11 +101,23 @@
 .stat {
   flex: 1;
   text-align: center;
+  border-right: 1rpx solid var(--line);
+}
+
+.stat:last-child {
+  border-right: none;
 }
 
 .stat-value {
   font-size: 32rpx;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.stat-suffix {
+  font-size: 22rpx;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 2rpx;
 }
 
 .stat-cost {
@@ -77,64 +127,71 @@
 .stat-label {
   font-size: 22rpx;
   color: var(--muted);
+  margin-top: 10rpx;
+}
+
+.tip-card {
+  margin: 20rpx 24rpx;
+  padding: 20rpx 24rpx;
+  background: #fff8e8;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  color: #a5701a;
+  line-height: 1.7;
+}
+
+.tip-strong {
+  font-weight: 700;
+}
+
+/* -------------------------------------------------------------- 结算 */
+
+.settle-hero {
+  background: linear-gradient(165deg, #07c160, #06a557);
+  padding: 50rpx 24rpx 60rpx;
+  text-align: center;
+  color: #fff;
+}
+
+.settle-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
+.settle-amount {
+  font-size: 84rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 10rpx;
+}
+
+.settle-order {
+  font-size: 22rpx;
+  opacity: 0.85;
   margin-top: 8rpx;
 }
 
-.session-info {
-  text-align: center;
-  font-size: 24rpx;
-  color: var(--muted);
-  margin-top: 24rpx;
-  padding-top: 20rpx;
-  border-top: 1rpx solid #f0f0f0;
-}
-
-/* 完成状态 */
-.done-icon-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 80rpx 0 20rpx;
-}
-
-.done-icon {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 50%;
-  background: var(--brand);
-  color: #fff;
-  font-size: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.done-title {
-  margin-top: 24rpx;
-  font-size: 34rpx;
-  font-weight: 600;
-}
-
-/* 账单 */
 .bill-row {
   display: flex;
   justify-content: space-between;
-  padding: 14rpx 0;
-  font-size: 28rpx;
+  align-items: baseline;
+  padding: 13rpx 0;
+  font-size: 27rpx;
 }
 
 .bill-label {
   color: var(--muted);
+  flex-shrink: 0;
+  margin-right: 24rpx;
 }
 
-.bill-total {
-  border-top: 1rpx solid #f0f0f0;
-  margin-top: 12rpx;
-  padding-top: 24rpx;
+.bill-value {
+  text-align: right;
+  flex: 1;
 }
 
 .bill-total .bill-label {
-  color: #333;
+  color: var(--text);
   font-weight: 600;
 }
 
@@ -144,13 +201,228 @@
   font-weight: 700;
 }
 
-/* 底部按钮 */
-.footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
-  background: #fff;
-  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.04);
+/* 优惠券 */
+.coupon-row {
+  display: flex;
+  align-items: center;
+}
+
+.coupon-icon {
+  font-size: 36rpx;
+  margin-right: 18rpx;
+}
+
+.coupon-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.coupon-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.coupon-sub {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+
+.coupon-right {
+  display: flex;
+  align-items: center;
+}
+
+.coupon-cut {
+  color: #fa5151;
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-right: 16rpx;
+}
+
+.coupon-off {
+  color: var(--muted);
+  font-size: 24rpx;
+  margin-right: 16rpx;
+}
+
+.checkbox {
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  border: 2rpx solid #d5d8dc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  color: transparent;
+}
+
+.checkbox.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+/* 支付方式 */
+.pay-item {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 20rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid transparent;
+  background: #fafbfc;
+  margin-bottom: 16rpx;
+}
+
+.pay-item:last-child {
+  margin-bottom: 0;
+}
+
+.pay-item.active {
+  border-color: var(--brand);
+  background: #f2fbf6;
+}
+
+.pay-icon {
+  font-size: 40rpx;
+  margin-right: 18rpx;
+}
+
+.pay-main {
+  flex: 1;
+}
+
+.pay-name {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.pay-sub {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+
+.pay-sub.danger {
+  color: #fa5151;
+}
+
+.radio {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 2rpx solid #d5d8dc;
+  box-sizing: border-box;
+}
+
+.radio.on {
+  border: 12rpx solid var(--brand);
+}
+
+.pay-summary {
+  font-size: 24rpx;
+  color: var(--text-2);
+  margin-bottom: 16rpx;
+  text-align: center;
+}
+
+.pay-amount {
+  color: #ff6f00;
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-left: 6rpx;
+}
+
+.pay-saved {
+  color: #fa5151;
+  font-size: 22rpx;
+  margin-left: 16rpx;
+}
+
+/* ---------------------------------------------------------- 支付成功 */
+
+.done-hero {
+  text-align: center;
+  padding: 70rpx 0 50rpx;
+  background: linear-gradient(165deg, #07c160, #06a557);
+  color: #fff;
+}
+
+.done-icon {
+  width: 110rpx;
+  height: 110rpx;
+  margin: 0 auto 24rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 4rpx solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 60rpx;
+  line-height: 104rpx;
+  animation: pop 0.4s ease;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.done-title {
+  font-size: 34rpx;
+  font-weight: 600;
+}
+
+.done-amount {
+  font-size: 66rpx;
+  font-weight: 700;
+  margin-top: 12rpx;
+}
+
+.done-sub {
+  font-size: 23rpx;
+  opacity: 0.88;
+  margin-top: 8rpx;
+}
+
+.done-grid {
+  display: flex;
+}
+
+.done-cell {
+  flex: 1;
+  text-align: center;
+}
+
+.done-cell-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.done-cell-label {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+.footer-double {
+  display: flex;
+  gap: 20rpx;
+}
+
+.footer-double .btn-ghost {
+  flex: 1;
+}
+
+.footer-double .btn-primary {
+  flex: 1.4;
 }

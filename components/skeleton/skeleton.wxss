@@ -1,0 +1,51 @@
+.skeleton-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin: 20rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(15, 34, 58, 0.05);
+}
+
+.sk {
+  background: linear-gradient(90deg, #eef0f2 25%, #f6f7f8 37%, #eef0f2 63%);
+  background-size: 400% 100%;
+  animation: sk-loading 1.2s ease infinite;
+  border-radius: 8rpx;
+}
+
+@keyframes sk-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.sk-title {
+  height: 34rpx;
+  width: 62%;
+  margin-bottom: 20rpx;
+}
+
+.sk-line {
+  height: 24rpx;
+  width: 88%;
+  margin-bottom: 14rpx;
+}
+
+.sk-line.short {
+  width: 46%;
+}
+
+.sk-footer {
+  display: flex;
+  margin-top: 22rpx;
+}
+
+.sk-chip {
+  height: 32rpx;
+  width: 120rpx;
+  margin-right: 16rpx;
+  border-radius: 999rpx;
+}

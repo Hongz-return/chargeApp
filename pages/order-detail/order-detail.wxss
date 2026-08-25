@@ -1,0 +1,179 @@
+.page {
+  padding-bottom: 220rpx;
+}
+
+.od-hero {
+  padding: 46rpx 32rpx 54rpx;
+  color: #fff;
+  background: linear-gradient(135deg, #07c160, #06a557);
+}
+
+.od-hero.unpaid {
+  background: linear-gradient(135deg, #ffa63d, #ff8a00);
+}
+
+.od-hero.charging {
+  background: linear-gradient(135deg, #13cd73, #06a557);
+}
+
+.od-hero.paid {
+  background: linear-gradient(135deg, #6d7b88, #55606b);
+}
+
+.od-status {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.od-desc {
+  font-size: 23rpx;
+  opacity: 0.9;
+  margin-top: 10rpx;
+}
+
+.od-amount {
+  font-size: 62rpx;
+  font-weight: 700;
+  margin-top: 22rpx;
+}
+
+/* --------------------------------------------------------------- 概况 */
+
+.od-grid {
+  display: flex;
+}
+
+.od-cell {
+  flex: 1;
+  text-align: center;
+  border-right: 1rpx solid var(--line);
+}
+
+.od-cell:last-child {
+  border-right: none;
+}
+
+.od-cell-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.od-cell-label {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+/* --------------------------------------------------------------- 账单 */
+
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 13rpx 0;
+  font-size: 26rpx;
+}
+
+.bill-label {
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-right: 24rpx;
+}
+
+.bill-value {
+  text-align: right;
+  flex: 1;
+}
+
+.bill-total .bill-label {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 28rpx;
+}
+
+.bill-total .bill-value {
+  color: #ff6f00;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------- 时间线 */
+
+.timeline {
+  padding-left: 10rpx;
+}
+
+.tl-item {
+  display: flex;
+  position: relative;
+  padding-bottom: 34rpx;
+}
+
+.tl-item:last-child {
+  padding-bottom: 0;
+}
+
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: 11rpx;
+  top: 24rpx;
+  bottom: 0;
+  width: 2rpx;
+  background: var(--line);
+}
+
+.tl-item:last-child::before {
+  display: none;
+}
+
+.tl-dot {
+  width: 24rpx;
+  height: 24rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 4rpx solid #d8dce0;
+  margin-top: 6rpx;
+  flex-shrink: 0;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.tl-item.done .tl-dot {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+.tl-main {
+  margin-left: 22rpx;
+}
+
+.tl-label {
+  font-size: 27rpx;
+}
+
+.tl-time {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+
+.tl-item.done .tl-label {
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------- 底部 */
+
+.footer-double {
+  display: flex;
+  gap: 20rpx;
+}
+
+.footer-double .btn-ghost {
+  flex: 1;
+}
+
+.footer-double .btn-primary {
+  flex: 1.6;
+}

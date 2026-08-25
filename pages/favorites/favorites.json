@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "我的收藏",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "station-card": "/components/station-card/station-card",
+    "empty": "/components/empty/empty",
+    "skeleton": "/components/skeleton/skeleton"
+  }
+}

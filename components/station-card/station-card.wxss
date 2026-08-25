@@ -1,0 +1,142 @@
+.station-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin: 20rpx 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(15, 34, 58, 0.05);
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+
+.station-card:active {
+  transform: scale(0.99);
+  opacity: 0.9;
+}
+
+.sc-head {
+  display: flex;
+  align-items: flex-start;
+}
+
+.sc-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  flex-shrink: 0;
+  background: #eef0f2;
+}
+
+.theme-green {
+  background: linear-gradient(135deg, #e6f9ee, #cdf1de);
+}
+
+.theme-blue {
+  background: linear-gradient(135deg, #e8f0ff, #d5e3ff);
+}
+
+.theme-orange {
+  background: linear-gradient(135deg, #fff2e0, #ffe3c2);
+}
+
+.theme-purple {
+  background: linear-gradient(135deg, #f0ebff, #e2d9ff);
+}
+
+.sc-title-wrap {
+  flex: 1;
+  min-width: 0;
+  margin: 0 16rpx;
+}
+
+.sc-name {
+  font-size: 31rpx;
+  font-weight: 600;
+  color: #1f2429;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sc-meta {
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #9aa0a6;
+}
+
+.sc-dot {
+  margin: 0 8rpx;
+}
+
+.sc-rating {
+  color: #ff8a00;
+}
+
+.sc-right {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.sc-fav {
+  font-size: 34rpx;
+  color: #c8ccd0;
+  line-height: 1;
+  padding: 4rpx 0 8rpx;
+}
+
+.sc-fav.on {
+  color: #fa5151;
+}
+
+.sc-distance {
+  font-size: 24rpx;
+  color: #9aa0a6;
+}
+
+.sc-address {
+  font-size: 24rpx;
+  color: #9aa0a6;
+  margin-top: 14rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sc-tags {
+  margin-top: 16rpx;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 8rpx;
+}
+
+.sc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid #f2f4f6;
+}
+
+.sc-price-detail {
+  display: block;
+  font-size: 20rpx;
+  color: #b6bbc0;
+  margin-top: 4rpx;
+}
+
+.sc-idle {
+  font-size: 24rpx;
+  color: #07c160;
+}
+
+.sc-idle-num {
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.sc-idle.none {
+  color: #9aa0a6;
+}

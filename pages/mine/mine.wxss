@@ -1,0 +1,244 @@
+.page {
+  padding-bottom: 60rpx;
+}
+
+/* ------------------------------------------------------------ 用户信息 */
+
+.profile {
+  background: linear-gradient(160deg, #07c160 0%, #06a557 62%, #f3f5f7 62%, #f3f5f7 100%);
+  padding: 30rpx 24rpx 0;
+}
+
+.profile-main {
+  display: flex;
+  align-items: center;
+  padding: 10rpx 8rpx 30rpx;
+}
+
+.avatar {
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+  border: 3rpx solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-size: 44rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-info {
+  flex: 1;
+  margin-left: 22rpx;
+  color: #fff;
+  min-width: 0;
+}
+
+.nickname {
+  font-size: 34rpx;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.level {
+  font-size: 20rpx;
+  font-weight: 400;
+  background: rgba(255, 255, 255, 0.26);
+  padding: 3rpx 14rpx;
+  border-radius: 999rpx;
+  margin-left: 14rpx;
+}
+
+.phone {
+  font-size: 23rpx;
+  opacity: 0.88;
+  margin-top: 10rpx;
+}
+
+.plate {
+  flex-shrink: 0;
+  text-align: right;
+  color: #fff;
+}
+
+.plate-no {
+  display: block;
+  font-size: 24rpx;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 8rpx 18rpx;
+  border-radius: 10rpx;
+}
+
+.plate-edit {
+  display: block;
+  font-size: 20rpx;
+  opacity: 0.8;
+  margin-top: 8rpx;
+}
+
+/* --------------------------------------------------------------- 钱包 */
+
+.wallet-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx 24rpx;
+  box-shadow: 0 6rpx 20rpx rgba(15, 34, 58, 0.08);
+}
+
+.wallet-left {
+  flex: 1;
+}
+
+.wallet-label {
+  font-size: 22rpx;
+  color: var(--muted);
+}
+
+.wallet-balance {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #ff6f00;
+  margin-top: 6rpx;
+}
+
+.wallet-right {
+  display: flex;
+  align-items: center;
+}
+
+.wallet-cell {
+  text-align: center;
+  padding: 0 24rpx;
+}
+
+.wallet-cell-value {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.wallet-cell-label {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 4rpx;
+}
+
+.recharge-btn {
+  margin-left: 12rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 24rpx;
+  padding: 12rpx 28rpx;
+  border-radius: 999rpx;
+}
+
+.recharge-btn:active {
+  opacity: 0.85;
+}
+
+/* --------------------------------------------------------------- 统计 */
+
+.stat-grid {
+  display: flex;
+}
+
+.stat-cell {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-value.warn {
+  color: #ff6f00;
+}
+
+.stat-label {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+/* ------------------------------------------------------------- 快捷入口 */
+
+.quick-grid {
+  display: flex;
+}
+
+.quick-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quick-item:active {
+  opacity: 0.7;
+}
+
+.quick-icon {
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38rpx;
+}
+
+.bg-green {
+  background: #e8f8ee;
+}
+
+.bg-orange {
+  background: #fff2e0;
+}
+
+.bg-red {
+  background: #ffecec;
+  color: #fa5151;
+}
+
+.bg-blue {
+  background: #e8f0ff;
+}
+
+.quick-label {
+  font-size: 23rpx;
+  color: var(--text-2);
+  margin-top: 14rpx;
+  position: relative;
+}
+
+.quick-dot {
+  position: absolute;
+  right: -14rpx;
+  top: 2rpx;
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #fa5151;
+}
+
+/* --------------------------------------------------------------- 其它 */
+
+.danger-row .row-label {
+  color: #fa5151;
+}
+
+.footer-note {
+  text-align: center;
+  font-size: 21rpx;
+  color: #b6bbc0;
+  padding: 20rpx 40rpx 60rpx;
+  line-height: 1.7;
+}

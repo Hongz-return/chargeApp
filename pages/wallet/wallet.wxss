@@ -1,0 +1,128 @@
+.page {
+  padding-bottom: 220rpx;
+}
+
+.balance-card {
+  background: linear-gradient(135deg, #07c160, #06a557);
+  color: #fff;
+  padding: 48rpx 32rpx 54rpx;
+}
+
+.balance-label {
+  font-size: 23rpx;
+  opacity: 0.9;
+}
+
+.balance-value {
+  font-size: 76rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-top: 8rpx;
+}
+
+.balance-tip {
+  font-size: 21rpx;
+  opacity: 0.82;
+  margin-top: 10rpx;
+}
+
+/* --------------------------------------------------------------- 金额 */
+
+.amount-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+.amount-item {
+  width: calc((100% - 36rpx) / 3);
+  height: 108rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #e9ebee;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfc;
+}
+
+.amount-item.active {
+  border-color: var(--brand);
+  background: #f2fbf6;
+}
+
+.amount-num {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.amount-unit {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-left: 6rpx;
+}
+
+.amount-item.custom {
+  padding: 0 16rpx;
+}
+
+.amount-input {
+  width: 100%;
+  text-align: center;
+  font-size: 28rpx;
+}
+
+.amount-placeholder {
+  color: #b6bbc0;
+  font-size: 24rpx;
+}
+
+/* --------------------------------------------------------------- 流水 */
+
+.tx-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.tx-row:last-child {
+  border-bottom: none;
+}
+
+.tx-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.tx-type {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.tx-note {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 6rpx;
+}
+
+.tx-time {
+  font-size: 21rpx;
+  color: #b6bbc0;
+  margin-top: 4rpx;
+}
+
+.tx-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-left: 20rpx;
+}
+
+.tx-amount.in {
+  color: var(--brand);
+}
+
+.tx-amount.out {
+  color: #ff6f00;
+}

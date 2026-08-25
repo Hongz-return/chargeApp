@@ -1,5 +1,11 @@
 {
   "navigationBarTitleText": "附近充电桩",
   "enablePullDownRefresh": true,
-  "backgroundTextStyle": "dark"
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "station-card": "/components/station-card/station-card",
+    "empty": "/components/empty/empty",
+    "skeleton": "/components/skeleton/skeleton",
+    "charging-bar": "/components/charging-bar/charging-bar"
+  }
 }

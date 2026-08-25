@@ -1,0 +1,99 @@
+<view class="page">
+  <!-- 汇总 -->
+  <view class="summary">
+    <view class="summary-cell">
+      <view class="summary-value">{{stats.orderCount}}</view>
+      <view class="summary-label">累计订单</view>
+    </view>
+    <view class="summary-cell">
+      <view class="summary-value">{{stats.totalEnergy}}</view>
+      <view class="summary-label">累计充电（度）</view>
+    </view>
+    <view class="summary-cell">
+      <view class="summary-value">¥{{stats.totalCost}}</view>
+      <view class="summary-label">累计消费</view>
+    </view>
+  </view>
+
+  <!-- 状态筛选 -->
+  <view class="tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="key"
+      class="tab {{activeTab === item.key ? 'active' : ''}}"
+      data-key="{{item.key}}"
+      bindtap="onTabTap"
+    >
+      <text>{{item.label}}</text>
+      <text wx:if="{{counts[item.key] > 0}}" class="tab-count">{{counts[item.key]}}</text>
+    </view>
+  </view>
+
+  <skeleton wx:if="{{loading}}" count="{{3}}" />
+
+  <block wx:else>
+    <view
+      wx:for="{{orders}}"
+      wx:key="id"
+      class="card order-card"
+      data-id="{{item.id}}"
+      bindtap="onOrderTap"
+    >
+      <view class="oc-head">
+        <view class="oc-station ellipsis">{{item.stationName}}</view>
+        <view class="oc-status {{item.statusClass}}">{{item.statusText}}</view>
+      </view>
+
+      <view class="oc-meta">{{item.pileName}} 号枪 · {{item.typeText}} {{item.powerKw}}kW · {{item.startTimeText}}</view>
+
+      <view class="oc-body">
+        <view class="oc-cell">
+          <view class="oc-value">{{item.energyText}}</view>
+          <view class="oc-label">电量（度）</view>
+        </view>
+        <view class="oc-cell">
+          <view class="oc-value">{{item.durationText}}</view>
+          <view class="oc-label">时长</view>
+        </view>
+        <view class="oc-cell">
+          <view class="oc-value money">¥{{item.amountText}}</view>
+          <view class="oc-label">{{item.status === 'paid' ? '实付' : '预估'}}</view>
+        </view>
+      </view>
+
+      <view class="oc-footer">
+        <view class="oc-no">{{item.orderNo}}</view>
+        <view class="oc-actions">
+          <view
+            wx:if="{{item.status === 'paid'}}"
+            class="btn-mini ghost"
+            data-id="{{item.id}}"
+            catchtap="onDelete"
+          >删除</view>
+          <view
+            class="btn-mini {{item.status === 'unpaid' ? 'pay' : ''}}"
+            data-id="{{item.id}}"
+            data-status="{{item.status}}"
+            data-station-id="{{item.stationId}}"
+            catchtap="onPrimaryAction"
+          >
+            {{item.status === 'charging' ? '查看充电' : (item.status === 'unpaid' ? '去支付' : '再来一次')}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <empty
+      wx:if="{{orders.length === 0}}"
+      icon="🧾"
+      text="{{activeTab === 'all' ? '还没有充电订单' : '该分类下暂无订单'}}"
+      sub="完成一次充电后，订单会自动保存在本地"
+      action-text="去找充电桩"
+      bind:action="onGoCharge"
+    />
+
+    <view wx:if="{{orders.length > 0}}" class="list-end">— 订单数据保存在本机 —</view>
+  </block>
+
+  <charging-bar bottom="{{40}}" />
+</view>

@@ -1,81 +1,214 @@
-<view class="page">
-  <!-- 充电进行中 -->
+<view class="page page-with-footer">
+  <!-- ------------------------------------------------ 阶段一：充电中 -->
   <block wx:if="{{phase === 'charging'}}">
-    <view class="ring-wrap">
-      <view class="ring">
+    <view class="charge-hero">
+      <view class="ring" style="background: conic-gradient(#13cd73 {{socDeg}}deg, rgba(255,255,255,0.28) {{socDeg}}deg)">
         <view class="ring-inner">
-          <view class="energy-num">{{energyKwh}}</view>
-          <view class="energy-unit">度（kWh）</view>
+          <view class="soc-num">{{soc}}<text class="soc-unit">%</text></view>
+          <view class="soc-label">当前电量</view>
+          <view class="energy-line">已充 {{energyKwh}} 度</view>
         </view>
       </view>
-      <view class="charging-hint">充电中，请勿拔枪</view>
+      <view class="charging-hint">
+        <text class="hint-dot"></text>
+        充电中，请勿拔枪
+      </view>
     </view>
 
-    <view class="card">
+    <view class="card stat-card">
       <view class="stat-row">
         <view class="stat">
           <view class="stat-value">{{duration}}</view>
           <view class="stat-label">已充时长</view>
         </view>
         <view class="stat">
-          <view class="stat-value">{{pile.powerKw}}kW</view>
-          <view class="stat-label">当前功率</view>
+          <view class="stat-value">{{currentPowerKw}}<text class="stat-suffix">kW</text></view>
+          <view class="stat-label">实时功率</view>
         </view>
         <view class="stat">
           <view class="stat-value stat-cost">¥{{totalCost}}</view>
-          <view class="stat-label">预计费用</view>
+          <view class="stat-label">当前费用</view>
         </view>
-      </view>
-      <view class="session-info">
-        {{station.name}} · {{pile.name}} 号枪
       </view>
     </view>
 
-    <view class="footer">
+    <view class="card">
+      <view class="section-title">充电信息</view>
+      <view class="info-row">
+        <text class="info-label">充电站</text>
+        <text class="info-value">{{session.stationName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">充电枪</text>
+        <text class="info-value">{{session.pileName}} 号枪 · {{session.powerKw}}kW</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">开始时间</text>
+        <text class="info-value">{{startTimeText}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">计费单价</text>
+        <text class="info-value">电费 ¥{{session.pricePerKwh}}/度 + 服务费 ¥{{session.serviceFeePerKwh}}/度</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">订单号</text>
+        <text class="info-value">{{session.orderNo}}</text>
+      </view>
+    </view>
+
+    <view class="tip-card">
+      演示说明：为方便观察，充电按 <text class="tip-strong">60 倍速</text> 模拟（1 秒 = 1 分钟），
+      SOC 达到 80% 后自动进入涓流阶段，充满后自动结束并进入结算。
+    </view>
+
+    <view class="footer-bar">
       <view class="btn-danger" bindtap="onStopCharging">结束充电</view>
     </view>
   </block>
 
-  <!-- 充电完成账单 -->
-  <block wx:if="{{phase === 'finished'}}">
-    <view class="done-icon-wrap">
-      <view class="done-icon">✓</view>
-      <view class="done-title">充电完成</view>
+  <!-- ------------------------------------------------ 阶段二：订单结算 -->
+  <block wx:elif="{{phase === 'settle'}}">
+    <view class="settle-hero">
+      <view class="settle-label">待支付金额（元）</view>
+      <view class="settle-amount">{{payAmount}}</view>
+      <view class="settle-order">订单号 {{order.orderNo}}</view>
     </view>
 
     <view class="card">
+      <view class="section-title">充电明细</view>
       <view class="bill-row">
         <text class="bill-label">充电站</text>
-        <text class="bill-value">{{bill.stationName}}</text>
+        <text class="bill-value">{{order.stationName}}</text>
       </view>
       <view class="bill-row">
         <text class="bill-label">充电枪</text>
-        <text class="bill-value">{{bill.pileName}} 号枪</text>
+        <text class="bill-value">{{order.pileName}} 号枪 · {{order.powerKw}}kW</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">充电时段</text>
+        <text class="bill-value">{{order.startTimeText}} 起</text>
       </view>
       <view class="bill-row">
         <text class="bill-label">充电时长</text>
-        <text class="bill-value">{{bill.duration}}</text>
+        <text class="bill-value">{{order.durationText}}</text>
       </view>
       <view class="bill-row">
         <text class="bill-label">充电电量</text>
-        <text class="bill-value">{{bill.energyKwh}} 度</text>
+        <text class="bill-value">{{order.energyText}} 度（SOC {{order.startSoc}}% → {{order.endSoc}}%）</text>
       </view>
+      <view class="divider"></view>
       <view class="bill-row">
         <text class="bill-label">电费</text>
-        <text class="bill-value">¥{{bill.electricityCost}}</text>
+        <text class="bill-value">¥{{order.electricityText}}</text>
       </view>
       <view class="bill-row">
         <text class="bill-label">服务费</text>
-        <text class="bill-value">¥{{bill.serviceCost}}</text>
+        <text class="bill-value">¥{{order.serviceText}}</text>
       </view>
-      <view class="bill-row bill-total">
-        <text class="bill-label">合计</text>
-        <text class="bill-value">¥{{bill.totalCost}}</text>
+      <view class="bill-row">
+        <text class="bill-label">订单金额</text>
+        <text class="bill-value">¥{{order.totalText}}</text>
       </view>
     </view>
 
-    <view class="footer">
-      <view class="btn-primary" bindtap="onDone">完成，返回首页</view>
+    <!-- 优惠券 -->
+    <view class="card">
+      <view class="coupon-row" bindtap="onToggleCoupon">
+        <text class="coupon-icon">🎟</text>
+        <view class="coupon-main">
+          <view wx:if="{{coupon}}" class="coupon-title">{{coupon.title}}</view>
+          <view wx:else class="coupon-title text-muted">暂无可用优惠券</view>
+          <view wx:if="{{coupon}}" class="coupon-sub">满 {{coupon.threshold}} 减 {{coupon.amount}} · 有效期至 {{coupon.expireAt}}</view>
+        </view>
+        <view class="coupon-right">
+          <text wx:if="{{coupon && useCoupon}}" class="coupon-cut">-¥{{couponAmount}}</text>
+          <text wx:elif="{{coupon}}" class="coupon-off">未使用</text>
+          <text class="checkbox {{coupon && useCoupon ? 'on' : ''}}">{{coupon && useCoupon ? '✓' : ''}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 支付方式 -->
+    <view class="card">
+      <view class="section-title">支付方式</view>
+      <view class="pay-item {{payMethod === 'balance' ? 'active' : ''}}" data-method="balance" bindtap="onPayMethodTap">
+        <text class="pay-icon">💰</text>
+        <view class="pay-main">
+          <view class="pay-name">账户余额</view>
+          <view class="pay-sub {{balanceEnough ? '' : 'danger'}}">
+            可用 ¥{{balance}}{{balanceEnough ? '' : '（余额不足）'}}
+          </view>
+        </view>
+        <text class="radio {{payMethod === 'balance' ? 'on' : ''}}"></text>
+      </view>
+      <view class="pay-item {{payMethod === 'wechat' ? 'active' : ''}}" data-method="wechat" bindtap="onPayMethodTap">
+        <text class="pay-icon">💚</text>
+        <view class="pay-main">
+          <view class="pay-name">微信支付</view>
+          <view class="pay-sub">演示环境模拟支付，不会真实扣款</view>
+        </view>
+        <text class="radio {{payMethod === 'wechat' ? 'on' : ''}}"></text>
+      </view>
+    </view>
+
+    <view class="footer-bar">
+      <view class="pay-summary">
+        实付 <text class="pay-amount">¥{{payAmount}}</text>
+        <text wx:if="{{couponAmount !== '0.00'}}" class="pay-saved">已优惠 ¥{{couponAmount}}</text>
+      </view>
+      <view class="btn-primary {{paying ? 'disabled' : ''}}" bindtap="onPay">
+        {{paying ? '支付中…' : '确认支付'}}
+      </view>
+    </view>
+  </block>
+
+  <!-- ------------------------------------------------ 阶段三：支付成功 -->
+  <block wx:else>
+    <view class="done-hero">
+      <view class="done-icon">✓</view>
+      <view class="done-title">支付成功</view>
+      <view class="done-amount">¥{{order.payText}}</view>
+      <view class="done-sub">{{order.payMethod}} · {{order.orderNo}}</view>
+    </view>
+
+    <view class="card">
+      <view class="section-title">本次充电</view>
+      <view class="done-grid">
+        <view class="done-cell">
+          <view class="done-cell-value">{{order.energyText}}</view>
+          <view class="done-cell-label">充电量（度）</view>
+        </view>
+        <view class="done-cell">
+          <view class="done-cell-value">{{order.durationText}}</view>
+          <view class="done-cell-label">充电时长</view>
+        </view>
+        <view class="done-cell">
+          <view class="done-cell-value">{{order.endSoc}}%</view>
+          <view class="done-cell-label">结束电量</view>
+        </view>
+      </view>
+      <view class="divider"></view>
+      <view class="bill-row">
+        <text class="bill-label">充电站</text>
+        <text class="bill-value">{{order.stationName}} · {{order.pileName}} 号枪</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">订单金额</text>
+        <text class="bill-value">¥{{order.totalText}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">优惠减免</text>
+        <text class="bill-value">-¥{{order.couponText}}</text>
+      </view>
+      <view class="bill-row bill-total">
+        <text class="bill-label">实付金额</text>
+        <text class="bill-value">¥{{order.payText}}</text>
+      </view>
+    </view>
+
+    <view class="footer-bar footer-double">
+      <view class="btn-ghost" bindtap="onViewOrder">查看订单</view>
+      <view class="btn-primary" bindtap="onBackHome">返回首页</view>
     </view>
   </block>
 </view>

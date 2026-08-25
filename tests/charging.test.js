@@ -1,0 +1,164 @@
+const test = require('node:test');
+const assert = require('node:assert');
+
+const charging = require('../utils/charging');
+const storage = require('../utils/storage');
+const mock = require('../utils/mock');
+
+const T0 = new Date(2026, 7, 25, 10, 0, 0).getTime();
+const STATION = 'st-001';
+const PILE = 'p-001-a1'; // 120kW 快充，初始 idle
+
+test.beforeEach(() => storage.resetAll());
+
+test('开始充电会占用充电枪并创建进行中订单', () => {
+  const res = charging.startCharging(STATION, PILE, { now: T0 });
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.session.powerKw, 120);
+  assert.strictEqual(mock.getPile(STATION, PILE).status, 'busy');
+
+  const order = storage.getOrderById(res.session.orderId);
+  assert.strictEqual(order.status, 'charging');
+  assert.strictEqual(order.stationId, STATION);
+  assert.strictEqual(storage.getSession().orderId, res.session.orderId);
+});
+
+test('已有会话时不能重复开单，占用中的枪也不能再次启动', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+
+  assert.strictEqual(charging.startCharging('st-002', 'p-002-a3', { now: T0 }).reason, 'session-exists');
+
+  storage.clearSession();
+  assert.strictEqual(charging.startCharging(STATION, PILE, { now: T0 }).reason, 'pile-busy');
+  assert.strictEqual(charging.startCharging('st-999', PILE, { now: T0 }).reason, 'station-not-found');
+  assert.strictEqual(charging.startCharging(STATION, 'p-x', { now: T0 }).reason, 'pile-not-found');
+});
+
+test('恒功率阶段按 功率×时长 计算电量与费用', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+
+  // 10 秒真实时间 = 600 秒模拟时间，仍处于 80% 之前的恒功率阶段
+  const p = charging.computeProgress(session, T0 + 10 * 1000);
+  assert.strictEqual(+p.simSeconds.toFixed(0), 600);
+  assert.strictEqual(+p.energyKwh.toFixed(2), 20); // 120kW * (600/3600)h
+  assert.strictEqual(+p.soc.toFixed(2), 65.33); // 32% + 20/60
+  assert.strictEqual(p.currentPowerKw, 120);
+  assert.strictEqual(+p.electricityCost.toFixed(2), 25); // 20 * 1.25
+  assert.strictEqual(+p.serviceCost.toFixed(2), 8); // 20 * 0.4
+  assert.strictEqual(+p.totalCost.toFixed(2), 33);
+  assert.strictEqual(p.full, false);
+});
+
+test('SOC 超过 80% 后功率下降，充满后停止累加', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+
+  // 28.8 度即到 80%，需要 864 模拟秒（14.4 真实秒）
+  const taper = charging.computeProgress(session, T0 + 15 * 1000);
+  assert.ok(taper.soc > 80);
+  assert.strictEqual(taper.currentPowerKw, 42); // 120 * 0.35
+
+  const full = charging.computeProgress(session, T0 + 600 * 1000);
+  assert.strictEqual(full.full, true);
+  assert.strictEqual(full.soc, 100);
+  assert.strictEqual(+full.energyKwh.toFixed(2), 40.8); // 60 * (100-32)%
+  assert.strictEqual(full.currentPowerKw, 0);
+});
+
+test('结束充电释放枪位并生成待支付订单', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  assert.strictEqual(order.status, 'unpaid');
+  assert.strictEqual(order.id, session.orderId);
+  assert.strictEqual(order.energyKwh, 20);
+  assert.strictEqual(order.electricityCost, 25);
+  assert.strictEqual(order.serviceCost, 8);
+  assert.strictEqual(order.totalCost, 33);
+  assert.strictEqual(order.payAmount, 33);
+  assert.strictEqual(order.durationSec, 600);
+  assert.strictEqual(order.endSoc, 65.3);
+
+  assert.strictEqual(storage.getSession(), null);
+  assert.strictEqual(mock.getPile(STATION, PILE).status, 'idle', '充电结束后枪位恢复空闲');
+});
+
+test('没有会话时结束充电返回 null', () => {
+  assert.strictEqual(charging.stopCharging(T0), null);
+});
+
+test('余额支付会扣款、核销优惠券并写入已完成订单', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  const coupon = storage.pickBestCoupon(order.totalCost);
+  assert.strictEqual(coupon.id, 'cp-01'); // 满 20 减 5
+
+  const balanceBefore = storage.getWallet().balance;
+  const res = charging.payOrder(order.id, 'balance', coupon);
+
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.order.status, 'paid');
+  assert.strictEqual(res.order.couponAmount, 5);
+  assert.strictEqual(res.order.payAmount, 28);
+  assert.strictEqual(res.order.payMethod, '余额支付');
+  assert.strictEqual(storage.getWallet().balance, +(balanceBefore - 28).toFixed(2));
+  assert.strictEqual(storage.listCoupons().find((c) => c.id === 'cp-01').used, true);
+
+  // 重复支付被拒绝
+  assert.strictEqual(charging.payOrder(order.id, 'balance', null).reason, 'already-paid');
+});
+
+test('微信支付不扣余额，仅记录流水', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  const balanceBefore = storage.getWallet().balance;
+  const res = charging.payOrder(order.id, 'wechat', null);
+
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.order.payAmount, 33);
+  assert.strictEqual(res.order.payMethod, '微信支付');
+  assert.strictEqual(storage.getWallet().balance, balanceBefore);
+  assert.strictEqual(storage.getWallet().transactions[0].type, 'wechat');
+});
+
+test('余额不足时支付失败且订单保持待支付', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  storage.saveWallet({ balance: 1, transactions: [] });
+  const res = charging.payOrder(order.id, 'balance', null);
+
+  assert.strictEqual(res.ok, false);
+  assert.strictEqual(res.reason, 'insufficient');
+  assert.strictEqual(storage.getOrderById(order.id).status, 'unpaid');
+  assert.strictEqual(storage.getWallet().balance, 1);
+});
+
+test('进行中的订单不能直接支付，未知订单返回错误', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  assert.strictEqual(charging.payOrder(session.orderId, 'balance', null).reason, 'still-charging');
+  assert.strictEqual(charging.payOrder('od-not-exist', 'balance', null).reason, 'order-not-found');
+});
+
+test('完整闭环：充电 -> 结算 -> 支付 -> 可再次充电', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const first = charging.stopCharging(T0 + 10 * 1000);
+  charging.payOrder(first.id, 'wechat', null);
+
+  const second = charging.startCharging(STATION, PILE, { now: T0 + 60 * 1000 });
+  assert.strictEqual(second.ok, true, '上一单结清后可以再次开单');
+  assert.notStrictEqual(second.session.orderId, first.id);
+  assert.strictEqual(storage.listOrders().length, 2);
+  assert.strictEqual(storage.getStats().paidCount, 1);
+});
+
+test('toViewModel 输出可直接渲染的字符串', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  const vm = charging.toViewModel(session, T0 + 10 * 1000);
+  assert.strictEqual(vm.duration, '00:10:00');
+  assert.strictEqual(vm.energyKwh, '20.00');
+  assert.strictEqual(vm.totalCost, '33.00');
+  assert.strictEqual(vm.soc, 65);
+  assert.strictEqual(vm.full, false);
+});
