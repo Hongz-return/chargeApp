@@ -434,6 +434,103 @@ test('收藏页与优惠券页', () => {
   coupons.onGoCharge();
 });
 
+test('发票页：候选订单、抬头校验与提交后写入开票记录', async () => {
+  const page = env.loadPage('pages/invoice/invoice.js');
+  // 从订单详情带 orderId 进来，该订单应被预选
+  page.onLoad({ orderId: 'od-demo-1' });
+
+  assert.deepStrictEqual(page.data.candidates.map((o) => o.id), ['od-demo-1', 'od-demo-2']);
+  assert.deepStrictEqual(page.data.selectedIds, ['od-demo-1']);
+  assert.strictEqual(page.data.candidates[0].selected, true);
+  assert.strictEqual(page.data.candidates[1].selected, false);
+  assert.strictEqual(page.data.totalAmount, '63.36');
+  assert.strictEqual(page.data.allSelected, false);
+
+  // 全选 / 取消全选
+  page.onSelectAll();
+  assert.strictEqual(page.data.allSelected, true);
+  assert.strictEqual(page.data.totalAmount, '102.11');
+  page.onSelectAll();
+  assert.strictEqual(page.data.selectedCount, 0);
+  assert.strictEqual(page.data.totalAmount, '0.00');
+
+  // 一笔都没选时提交被拦下
+  page.onSubmit();
+  assert.strictEqual(env.calls.toast.pop(), '请至少选择一笔订单');
+
+  page.onOrderTap({ currentTarget: { dataset: { id: 'od-demo-2' } } });
+  assert.deepStrictEqual(page.data.selectedIds, ['od-demo-2']);
+
+  // 邮箱非法
+  page.onEmailInput({ detail: { value: '不是邮箱' } });
+  page.onSubmit();
+  assert.strictEqual(env.calls.toast.pop(), '请填写有效的接收邮箱');
+  page.onEmailInput({ detail: { value: 'demo@example.com' } });
+
+  // 企业抬头缺税号
+  page.onTypeTap({ currentTarget: { dataset: { type: 'company' } } });
+  page.onTaxNoInput({ detail: { value: '123' } });
+  page.onSubmit();
+  assert.strictEqual(env.calls.toast.pop(), '请填写 15-20 位纳税人识别号');
+
+  page.onTaxNoInput({ detail: { value: '91440300MA5EXAMPLE1' } });
+  page.onTitleInput({ detail: { value: '  某某科技有限公司  ' } });
+  page.onSubmit();
+  await wait(900);
+
+  assert.strictEqual(env.calls.toast.pop(), '已提交开票申请');
+  assert.strictEqual(page.data.activeTab, 'history', '提交后切到开票记录');
+
+  const invoices = storage.listInvoices();
+  assert.strictEqual(invoices.length, 1);
+  assert.strictEqual(invoices[0].orderId, 'od-demo-2');
+  assert.strictEqual(invoices[0].title, '某某科技有限公司', '抬头去掉首尾空格');
+  assert.strictEqual(invoices[0].taxNo, '91440300MA5EXAMPLE1');
+
+  // 已开票的订单不再出现在候选里
+  assert.deepStrictEqual(page.data.candidates.map((o) => o.id), ['od-demo-1']);
+  assert.strictEqual(page.data.invoices[0].typeText, '企业单位');
+  assert.strictEqual(page.data.invoices[0].amountText, '38.75');
+
+  page.onTabTap({ currentTarget: { dataset: { key: 'apply' } } });
+  assert.strictEqual(page.data.activeTab, 'apply');
+  page.onCopyInvoiceNo({ currentTarget: { dataset: { no: 'CD20260805084501002' } } });
+  assert.strictEqual(env.calls.clipboard.pop(), 'CD20260805084501002');
+  page.onGoOrders();
+  assert.strictEqual(env.calls.switchTab.pop(), '/pages/orders/orders');
+});
+
+test('演示说明页：声明条目、本机数据清单与客服信息', () => {
+  const page = env.loadPage('pages/about/about.js');
+  page.onLoad();
+
+  assert.ok(page.data.statements.length >= 5);
+  assert.ok(page.data.limits.length >= 5);
+  assert.ok(page.data.version.length > 0);
+
+  // 列出的 Key 必须都是 storage 真实在用的，避免声明与实现脱节
+  const declared = page.data.storageKeys.map((k) => k.key);
+  const actual = Object.keys(storage.KEYS).map((name) => storage.KEYS[name]);
+  assert.deepStrictEqual(declared.slice().sort(), actual.slice().sort());
+  assert.ok(page.data.storageKeys.every((k) => k.desc.length > 0));
+
+  page.onCopyHotline();
+  assert.strictEqual(env.calls.clipboard.pop(), page.data.support.hotline);
+  assert.ok(page.onShareAppMessage().path.length > 0);
+  assert.ok(page.onShareTimeline().title.length > 0);
+});
+
+test('断网时给出「可离线使用」提示而不是加载失败', () => {
+  assert.strictEqual(env.calls.networkListeners.length, 1, 'app 启动时注册了网络监听');
+
+  const notify = env.calls.networkListeners[0];
+  notify({ isConnected: true });
+  assert.strictEqual(env.calls.toast.length, 0, '有网络时不打扰用户');
+
+  notify({ isConnected: false });
+  assert.strictEqual(env.calls.toast.pop(), '当前无网络，演示版可离线使用');
+});
+
 /* ----------------------------------------------------------------- 组件 */
 
 test('charging-bar 组件在有会话时展示实时数据', async () => {
