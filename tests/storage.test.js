@@ -138,3 +138,85 @@ test('resetAll 清空全部演示数据', () => {
   assert.strictEqual(storage.listFavorites().length, 0);
   assert.strictEqual(storage.getWallet().transactions.length, 0);
 });
+
+/* ------------------------------------------------------------ 发票记录 */
+
+test('开票记录按订单去重并倒序返回', () => {
+  assert.deepStrictEqual(storage.listInvoices(), []);
+
+  const first = storage.saveInvoice({
+    orderId: 'od-1',
+    orderNo: 'CD001',
+    amount: 63.36,
+    type: 'personal',
+    title: '张三',
+    email: 'a@example.com'
+  });
+  assert.ok(first.id);
+  assert.strictEqual(first.status, 'issued');
+  assert.ok(first.createdAt > 0);
+
+  storage.saveInvoice({ orderId: 'od-2', orderNo: 'CD002', amount: 10, type: 'company', title: '某公司' });
+  assert.strictEqual(storage.listInvoices().length, 2);
+
+  // 同一订单再次提交只保留最新一条
+  storage.saveInvoice({ orderId: 'od-1', orderNo: 'CD001', amount: 63.36, type: 'company', title: '新抬头' });
+  assert.strictEqual(storage.listInvoices().length, 2);
+  assert.strictEqual(storage.getInvoiceByOrderId('od-1').title, '新抬头');
+
+  assert.strictEqual(storage.getInvoiceByOrderId('od-none'), null);
+  assert.strictEqual(storage.saveInvoice({ orderNo: '缺少 orderId' }), null);
+});
+
+/* -------------------------------------------------------- 损坏数据兜底 */
+
+test('storage 被写入非法结构时读接口返回可用默认值而不抛错', () => {
+  storage.write(storage.KEYS.ORDERS, 'not-an-array');
+  storage.write(storage.KEYS.WALLET, 12345);
+  storage.write(storage.KEYS.COUPONS, { broken: true });
+  storage.write(storage.KEYS.FAVORITES, 'st-001');
+  storage.write(storage.KEYS.PILE_STATUS, ['wrong', 'shape']);
+  storage.write(storage.KEYS.INVOICES, 'nope');
+
+  assert.deepStrictEqual(storage.listOrders(), []);
+  assert.deepStrictEqual(storage.listFavorites(), []);
+  assert.deepStrictEqual(storage.getPileStatusMap(), {});
+  assert.deepStrictEqual(storage.listInvoices(), []);
+  assert.deepStrictEqual(storage.getStats(), {
+    orderCount: 0,
+    paidCount: 0,
+    unpaidCount: 0,
+    totalEnergy: 0,
+    totalCost: 0
+  });
+
+  // 钱包结构不可用时重建默认值，之后可以正常充值
+  const wallet = storage.getWallet();
+  assert.ok(wallet.balance > 0);
+  assert.deepStrictEqual(wallet.transactions, []);
+  assert.strictEqual(storage.recharge(50).balance, +(wallet.balance + 50).toFixed(2));
+
+  // 优惠券结构不可用时重建默认券
+  assert.ok(storage.listCoupons().length >= 3);
+});
+
+test('订单/优惠券/流水中的脏数据会被过滤掉', () => {
+  storage.write(storage.KEYS.ORDERS, [
+    null,
+    'string',
+    { noId: true },
+    { id: 'ok', status: 'paid', startTime: 2, energyKwh: 3, payAmount: 4 }
+  ]);
+  const orders = storage.listOrders();
+  assert.strictEqual(orders.length, 1);
+  assert.strictEqual(orders[0].id, 'ok');
+  assert.strictEqual(storage.getStats().totalCost, 4);
+
+  storage.write(storage.KEYS.COUPONS, [null, { id: 'bad' }, { id: 'good', amount: 5, threshold: 0 }]);
+  assert.deepStrictEqual(storage.listCoupons().map((c) => c.id), ['good']);
+
+  storage.write(storage.KEYS.WALLET, { balance: Number.NaN, transactions: [null, { amount: 'x' }, { amount: 3 }] });
+  const wallet = storage.getWallet();
+  assert.strictEqual(wallet.balance, 0);
+  assert.strictEqual(wallet.transactions.length, 1);
+});

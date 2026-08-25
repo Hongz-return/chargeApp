@@ -162,3 +162,34 @@ test('toViewModel 输出可直接渲染的字符串', () => {
   assert.strictEqual(vm.soc, 65);
   assert.strictEqual(vm.full, false);
 });
+
+test('重复支付同一订单不会重复扣款', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+  const before = storage.getWallet().balance;
+
+  const first = charging.payOrder(order.id, 'balance', null);
+  assert.strictEqual(first.ok, true);
+  const afterFirst = storage.getWallet().balance;
+  assert.strictEqual(afterFirst, +(before - order.totalCost).toFixed(2));
+
+  const second = charging.payOrder(order.id, 'balance', null);
+  assert.strictEqual(second.ok, false);
+  assert.strictEqual(second.reason, 'already-paid');
+  assert.strictEqual(storage.getWallet().balance, afterFirst, '第二次支付不应再扣款');
+  assert.strictEqual(storage.getStats().paidCount, 1);
+  assert.strictEqual(storage.getWallet().transactions.length, 1);
+});
+
+test('优惠券只在支付成功时核销一次', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+  const coupon = storage.pickBestCoupon(order.totalCost);
+
+  charging.payOrder(order.id, 'balance', coupon);
+  assert.strictEqual(storage.listCoupons().find((c) => c.id === coupon.id).used, true);
+
+  // 再次尝试支付被 already-paid 拦住，不会再核销别的券
+  charging.payOrder(order.id, 'balance', storage.pickBestCoupon(order.totalCost));
+  assert.strictEqual(storage.listCoupons().filter((c) => c.used).length, 1);
+});
