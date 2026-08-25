@@ -690,8 +690,10 @@ test('发票页：候选订单、抬头校验与提交后写入开票记录', as
 
   page.onTabTap({ currentTarget: { dataset: { key: 'apply' } } });
   assert.strictEqual(page.data.activeTab, 'apply');
-  page.onCopyInvoiceNo({ currentTarget: { dataset: { no: 'CD20260805084501002' } } });
-  assert.strictEqual(env.calls.clipboard.pop(), 'CD20260805084501002');
+  const invoicedNo = page.data.invoices[0].orderNo;
+  assert.match(invoicedNo, /^CD\d{18}$/, '订单号按订单时间现算，不是写死的字面量');
+  page.onCopyInvoiceNo({ currentTarget: { dataset: { no: invoicedNo } } });
+  assert.strictEqual(env.calls.clipboard.pop(), invoicedNo);
   page.onGoOrders();
   assert.strictEqual(env.calls.switchTab.pop(), '/pages/orders/orders');
 });

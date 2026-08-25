@@ -6,6 +6,8 @@
  * 站点 / 充电枪 id 与 utils/mock.js 的内置站点保持一致。
  */
 
+const format = require('./format');
+
 const DAY = 24 * 60 * 60 * 1000;
 
 /**
@@ -14,10 +16,12 @@ const DAY = 24 * 60 * 60 * 1000;
  */
 function buildDemoOrders(now) {
   const at = now || Date.now();
+  // 订单号按订单时间现算：写死的话，Demo 放上一年之后列表显示「3 天前」
+  // 而订单号还印着一年前的日期，账单上自相矛盾
   return [
     {
       id: 'od-demo-1',
-      orderNo: 'CD20260810193212001',
+      orderNo: format.buildOrderNo(at - 3 * DAY, 1),
       status: 'paid',
       stationId: 'st-001',
       stationName: '万象城地下停车场充电站',
@@ -45,7 +49,7 @@ function buildDemoOrders(now) {
     },
     {
       id: 'od-demo-2',
-      orderNo: 'CD20260805084501002',
+      orderNo: format.buildOrderNo(at - 8 * DAY, 2),
       status: 'paid',
       stationId: 'st-003',
       stationName: '前海湾写字楼慢充车位',
