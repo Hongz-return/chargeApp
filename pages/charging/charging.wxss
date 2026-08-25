@@ -5,7 +5,7 @@
 /* ------------------------------------------------------------ 充电中 */
 
 .charge-hero {
-  background: linear-gradient(165deg, #13cd73 0%, #06a557 60%, #f3f5f7 60%, #f3f5f7 100%);
+  background: linear-gradient(180deg, #13cd73 0%, #06a557 60%, #f3f5f7 60%, #f3f5f7 100%);
   padding: 40rpx 0 20rpx;
   display: flex;
   flex-direction: column;
