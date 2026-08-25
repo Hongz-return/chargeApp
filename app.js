@@ -1,72 +1,13 @@
 const storage = require('./utils/storage');
 const charging = require('./utils/charging');
+const config = require('./utils/config');
+const repo = require('./utils/repo');
+const demo = require('./utils/demo');
 
 /** 首次启动（或清除数据后）写入的演示历史订单，保证订单页/我的页开箱可演示 */
 function seedDemoOrders(force) {
   if (!force && storage.read(storage.KEYS.SEEDED, false)) return;
-
-  const day = 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  const demos = [
-    {
-      id: 'od-demo-1',
-      orderNo: 'CD20260810193212001',
-      status: 'paid',
-      stationId: 'st-001',
-      stationName: '万象城地下停车场充电站',
-      stationAddress: '南山区深圳湾万象城 B2 层 12-18 号车位',
-      pileId: 'p-001-a1',
-      pileName: 'A1',
-      pileType: 'fast',
-      powerKw: 120,
-      pricePerKwh: 1.25,
-      serviceFeePerKwh: 0.4,
-      startSoc: 28,
-      endSoc: 92,
-      startTime: now - 3 * day,
-      endTime: now - 3 * day + 46 * 60 * 1000,
-      durationSec: 2760,
-      energyKwh: 38.4,
-      electricityCost: 48.0,
-      serviceCost: 15.36,
-      couponId: '',
-      couponAmount: 0,
-      totalCost: 63.36,
-      payAmount: 63.36,
-      payMethod: '余额支付',
-      paidAt: now - 3 * day + 47 * 60 * 1000
-    },
-    {
-      id: 'od-demo-2',
-      orderNo: 'CD20260805084501002',
-      status: 'paid',
-      stationId: 'st-003',
-      stationName: '前海湾写字楼慢充车位',
-      stationAddress: '南山区前海卓越金融中心 B1 层 30-42 号车位',
-      pileId: 'p-003-b2',
-      pileName: 'B2',
-      pileType: 'slow',
-      powerKw: 7,
-      pricePerKwh: 0.95,
-      serviceFeePerKwh: 0.3,
-      startSoc: 40,
-      endSoc: 100,
-      startTime: now - 8 * day,
-      endTime: now - 8 * day + 5 * 60 * 60 * 1000,
-      durationSec: 18000,
-      energyKwh: 35.0,
-      electricityCost: 33.25,
-      serviceCost: 10.5,
-      couponId: 'cp-99',
-      couponAmount: 5,
-      totalCost: 43.75,
-      payAmount: 38.75,
-      payMethod: '微信支付',
-      paidAt: now - 8 * day + 5.1 * 60 * 60 * 1000
-    }
-  ];
-
-  demos.forEach((o) => storage.saveOrder(o));
+  demo.buildDemoOrders().forEach((o) => storage.saveOrder(o));
   storage.write(storage.KEYS.SEEDED, true);
 }
 
@@ -77,26 +18,34 @@ App({
   },
 
   onLaunch() {
-    seedDemoOrders();
-    // 初始化钱包/优惠券默认值，避免各页面重复判空
-    storage.getWallet();
-    storage.listCoupons();
-    // 本机数据可能停在半路（订单还是「充电中」但会话没了），启动时先收尾
-    charging.reconcile();
-    this.globalData.chargingSession = charging.getActiveSession();
+    if (config.isRemote()) {
+      // 远程数据源：订单、钱包、优惠券、会话都由 server/ 持有，本机不播种也不对账
+      this.syncSession();
+    } else {
+      seedDemoOrders();
+      // 初始化钱包/优惠券默认值，避免各页面重复判空
+      storage.getWallet();
+      storage.listCoupons();
+      // 本机数据可能停在半路（订单还是「充电中」但会话没了），启动时先收尾
+      charging.reconcile();
+      this.globalData.chargingSession = charging.getActiveSession();
+    }
 
     this.watchNetwork();
   },
 
   /**
-   * 演示版不发任何网络请求，断网时功能完全可用。
-   * 这里只在网络恢复/断开时给一次轻提示，避免用户以为界面「加载失败」。
+   * 默认数据源（local）不发任何网络请求，断网时功能完全可用；
+   * 切到 remote 时断网就真的读不到数据了，所以两种情况给的提示文案不同。
    */
   watchNetwork() {
     try {
       wx.onNetworkStatusChange((res) => {
         if (res.isConnected) return;
-        wx.showToast({ title: '当前无网络，演示版可离线使用', icon: 'none', duration: 2000 });
+        const title = config.isRemote()
+          ? '当前无网络，无法访问本地后端'
+          : '当前无网络，演示版可离线使用';
+        wx.showToast({ title, icon: 'none', duration: 2000 });
       });
     } catch (err) {
       // 基础库不支持时忽略
@@ -116,26 +65,42 @@ App({
     this.refreshTabBarBadge();
   },
 
-  /** 从 storage 重新读取会话并刷新 tabBar 角标，页面 onShow 时可调用 */
+  /**
+   * 重新读取会话并刷新 tabBar 角标，页面 onShow 时可调用。
+   *
+   * 同步返回本机会话（远程数据源下是服务端会话的镜像），调用方拿到的永远是「当前已知」的状态；
+   * remote 时再向服务端核对一次，回来后补一次角标刷新。
+   */
   syncSession() {
     const session = charging.getActiveSession();
     this.globalData.chargingSession = session;
     this.refreshTabBarBadge();
+
+    if (config.isRemote()) {
+      repo.syncSession((err, remote) => {
+        if (err) return;
+        this.globalData.chargingSession = remote;
+        this.refreshTabBarBadge();
+      });
+    }
     return session;
   },
 
   /** 有进行中订单或待支付订单时，在「订单」tab 上显示红点 */
   refreshTabBarBadge() {
     const hasActive = !!this.globalData.chargingSession;
-    const hasUnpaid = storage.getStats().unpaidCount > 0;
-    try {
-      if (hasActive || hasUnpaid) {
-        wx.showTabBarRedDot({ index: 1, fail: () => {} });
-      } else {
-        wx.hideTabBarRedDot({ index: 1, fail: () => {} });
+    // local 数据源下 getStats 是同步回调，角标在本次调用栈里就更新完毕
+    repo.getStats((err, stats) => {
+      const hasUnpaid = !err && !!stats && stats.unpaidCount > 0;
+      try {
+        if (hasActive || hasUnpaid) {
+          wx.showTabBarRedDot({ index: 1, fail: () => {} });
+        } else {
+          wx.hideTabBarRedDot({ index: 1, fail: () => {} });
+        }
+      } catch (e) {
+        // 非 tabBar 页面调用会失败，忽略即可
       }
-    } catch (err) {
-      // 非 tabBar 页面调用会失败，忽略即可
-    }
+    });
   }
 });

@@ -1,5 +1,5 @@
 {
-  "description": "充电桩微信小程序（本地 mock 数据，无后端）",
+  "description": "充电桩微信小程序（默认本地 mock 数据，可选连本地后端 server/）",
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
   "libVersion": "3.4.0",
@@ -21,6 +21,7 @@
     "ignore": [
       { "type": "folder", "value": "tests" },
       { "type": "folder", "value": "tools" },
+      { "type": "folder", "value": "server" },
       { "type": "folder", "value": "docs" },
       { "type": "folder", "value": ".github" },
       { "type": "file", "value": "package.json" },
@@ -44,7 +45,7 @@
     }
   },
   "editorSetting": {
-    "tabIndent": "space",
+    "tabIndent": "insertSpaces",
     "tabSize": 2
   }
 }
