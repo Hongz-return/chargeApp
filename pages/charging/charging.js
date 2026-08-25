@@ -1,4 +1,5 @@
 const charging = require('../../utils/charging');
+const repo = require('../../utils/repo');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const nav = require('../../utils/nav');
@@ -43,14 +44,17 @@ Page({
   onLoad(options) {
     // 支持从订单列表直接进入结算：/pages/charging/charging?orderId=xxx
     if (options.orderId) {
-      const order = storage.getOrderById(options.orderId);
-      if (order && order.status === 'unpaid') {
-        this.enterSettle(order);
-        return;
-      }
+      repo.getOrder(options.orderId, (err, order) => {
+        if (!err && order && order.status === 'unpaid') this.enterSettle(order);
+        else this.enterCharging();
+      });
+      return;
     }
+    this.enterCharging();
+  },
 
-    const session = charging.getActiveSession();
+  enterCharging() {
+    const session = repo.getSession();
     if (!session) {
       wx.showToast({ title: '没有进行中的充电订单', icon: 'none' });
       nav.delay(this, () => nav.backOrHome(), 1200);
@@ -76,7 +80,7 @@ Page({
   },
 
   onShow() {
-    if (this.data.phase !== 'charging' || !charging.getActiveSession()) return;
+    if (this.data.phase !== 'charging' || !repo.getSession()) return;
     // 先补一帧再起定时器：从后台回来时不该先看到一秒钟的旧数据
     this.tick();
     this.startTimer();
@@ -95,7 +99,8 @@ Page({
   },
 
   tick() {
-    const session = charging.getActiveSession();
+    // 进度是纯函数推算，两种数据源用的是同一套充电曲线（服务端的 /api/charging/tick 同样调它）
+    const session = repo.getSession();
     if (!session) {
       this.stopTimer();
       return;
@@ -149,14 +154,19 @@ Page({
 
   finishCharging() {
     this.stopTimer();
-    const order = charging.stopCharging();
-    app.syncSession();
-    if (!order) {
-      wx.showToast({ title: '订单状态异常', icon: 'none' });
-      nav.delay(this, () => nav.backOrHome(), 1000);
-      return;
-    }
-    this.enterSettle(order);
+    repo.stopCharging((err, result) => {
+      app.syncSession();
+      if (err) {
+        repo.toastError(err, '结束充电失败');
+        return;
+      }
+      if (!result.ok || !result.order) {
+        wx.showToast({ title: '订单状态异常', icon: 'none' });
+        nav.delay(this, () => nav.backOrHome(), 1000);
+        return;
+      }
+      this.enterSettle(result.order);
+    });
   },
 
   /* -------------------------------------------------------------- 结算 */
@@ -197,29 +207,32 @@ Page({
   enterSettle(order) {
     this.stopTimer();
     this.setLeaveAlert(true);
-    const coupon = storage.pickBestCoupon(order.totalCost);
     wx.setNavigationBarTitle({ title: '订单结算' });
-    this.setData(
-      {
-        phase: 'settle',
-        order: this.decorateOrder(order),
-        coupon,
-        useCoupon: !!coupon
-      },
-      () => this.recalcPayment()
-    );
+    repo.pickBestCoupon(order.totalCost, (err, coupon) => {
+      this.setData(
+        {
+          phase: 'settle',
+          order: this.decorateOrder(order),
+          coupon: err ? null : coupon,
+          useCoupon: !err && !!coupon
+        },
+        () => this.recalcPayment()
+      );
+    });
   },
 
   recalcPayment() {
     const { order, coupon, useCoupon, payMethod } = this.data;
     const couponAmount = coupon && useCoupon ? Math.min(coupon.amount, order.totalCost) : 0;
     const payAmount = Math.max(0, order.totalCost - couponAmount);
-    const wallet = storage.getWallet();
-    this.setData({
-      couponAmount: format.formatMoney(couponAmount),
-      payAmount: format.formatMoney(payAmount),
-      balance: format.formatMoney(wallet.balance),
-      balanceEnough: payMethod !== 'balance' || wallet.balance + storage.MONEY_EPSILON >= payAmount
+    repo.getWallet((err, wallet) => {
+      const balance = err ? 0 : wallet.balance;
+      this.setData({
+        couponAmount: format.formatMoney(couponAmount),
+        payAmount: format.formatMoney(payAmount),
+        balance: format.formatMoney(balance),
+        balanceEnough: payMethod !== 'balance' || balance + storage.MONEY_EPSILON >= payAmount
+      });
     });
   },
 
@@ -259,27 +272,34 @@ Page({
     nav.delay(
       this,
       () => {
-        const result = charging.payOrder(order.id, payMethod, useCoupon ? coupon : null);
-        wx.hideLoading();
-        this.setData({ paying: false });
+        repo.payOrder(order.id, payMethod, useCoupon ? coupon : null, (err, result) => {
+          wx.hideLoading();
+          this.setData({ paying: false });
 
-        if (!result.ok) {
-          // 券在别处被核销时把它从本次结算里摘掉，金额与提示同时更新
-          if (result.reason === 'coupon-unavailable') {
-            this.setData({ coupon: storage.pickBestCoupon(order.totalCost) }, () => this.recalcPayment());
+          if (err) {
+            repo.toastError(err, '支付失败');
+            return;
           }
-          wx.showToast({ title: PAY_ERRORS[result.reason] || '支付失败', icon: 'none' });
-          return;
-        }
+          if (!result.ok) {
+            // 券在别处被核销时把它从本次结算里摘掉，金额与提示同时更新
+            if (result.reason === 'coupon-unavailable') {
+              repo.pickBestCoupon(order.totalCost, (e, coupon2) => {
+                this.setData({ coupon: e ? null : coupon2 }, () => this.recalcPayment());
+              });
+            }
+            wx.showToast({ title: PAY_ERRORS[result.reason] || '支付失败', icon: 'none' });
+            return;
+          }
 
-        app.refreshTabBarBadge();
-        this.setLeaveAlert(false);
-        wx.setNavigationBarTitle({ title: '支付成功' });
-        this.setData({
-          phase: 'paid',
-          order: this.decorateOrder(result.order)
+          app.refreshTabBarBadge();
+          this.setLeaveAlert(false);
+          wx.setNavigationBarTitle({ title: '支付成功' });
+          this.setData({
+            phase: 'paid',
+            order: this.decorateOrder(result.order)
+          });
+          wx.showToast({ title: '支付成功', icon: 'success' });
         });
-        wx.showToast({ title: '支付成功', icon: 'success' });
       },
       900
     );

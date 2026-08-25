@@ -1,4 +1,4 @@
-const storage = require('../../utils/storage');
+const repo = require('../../utils/repo');
 const format = require('../../utils/format');
 const nav = require('../../utils/nav');
 
@@ -27,19 +27,21 @@ Page({
   },
 
   loadWallet() {
-    const wallet = storage.getWallet();
-    this.setData({
-      balance: format.formatMoney(wallet.balance),
-      transactions: wallet.transactions.map((t) => {
-        const meta = TYPE_META[t.type] || TYPE_META.consume;
-        return Object.assign({}, t, {
-          typeText: meta.text,
-          sign: meta.sign,
-          className: meta.className,
-          amountText: format.formatMoney(t.amount),
-          timeText: format.formatDateTime(t.time)
-        });
-      })
+    repo.getWallet((err, wallet) => {
+      if (err) return repo.toastError(err, '钱包加载失败');
+      this.setData({
+        balance: format.formatMoney(wallet.balance),
+        transactions: (wallet.transactions || []).map((t) => {
+          const meta = TYPE_META[t.type] || TYPE_META.consume;
+          return Object.assign({}, t, {
+            typeText: meta.text,
+            sign: meta.sign,
+            className: meta.className,
+            amountText: format.formatMoney(t.amount),
+            timeText: format.formatDateTime(t.time)
+          });
+        })
+      });
     });
   },
 
@@ -89,11 +91,14 @@ Page({
         nav.delay(
           this,
           () => {
-            storage.recharge(amount, '微信充值（演示）');
-            wx.hideLoading();
-            this.setData({ recharging: false, customAmount: '' });
-            wx.showToast({ title: '充值成功', icon: 'success' });
-            this.loadWallet();
+            repo.recharge(amount, '微信充值（演示）', (err) => {
+              wx.hideLoading();
+              this.setData({ recharging: false });
+              if (err) return repo.toastError(err, '充值失败');
+              this.setData({ customAmount: '' });
+              wx.showToast({ title: '充值成功', icon: 'success' });
+              this.loadWallet();
+            });
           },
           800
         );

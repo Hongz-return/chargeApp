@@ -1,3 +1,4 @@
+const repo = require('../../utils/repo');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const config = require('../../utils/config');
@@ -33,21 +34,28 @@ Page({
   },
 
   loadProfile() {
+    // 用户资料与开票记录是纯本机的演示数据，两种数据源下都读 Storage；
+    // 余额、充电统计、券数、收藏数跟着数据源走。
     const user = storage.getUser();
-    const wallet = storage.getWallet();
-    const stats = storage.getStats();
     this.setData({
       user,
       phoneText: format.maskPhone(user.phone),
-      balance: format.formatMoney(wallet.balance),
-      couponCount: storage.listCoupons().filter((c) => !c.used).length,
-      favoriteCount: storage.listFavorites().length,
       invoiceCount: storage.listInvoices().length,
-      stats: Object.assign({}, stats, {
-        totalEnergyText: format.formatEnergy(stats.totalEnergy),
-        totalCostText: format.formatMoney(stats.totalCost)
-      }),
       hasCharging: !!app.globalData.chargingSession
+    });
+
+    repo.getProfileSummary((err, summary) => {
+      if (err) return repo.toastError(err, '账户信息加载失败');
+      const stats = summary.stats || {};
+      this.setData({
+        balance: format.formatMoney((summary.wallet && summary.wallet.balance) || 0),
+        couponCount: summary.couponCount || 0,
+        favoriteCount: summary.favoriteCount || 0,
+        stats: Object.assign({}, stats, {
+          totalEnergyText: format.formatEnergy(stats.totalEnergy),
+          totalCostText: format.formatMoney(stats.totalCost)
+        })
+      });
     });
   },
 
@@ -131,11 +139,14 @@ Page({
       confirmColor: '#fa5151',
       success: (res) => {
         if (!res.confirm) return;
-        // resetAll 已包含播种标记与首页提示条状态，清完直接重新播种即可
-        storage.resetAll();
-        app.reseedDemoData();
-        wx.showToast({ title: '已恢复初始状态', icon: 'success' });
-        this.loadProfile();
+        // resetAll 已包含播种标记与首页提示条状态，清完直接重新播种即可；
+        // 远程数据源下服务端的演示数据也会一并重置
+        repo.resetDemoData((err) => {
+          if (err) repo.toastError(err, '后端数据重置失败，本机数据已清除');
+          app.reseedDemoData();
+          wx.showToast({ title: '已恢复初始状态', icon: 'success' });
+          this.loadProfile();
+        });
       }
     });
   }

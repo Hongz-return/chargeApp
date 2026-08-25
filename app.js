@@ -58,9 +58,12 @@ App({
 
   /** 清除本地数据后重新播种演示数据，让界面立刻回到初始可演示状态 */
   reseedDemoData() {
-    seedDemoOrders(true);
-    storage.getWallet();
-    storage.listCoupons();
+    // 远程数据源下这批数据由服务端持有（repo.resetDemoData 已经让它重置过了），本机不重复播种
+    if (!config.isRemote()) {
+      seedDemoOrders(true);
+      storage.getWallet();
+      storage.listCoupons();
+    }
     this.globalData.chargingSession = null;
     this.refreshTabBarBadge();
   },

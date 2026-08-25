@@ -1,6 +1,4 @@
-const mock = require('../../utils/mock');
-const storage = require('../../utils/storage');
-const charging = require('../../utils/charging');
+const repo = require('../../utils/repo');
 const format = require('../../utils/format');
 const config = require('../../utils/config');
 const nav = require('../../utils/nav');
@@ -46,7 +44,20 @@ Page({
   },
 
   loadStation(first) {
-    const station = mock.getStationById(this.stationId);
+    repo.getStation(this.stationId, (err, station) => {
+      if (err) {
+        this.setData({ loading: false });
+        repo.toastError(err, '充电站信息加载失败');
+        return;
+      }
+      // 收藏态取不到不影响主信息展示，退化成「未收藏」即可
+      repo.listFavorites((favErr, ids) => {
+        this.applyStation(station, first, favErr ? [] : ids);
+      });
+    });
+  },
+
+  applyStation(station, first, favoriteIds) {
     if (!station) {
       this.setData({ loading: false });
       wx.showToast({ title: '充电站不存在', icon: 'none' });
@@ -86,7 +97,7 @@ Page({
             iconPath: '/assets/marker/pin.png'
           }
         ],
-        isFavorite: storage.isFavorite(station.id),
+        isFavorite: (favoriteIds || []).indexOf(station.id) >= 0,
         selectedPileId
       },
       () => this.applyPileFilter()
@@ -122,9 +133,11 @@ Page({
   },
 
   onToggleFavorite() {
-    const added = storage.toggleFavorite(this.data.station.id);
-    this.setData({ isFavorite: added });
-    wx.showToast({ title: added ? '已加入收藏' : '已取消收藏', icon: 'none', duration: 900 });
+    repo.toggleFavorite(this.data.station.id, (err, res) => {
+      if (err) return repo.toastError(err, '收藏失败');
+      this.setData({ isFavorite: res.favorite });
+      wx.showToast({ title: res.favorite ? '已加入收藏' : '已取消收藏', icon: 'none', duration: 900 });
+    });
   },
 
   onNavigate() {
@@ -169,7 +182,7 @@ Page({
     const { station, selectedPileId } = this.data;
     if (!selectedPileId) return;
 
-    const active = charging.getActiveSession();
+    const active = repo.getSession();
     if (active) {
       wx.showModal({
         title: '已有进行中的订单',
@@ -204,19 +217,24 @@ Page({
     nav.delay(
       this,
       () => {
-        const result = charging.startCharging(this.data.station.id, pileId);
-        wx.hideLoading();
-        this._starting = false;
+        repo.startCharging(this.data.station.id, pileId, (err, result) => {
+          wx.hideLoading();
+          this._starting = false;
 
-        if (!result.ok) {
-          wx.showToast({ title: START_ERRORS[result.reason] || '启动失败', icon: 'none' });
-          this.loadStation(false);
-          return;
-        }
+          if (err) {
+            repo.toastError(err, '启动失败');
+            return;
+          }
+          if (!result.ok) {
+            wx.showToast({ title: START_ERRORS[result.reason] || '启动失败', icon: 'none' });
+            this.loadStation(false);
+            return;
+          }
 
-        app.syncSession();
-        wx.showToast({ title: '启动成功', icon: 'success', duration: 700 });
-        nav.delay(this, () => wx.redirectTo({ url: '/pages/charging/charging' }), 500);
+          app.syncSession();
+          wx.showToast({ title: '启动成功', icon: 'success', duration: 700 });
+          nav.delay(this, () => wx.redirectTo({ url: '/pages/charging/charging' }), 500);
+        });
       },
       600
     );

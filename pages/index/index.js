@@ -1,4 +1,4 @@
-const mock = require('../../utils/mock');
+const repo = require('../../utils/repo');
 const storage = require('../../utils/storage');
 const nav = require('../../utils/nav');
 
@@ -35,7 +35,7 @@ Page({
     favorites: [],
     markers: [],
     selectedStation: null,
-    mapCenter: mock.USER_LOCATION,
+    mapCenter: repo.USER_LOCATION,
     stats: { total: 0, idle: 0 },
     showNotice: false
   },
@@ -77,33 +77,43 @@ Page({
     if (showLoading) this.setData({ loading: true });
 
     const run = () => {
-      const favorites = storage.listFavorites();
-      const stations = mock.toStationCards(
-        mock.getStations({
-          keyword: this.data.keyword,
-          filter: this.data.filter,
-          sort: this.data.sort,
-          favoriteIds: favorites
-        }),
-        favorites
-      );
-
-      this.setData({
-        stations,
-        favorites,
-        markers: mock.getMarkers(stations),
-        loading: false,
-        selectedStation: null,
-        stats: {
-          total: stations.length,
-          idle: stations.reduce((sum, s) => sum + s.idle, 0)
-        }
+      repo.listFavorites((favErr, favorites) => {
+        if (favErr) return this.onLoadFailed(favErr);
+        repo.listStations(
+          {
+            keyword: this.data.keyword,
+            filter: this.data.filter,
+            sort: this.data.sort,
+            favoriteIds: favorites
+          },
+          (err, list) => {
+            if (err) return this.onLoadFailed(err);
+            const stations = repo.toStationCards(list, favorites);
+            this.setData({
+              stations,
+              favorites,
+              markers: repo.getMarkers(stations),
+              loading: false,
+              selectedStation: null,
+              stats: {
+                total: stations.length,
+                idle: stations.reduce((sum, s) => sum + s.idle, 0)
+              }
+            });
+          }
+        );
       });
     };
 
-    // 模拟一次网络请求的加载态，让骨架屏可见
+    // 本地数据源下这里只是让骨架屏可见的一段延时；远程数据源下请求本身就是异步的
     if (showLoading) nav.delay(this, run, 320);
     else run();
+  },
+
+  /** 远程数据源取数失败：结束加载态并提示，不把页面留在骨架屏里 */
+  onLoadFailed(err) {
+    this.setData({ loading: false });
+    repo.toastError(err, '充电站列表加载失败');
   },
 
   onSearchInput(e) {
@@ -149,9 +159,11 @@ Page({
   onFavoriteTap(e) {
     const id = (e.detail && e.detail.id) || e.currentTarget.dataset.id;
     if (!id) return;
-    const added = storage.toggleFavorite(id);
-    wx.showToast({ title: added ? '已收藏' : '已取消收藏', icon: 'none', duration: 900 });
-    this.loadStations(false);
+    repo.toggleFavorite(id, (err, res) => {
+      if (err) return repo.toastError(err, '收藏失败');
+      wx.showToast({ title: res.favorite ? '已收藏' : '已取消收藏', icon: 'none', duration: 900 });
+      this.loadStations(false);
+    });
   },
 
   /* ------------------------------------------------------------ 地图交互 */
@@ -174,7 +186,7 @@ Page({
   },
 
   onRecenter() {
-    this.setData({ mapCenter: Object.assign({}, mock.USER_LOCATION), selectedStation: null });
+    this.setData({ mapCenter: Object.assign({}, repo.USER_LOCATION), selectedStation: null });
     wx.showToast({ title: '已回到当前位置', icon: 'none', duration: 800 });
   },
 
@@ -201,33 +213,37 @@ Page({
       confirmText: '模拟扫码',
       success: (res) => {
         if (!res.confirm) return;
-        const pick = mock.randomIdlePile();
-        if (!pick) {
-          wx.showToast({ title: '暂无空闲充电枪', icon: 'none' });
-          return;
-        }
-        this.handleScanResult(`chargingpile://station/${pick.stationId}/pile/${pick.pileId}`);
+        repo.randomIdlePile((err, pick) => {
+          if (err) return repo.toastError(err, '模拟扫码失败');
+          if (!pick) {
+            wx.showToast({ title: '暂无空闲充电枪', icon: 'none' });
+            return;
+          }
+          this.handleScanResult(`chargingpile://station/${pick.stationId}/pile/${pick.pileId}`);
+        });
       }
     });
   },
 
   handleScanResult(code) {
-    const target = mock.resolveScanCode(code);
-    if (!target) {
-      wx.showModal({
-        title: '无法识别',
-        content: '该二维码不是本平台的充电枪二维码，请对准充电桩上的二维码重新扫描。',
-        showCancel: false
-      });
-      return;
-    }
-    wx.showToast({ title: '识别成功', icon: 'success', duration: 700 });
-    const query = target.pileId ? `&pileId=${target.pileId}&from=scan` : '&from=scan';
-    nav.delay(
-      this,
-      () => wx.navigateTo({ url: `/pages/detail/detail?id=${target.stationId}${query}` }),
-      400
-    );
+    repo.resolveScan(code, (err, target) => {
+      if (err) return repo.toastError(err, '二维码校验失败');
+      if (!target) {
+        wx.showModal({
+          title: '无法识别',
+          content: '该二维码不是本平台的充电枪二维码，请对准充电桩上的二维码重新扫描。',
+          showCancel: false
+        });
+        return;
+      }
+      wx.showToast({ title: '识别成功', icon: 'success', duration: 700 });
+      const query = target.pileId ? `&pileId=${target.pileId}&from=scan` : '&from=scan';
+      nav.delay(
+        this,
+        () => wx.navigateTo({ url: `/pages/detail/detail?id=${target.stationId}${query}` }),
+        400
+      );
+    });
   },
 
   onPullDownRefresh() {

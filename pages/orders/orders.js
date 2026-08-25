@@ -1,4 +1,4 @@
-const storage = require('../../utils/storage');
+const repo = require('../../utils/repo');
 const format = require('../../utils/format');
 const nav = require('../../utils/nav');
 
@@ -52,30 +52,44 @@ Page({
     if (showLoading) this.setData({ loading: true });
 
     const run = () => {
-      const all = storage.listOrders();
-      const counts = {
-        all: all.length,
-        charging: all.filter((o) => o.status === 'charging').length,
-        unpaid: all.filter((o) => o.status === 'unpaid').length,
-        paid: all.filter((o) => o.status === 'paid').length
-      };
+      repo.listOrders((err, all) => {
+        if (err) {
+          this.setData({ loading: false });
+          repo.toastError(err, '订单加载失败');
+          return;
+        }
 
-      const filtered = this.data.activeTab === 'all' ? all : all.filter((o) => o.status === this.data.activeTab);
+        const counts = {
+          all: all.length,
+          charging: all.filter((o) => o.status === 'charging').length,
+          unpaid: all.filter((o) => o.status === 'unpaid').length,
+          paid: all.filter((o) => o.status === 'paid').length
+        };
 
-      const orders = filtered.map((o) => {
-        const meta = STATUS_META[o.status] || STATUS_META.paid;
-        return Object.assign({}, o, {
-          statusText: meta.text,
-          statusClass: meta.className,
-          startTimeText: format.formatShortDateTime(o.startTime),
-          durationText: o.durationSec ? format.formatDurationCn(o.durationSec) : '进行中',
-          energyText: format.formatEnergy(o.energyKwh),
-          amountText: format.formatMoney(o.status === 'paid' ? o.payAmount : o.totalCost),
-          typeText: o.pileType === 'fast' ? '快充' : '慢充'
+        const filtered = this.data.activeTab === 'all' ? all : all.filter((o) => o.status === this.data.activeTab);
+
+        const orders = filtered.map((o) => {
+          const meta = STATUS_META[o.status] || STATUS_META.paid;
+          return Object.assign({}, o, {
+            statusText: meta.text,
+            statusClass: meta.className,
+            startTimeText: format.formatShortDateTime(o.startTime),
+            durationText: o.durationSec ? format.formatDurationCn(o.durationSec) : '进行中',
+            energyText: format.formatEnergy(o.energyKwh),
+            amountText: format.formatMoney(o.status === 'paid' ? o.payAmount : o.totalCost),
+            typeText: o.pileType === 'fast' ? '快充' : '慢充'
+          });
+        });
+
+        repo.getStats((statsErr, stats) => {
+          this.setData({
+            orders,
+            counts,
+            stats: decorateStats(statsErr ? { totalEnergy: 0, totalCost: 0, orderCount: all.length } : stats),
+            loading: false
+          });
         });
       });
-
-      this.setData({ orders, counts, stats: decorateStats(storage.getStats()), loading: false });
     };
 
     if (showLoading) nav.delay(this, run, 260);
@@ -116,10 +130,12 @@ Page({
       confirmColor: '#fa5151',
       success: (res) => {
         if (!res.confirm) return;
-        storage.removeOrder(id);
-        wx.showToast({ title: '已删除', icon: 'none' });
-        this.loadOrders(false);
-        app.refreshTabBarBadge();
+        repo.removeOrder(id, (err) => {
+          if (err) return repo.toastError(err, '删除失败');
+          wx.showToast({ title: '已删除', icon: 'none' });
+          this.loadOrders(false);
+          app.refreshTabBarBadge();
+        });
       }
     });
   },

@@ -1,5 +1,4 @@
-const mock = require('../../utils/mock');
-const storage = require('../../utils/storage');
+const repo = require('../../utils/repo');
 const nav = require('../../utils/nav');
 
 Page({
@@ -17,8 +16,21 @@ Page({
   },
 
   loadFavorites() {
-    const ids = storage.listFavorites();
-    this.setData({ stations: mock.toStationCards(mock.getStationsByIds(ids), ids), loading: false });
+    repo.listFavorites((err, ids) => {
+      if (err) {
+        this.setData({ loading: false });
+        repo.toastError(err, '收藏加载失败');
+        return;
+      }
+      repo.listStationsByIds(ids, (stationErr, stations) => {
+        if (stationErr) {
+          this.setData({ loading: false });
+          repo.toastError(stationErr, '收藏加载失败');
+          return;
+        }
+        this.setData({ stations: repo.toStationCards(stations, ids), loading: false });
+      });
+    });
   },
 
   onStationTap(e) {
@@ -34,9 +46,11 @@ Page({
       content: '确定要将该充电站移出收藏吗？',
       success: (res) => {
         if (!res.confirm) return;
-        storage.toggleFavorite(id);
-        wx.showToast({ title: '已取消收藏', icon: 'none' });
-        this.loadFavorites();
+        repo.toggleFavorite(id, (err) => {
+          if (err) return repo.toastError(err, '取消收藏失败');
+          wx.showToast({ title: '已取消收藏', icon: 'none' });
+          this.loadFavorites();
+        });
       }
     });
   },

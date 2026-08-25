@@ -5,7 +5,7 @@
     </view>
     <view class="hero-name">充电桩小程序</view>
     <view class="hero-badge">演示版 v{{version}}</view>
-    <view class="hero-sub">纯前端实现 · 本地 mock 数据 · 无后端依赖</view>
+    <view class="hero-sub">默认本地 mock 数据 · 开箱即用 · 可选连本地后端</view>
   </view>
 
   <!-- 演示声明 -->
@@ -69,6 +69,6 @@
   </view>
 
   <view class="footer-note">
-    以 MIT 协议开源 · 接入真实后端时只需替换 utils/mock.js 与 utils/charging.js
+    以 MIT 协议开源 · 数据源在 utils/config.js 一处切换（local / remote）
   </view>
 </view>

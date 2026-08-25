@@ -1,3 +1,4 @@
+const repo = require('../../utils/repo');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const nav = require('../../utils/nav');
@@ -26,7 +27,17 @@ Page({
   },
 
   loadOrder() {
-    const raw = storage.getOrderById(this.orderId);
+    repo.getOrder(this.orderId, (err, order) => {
+      if (err) {
+        this.setData({ loading: false });
+        repo.toastError(err, '订单加载失败');
+        return;
+      }
+      this.applyOrder(order);
+    });
+  },
+
+  applyOrder(raw) {
     if (!raw) {
       this.setData({ loading: false });
       wx.showToast({ title: '订单不存在', icon: 'none' });
@@ -116,10 +127,12 @@ Page({
       confirmColor: '#fa5151',
       success: (res) => {
         if (!res.confirm) return;
-        storage.removeOrder(this.data.order.id);
-        app.refreshTabBarBadge();
-        wx.showToast({ title: '已删除', icon: 'none' });
-        nav.delay(this, () => nav.backOrHome(), 700);
+        repo.removeOrder(this.data.order.id, (err) => {
+          if (err) return repo.toastError(err, '删除失败');
+          app.refreshTabBarBadge();
+          wx.showToast({ title: '已删除', icon: 'none' });
+          nav.delay(this, () => nav.backOrHome(), 700);
+        });
       }
     });
   }
