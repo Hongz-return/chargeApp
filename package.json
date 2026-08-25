@@ -10,7 +10,7 @@
     "build:assets": "npm run assets && npm run preview",
     "docs": "npm run preview && npm run screenshots",
     "validate": "node tools/validate.js",
-    "test": "node --test \"tests/*.test.js\"",
+    "test": "node --test",
     "check": "npm run validate && npm test"
   },
   "engines": {

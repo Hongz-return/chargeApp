@@ -45,6 +45,9 @@
 - 订单页与「我的」页的累计电量、累计消费改用 `format` 统一格式化，不再出现 `156.2` 这类
   少一位小数的展示。
 - `package.json` 的 `version` 与 `utils/config.js` 的 `VERSION` 对齐到 `1.1.0`。
+- `npm test` 由 `node --test "tests/*.test.js"` 改为不带参数的 `node --test`：`--test` 参数里的
+  glob 展开需要 Node 21+，此前在 CI 的 Node 18 / 20 上直接报 `Could not find`。
+  现在 `npm run check` 在 Node 18 / 20 / 22 上都是 67 个用例全绿。
 
 ### 测试
 
