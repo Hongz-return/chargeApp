@@ -66,22 +66,22 @@
   <view class="card">
     <view class="quick-grid">
       <view class="quick-item" bindtap="onOrdersTap">
-        <view class="quick-icon bg-green">🧾</view>
+        <view class="quick-icon bg-green"><view class="ic ic-doc"></view></view>
         <view class="quick-label">全部订单</view>
       </view>
       <view class="quick-item" bindtap="onChargingTap">
-        <view class="quick-icon bg-orange">⚡</view>
+        <view class="quick-icon bg-orange"><view class="ic ic-bolt"></view></view>
         <view class="quick-label">
           充电中
           <text wx:if="{{hasCharging}}" class="quick-dot"></text>
         </view>
       </view>
       <view class="quick-item" bindtap="onFavoriteTap">
-        <view class="quick-icon bg-red">♥</view>
+        <view class="quick-icon bg-red"><view class="ic ic-heart"></view></view>
         <view class="quick-label">我的收藏</view>
       </view>
       <view class="quick-item" bindtap="onCouponTap">
-        <view class="quick-icon bg-blue">🎟</view>
+        <view class="quick-icon bg-blue"><view class="ic ic-ticket"></view></view>
         <view class="quick-label">优惠券</view>
       </view>
     </view>
@@ -90,45 +90,59 @@
   <!-- 常用功能 -->
   <view class="card">
     <view class="list-row" bindtap="onWalletTap">
-      <text class="row-icon">💰</text>
+      <view class="row-icon"><view class="ic ic-wallet"></view></view>
       <text class="row-label">我的钱包</text>
       <text class="row-value">¥{{balance}}</text>
       <text class="row-arrow">›</text>
     </view>
-    <view class="list-row" data-name="我的车辆" bindtap="onMockEntry">
-      <text class="row-icon">🚗</text>
+    <view class="list-row" bindtap="onInvoiceTap">
+      <view class="row-icon"><view class="ic ic-doc"></view></view>
+      <text class="row-label">发票管理</text>
+      <text class="row-value">{{invoiceCount > 0 ? invoiceCount + ' 条记录' : ''}}</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" bindtap="onVehicleTap">
+      <view class="row-icon"><view class="ic ic-car"></view></view>
       <text class="row-label">我的车辆</text>
       <text class="row-value">{{user.carModel}}</text>
       <text class="row-arrow">›</text>
     </view>
-    <view class="list-row" data-name="发票管理" bindtap="onMockEntry">
-      <text class="row-icon">📮</text>
-      <text class="row-label">发票管理</text>
-      <text class="row-arrow">›</text>
-    </view>
-    <view class="list-row" data-name="帮助中心" bindtap="onMockEntry">
-      <text class="row-icon">💬</text>
+    <view class="list-row" bindtap="onServiceTap">
+      <view class="row-icon"><view class="ic ic-chat"></view></view>
       <text class="row-label">帮助与客服</text>
       <text class="row-arrow">›</text>
     </view>
     <view class="list-row" bindtap="onAbout">
-      <text class="row-icon">ℹ️</text>
-      <text class="row-label">关于本 Demo</text>
-      <text class="row-value">v1.0.0</text>
+      <view class="row-icon"><view class="ic ic-info"></view></view>
+      <text class="row-label">演示说明与隐私</text>
+      <text class="row-value">v{{version}}</text>
       <text class="row-arrow">›</text>
     </view>
   </view>
 
   <view class="card">
     <view class="list-row danger-row" bindtap="onResetData">
-      <text class="row-icon">🗑</text>
+      <view class="row-icon"><view class="ic ic-trash"></view></view>
       <text class="row-label">清除本地数据</text>
       <text class="row-arrow">›</text>
     </view>
   </view>
 
+  <!-- 演示与隐私声明（常驻） -->
+  <view class="card notice-card">
+    <view class="notice-title">
+      <view class="ic ic-info"></view>
+      <text class="notice-title-text">演示版声明</text>
+    </view>
+    <view class="notice-item">本小程序为<text class="notice-strong">演示版</text>，用于展示充电桩业务的完整交互流程。</view>
+    <view class="notice-item">全部站点、充电过程与支付均为本地模拟，<text class="notice-strong">不会产生真实充电，也不会真实扣款</text>。</view>
+    <view class="notice-item">不采集、不上传任何个人信息；订单、钱包、收藏等数据只写入本机 Storage，可在上方「清除本地数据」一键删除。</view>
+    <view class="notice-item">无需联网即可完整体验，断网时功能不受影响。</view>
+    <view class="notice-more" bindtap="onAbout">查看完整演示说明 ›</view>
+  </view>
+
   <view class="footer-note">
-    注册于 {{user.joinedAt}} · 本 Demo 所有数据仅保存在本机
+    注册于 {{user.joinedAt}} · 演示数据仅保存在本机
   </view>
 
   <charging-bar bottom="{{40}}" />

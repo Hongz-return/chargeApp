@@ -1,0 +1,159 @@
+<view class="page page-with-footer">
+  <view class="tabs">
+    <view class="tab {{activeTab === 'apply' ? 'active' : ''}}" data-key="apply" bindtap="onTabTap">
+      申请开票（{{candidates.length}}）
+    </view>
+    <view class="tab {{activeTab === 'history' ? 'active' : ''}}" data-key="history" bindtap="onTabTap">
+      开票记录（{{invoices.length}}）
+    </view>
+  </view>
+
+  <!-- ---------------------------------------------------- 申请开票 -->
+  <block wx:if="{{activeTab === 'apply'}}">
+    <view class="card">
+      <view class="section-title">
+        选择订单
+        <text class="section-sub" bindtap="onSelectAll">{{allSelected ? '取消全选' : '全选'}}</text>
+      </view>
+
+      <view
+        wx:for="{{candidates}}"
+        wx:key="id"
+        class="order-item {{item.selected ? 'on' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="onOrderTap"
+      >
+        <view class="iv-check {{item.selected ? 'on' : ''}}">{{item.selected ? '✓' : ''}}</view>
+        <view class="oi-main">
+          <view class="oi-station ellipsis">{{item.stationName}}</view>
+          <view class="oi-meta">{{item.timeText}} · {{item.energyText}} 度</view>
+          <view class="oi-no">{{item.orderNo}}</view>
+        </view>
+        <view class="oi-amount">¥{{item.amountText}}</view>
+      </view>
+
+      <empty
+        wx:if="{{candidates.length === 0}}"
+        icon="doc"
+        text="暂无可开票的订单"
+        sub="只有已完成支付且尚未开票的订单可以申请开票"
+        action-text="去看订单"
+        bind:action="onGoOrders"
+      />
+    </view>
+
+    <block wx:if="{{candidates.length > 0}}">
+      <!-- 抬头类型 -->
+      <view class="card">
+        <view class="section-title">抬头类型</view>
+        <view class="type-row">
+          <view
+            wx:for="{{types}}"
+            wx:key="key"
+            class="type-item {{type === item.key ? 'active' : ''}}"
+            data-type="{{item.key}}"
+            bindtap="onTypeTap"
+          >{{item.label}}</view>
+        </view>
+      </view>
+
+      <!-- 开票信息 -->
+      <view class="card">
+        <view class="section-title">开票信息</view>
+        <view class="field">
+          <text class="field-label">发票抬头</text>
+          <input
+            class="field-input"
+            value="{{title}}"
+            placeholder="{{type === 'company' ? '请输入单位名称' : '请输入个人姓名'}}"
+            placeholder-class="field-placeholder"
+            bindinput="onTitleInput"
+          />
+        </view>
+        <view wx:if="{{type === 'company'}}" class="field">
+          <text class="field-label">纳税人识别号</text>
+          <input
+            class="field-input"
+            value="{{taxNo}}"
+            placeholder="15-20 位数字或字母"
+            placeholder-class="field-placeholder"
+            bindinput="onTaxNoInput"
+          />
+        </view>
+        <view class="field">
+          <text class="field-label">接收邮箱</text>
+          <input
+            class="field-input"
+            value="{{email}}"
+            placeholder="电子发票将发送到该邮箱"
+            placeholder-class="field-placeholder"
+            bindinput="onEmailInput"
+          />
+        </view>
+        <view class="field">
+          <text class="field-label">备注</text>
+          <input
+            class="field-input"
+            value="{{remark}}"
+            placeholder="选填"
+            placeholder-class="field-placeholder"
+            bindinput="onRemarkInput"
+          />
+        </view>
+        <view class="field-tip">演示环境不会真实开票，提交后只在本机生成一条开票记录。</view>
+      </view>
+    </block>
+  </block>
+
+  <!-- ---------------------------------------------------- 开票记录 -->
+  <block wx:else>
+    <view wx:for="{{invoices}}" wx:key="id" class="card iv-card">
+      <view class="iv-head">
+        <view class="iv-title ellipsis">{{item.title}}</view>
+        <view class="iv-status">已开票</view>
+      </view>
+      <view class="info-row">
+        <text class="info-label">抬头类型</text>
+        <text class="info-value">{{item.typeText}}</text>
+      </view>
+      <view wx:if="{{item.taxNo}}" class="info-row">
+        <text class="info-label">税号</text>
+        <text class="info-value">{{item.taxNo}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">接收邮箱</text>
+        <text class="info-value">{{item.email}}</text>
+      </view>
+      <view wx:if="{{item.remark}}" class="info-row">
+        <text class="info-label">备注</text>
+        <text class="info-value">{{item.remark}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">申请时间</text>
+        <text class="info-value">{{item.createdText}}</text>
+      </view>
+      <view class="divider"></view>
+      <view class="iv-foot" data-no="{{item.orderNo}}" bindtap="onCopyInvoiceNo">
+        <text class="iv-no">{{item.orderNo}}</text>
+        <text class="iv-amount">¥{{item.amountText}}</text>
+      </view>
+    </view>
+
+    <empty
+      wx:if="{{invoices.length === 0}}"
+      icon="doc"
+      text="还没有开票记录"
+      sub="在「申请开票」中选择已完成的订单即可提交申请"
+    />
+  </block>
+
+  <view wx:if="{{activeTab === 'apply' && candidates.length > 0}}" class="footer-bar">
+    <view class="footer-summary">
+      已选 <text class="footer-strong">{{selectedCount}}</text> 笔 ·
+      合计 <text class="footer-strong">¥{{totalAmount}}</text>
+    </view>
+    <view class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="onSubmit">
+      {{submitting ? '提交中…' : '提交开票申请'}}
+    </view>
+  </view>
+</view>

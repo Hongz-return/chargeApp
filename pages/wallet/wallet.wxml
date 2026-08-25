@@ -47,7 +47,7 @@
 
     <empty
       wx:if="{{transactions.length === 0}}"
-      icon="📄"
+      icon="doc"
       text="暂无交易记录"
       sub="充值或完成一次充电支付后会显示在这里"
     />

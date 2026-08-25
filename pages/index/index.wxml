@@ -3,17 +3,18 @@
   <view class="header">
     <view class="header-top">
       <view class="location">
-        <text class="location-icon">📍</text>
+        <view class="location-icon ic ic-pin"></view>
         <text class="location-text">深圳 · 南山科技园</text>
       </view>
       <view class="view-toggle" bindtap="onToggleView">
-        {{viewMode === 'list' ? '🗺 地图' : '📋 列表'}}
+        <view class="ic {{viewMode === 'list' ? 'ic-map' : 'ic-list'}}"></view>
+        <text class="view-toggle-text">{{viewMode === 'list' ? '地图' : '列表'}}</text>
       </view>
     </view>
 
     <view class="search-row">
       <view class="search-box">
-        <text class="search-icon">🔍</text>
+        <view class="search-icon ic ic-search"></view>
         <input
           class="search-input"
           value="{{keyword}}"
@@ -26,7 +27,7 @@
         <text wx:if="{{keyword}}" class="search-clear" catchtap="onClearKeyword">✕</text>
       </view>
       <view class="scan-btn" bindtap="onScanTap">
-        <text class="scan-icon">⛶</text>
+        <view class="scan-icon ic ic-scan"></view>
         <text class="scan-text">扫码</text>
       </view>
     </view>
@@ -59,6 +60,16 @@
     </scroll-view>
   </view>
 
+  <!-- 首次进入的演示声明（关闭后不再出现，状态存在本机） -->
+  <view wx:if="{{showNotice}}" class="demo-notice">
+    <view class="dn-icon ic ic-info"></view>
+    <view class="dn-main">
+      <view class="dn-title">演示版小程序</view>
+      <view class="dn-text">站点、充电与支付均为本地模拟，不联网、不产生真实充电与真实扣款。</view>
+    </view>
+    <view class="dn-close" catchtap="onCloseNotice">✕</view>
+  </view>
+
   <!-- 列表模式 -->
   <block wx:if="{{viewMode === 'list'}}">
     <skeleton wx:if="{{loading}}" count="{{4}}" />
@@ -80,7 +91,7 @@
 
       <empty
         wx:if="{{stations.length === 0}}"
-        icon="🔌"
+        icon="plug"
         text="没有找到符合条件的充电站"
         sub="换个关键词，或把筛选条件调整为「全部」试试"
       />
@@ -105,7 +116,9 @@
         bindtap="onMapTap"
       ></map>
 
-      <view class="map-recenter" bindtap="onRecenter">🎯</view>
+      <view class="map-recenter" bindtap="onRecenter">
+        <view class="ic ic-locate"></view>
+      </view>
 
       <view wx:if="{{selectedStation}}" class="map-preview">
         <station-card
@@ -116,7 +129,7 @@
           bind:favorite="onFavoriteTap"
         />
       </view>
-      <view wx:else class="map-tip">点击地图上的 📍 查看充电站详情</view>
+      <view wx:else class="map-tip">点击地图上的绿色标记查看充电站详情</view>
     </view>
   </block>
 

@@ -21,7 +21,10 @@
         </view>
       </view>
 
-      <view wx:if="{{fromScan}}" class="scan-banner">✅ 已通过扫码定位到该充电站</view>
+      <view wx:if="{{fromScan}}" class="scan-banner">
+        <text class="sb-check">✓</text>
+        已通过扫码定位到该充电站
+      </view>
 
       <view class="hero-tags">
         <text wx:for="{{station.tags}}" wx:key="*this" class="tag tag-plain">{{item}}</text>
@@ -29,15 +32,15 @@
 
       <view class="hero-actions">
         <view class="hero-action" bindtap="onNavigate">
-          <text class="ha-icon">🧭</text>
+          <view class="ha-icon ic ic-compass"></view>
           <text>导航</text>
         </view>
         <view class="hero-action" bindtap="onCopyAddress">
-          <text class="ha-icon">📋</text>
+          <view class="ha-icon ic ic-copy"></view>
           <text>复制地址</text>
         </view>
         <view class="hero-action" bindtap="onCall">
-          <text class="ha-icon">📞</text>
+          <view class="ha-icon ic ic-phone"></view>
           <text>客服</text>
         </view>
       </view>
@@ -135,7 +138,7 @@
 
       <empty
         wx:if="{{visiblePiles.length === 0}}"
-        icon="🔌"
+        icon="plug"
         text="该站暂无此类型充电枪"
         sub="切换到「全部」查看其它充电枪"
       />

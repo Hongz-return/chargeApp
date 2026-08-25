@@ -24,14 +24,21 @@
 }
 
 .location-icon {
-  margin-right: 6rpx;
+  margin-right: 8rpx;
+  font-size: 26rpx;
 }
 
 .view-toggle {
+  display: flex;
+  align-items: center;
   font-size: 24rpx;
   background: rgba(255, 255, 255, 0.22);
   padding: 8rpx 22rpx;
   border-radius: 999rpx;
+}
+
+.view-toggle-text {
+  margin-left: 8rpx;
 }
 
 .view-toggle:active {
@@ -162,6 +169,49 @@
   color: #07c160;
   font-weight: 600;
   border-bottom: 4rpx solid #07c160;
+}
+
+/* ------------------------------------------------------------ 演示声明条 */
+
+.demo-notice {
+  display: flex;
+  align-items: flex-start;
+  margin: 20rpx 24rpx 0;
+  padding: 20rpx 22rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  border-left: 6rpx solid var(--brand);
+  box-shadow: 0 2rpx 12rpx rgba(15, 34, 58, 0.05);
+}
+
+.dn-icon {
+  font-size: 30rpx;
+  color: var(--brand);
+  margin-top: 4rpx;
+}
+
+.dn-main {
+  flex: 1;
+  margin-left: 16rpx;
+  min-width: 0;
+}
+
+.dn-title {
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.dn-text {
+  font-size: 22rpx;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin-top: 6rpx;
+}
+
+.dn-close {
+  font-size: 24rpx;
+  color: #c2c7cc;
+  padding: 0 4rpx 12rpx 20rpx;
 }
 
 /* -------------------------------------------------------------- 结果列表 */

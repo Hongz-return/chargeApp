@@ -24,7 +24,7 @@
 
   <empty
     wx:if="{{list.length === 0}}"
-    icon="🎟"
+    icon="ticket"
     text="{{activeTab === 'usable' ? '暂无可用优惠券' : '还没有使用过优惠券'}}"
     sub="结算时系统会自动为你匹配面额最大的可用券"
     action-text="去充电"

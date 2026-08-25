@@ -4,7 +4,9 @@
   style="bottom: {{bottom}}rpx"
   bindtap="onTap"
 >
-  <view class="cb-pulse">⚡</view>
+  <view class="cb-pulse">
+    <view class="ic ic-bolt"></view>
+  </view>
   <view class="cb-main">
     <view class="cb-title">充电中 · {{stationName}}</view>
     <view class="cb-sub">{{duration}} · {{energyKwh}} 度 · SOC {{soc}}%</view>

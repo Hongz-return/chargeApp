@@ -27,7 +27,9 @@ function createEnv(options) {
     clipboard: [],
     openLocation: [],
     navigationTitle: [],
-    tabBarRedDot: []
+    tabBarRedDot: [],
+    leaveAlert: [],
+    networkListeners: []
   };
 
   // showModal 默认点「确定」，可通过 env.modalConfirm 控制；modalContent 用于 editable 弹窗
@@ -106,6 +108,15 @@ function createEnv(options) {
     hideTabBarRedDot(o) {
       calls.tabBarRedDot.push('hide');
       if (o && o.success) o.success({});
+    },
+    enableAlertBeforeUnload(o) {
+      calls.leaveAlert.push(o && o.message);
+    },
+    disableAlertBeforeUnload() {
+      calls.leaveAlert.push(null);
+    },
+    onNetworkStatusChange(cb) {
+      calls.networkListeners.push(cb);
     },
     getWindowInfo() {
       return { statusBarHeight: 44, windowWidth: 375, windowHeight: 812 };

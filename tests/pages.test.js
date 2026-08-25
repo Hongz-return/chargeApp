@@ -369,8 +369,12 @@ test('我的页：资料、余额、统计与清除数据', () => {
   page.onOrdersTap();
   assert.strictEqual(env.calls.switchTab.pop(), '/pages/orders/orders');
   page.onChargingTap();
-  page.onMockEntry({ currentTarget: { dataset: { name: '发票管理' } } });
+  page.onVehicleTap();
+  page.onServiceTap();
+  page.onInvoiceTap();
+  assert.strictEqual(env.calls.navigate.pop(), '/pages/invoice/invoice');
   page.onAbout();
+  assert.strictEqual(env.calls.navigate.pop(), '/pages/about/about');
 
   // 清除数据后重新播种，界面回到初始状态
   storage.toggleFavorite('st-001');

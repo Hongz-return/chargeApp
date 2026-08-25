@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 工程校验与测试 (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: 校验 + 测试
+        run: npm run check
+
+  assets:
+    name: 生成物一致性
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 图标、预览页与界面图都是脚本生成的，重跑后不应产生 diff，
+      # 否则说明仓库里的生成物与生成脚本已经不同步。
+      - name: 重新生成图标与演示资产
+        run: npm run build:assets
+
+      - name: 检查生成物是否与仓库一致
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::生成物与脚本输出不一致，请在本地执行 npm run build:assets 后提交。"
+            git status --porcelain
+            git diff
+            exit 1
+          fi

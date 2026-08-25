@@ -18,7 +18,8 @@ const KEYS = {
   FAVORITES: 'cp_favorites',
   SESSION: 'cp_charging_session',
   PILE_STATUS: 'cp_pile_status',
-  COUPONS: 'cp_coupons'
+  COUPONS: 'cp_coupons',
+  INVOICES: 'cp_invoices'
 };
 
 function clone(value) {
@@ -114,16 +115,23 @@ const DEFAULT_WALLET = {
   transactions: []
 };
 
+/**
+ * 读取钱包。Storage 被损坏（写入了字符串/数组/NaN 余额）时不抛错：
+ * 结构不可用就重建默认值，字段不可用就回落到 0 / 空数组。
+ */
 function getWallet() {
   const stored = read(KEYS.WALLET, null);
-  if (!stored || typeof stored !== 'object') {
+  if (!stored || typeof stored !== 'object' || Array.isArray(stored)) {
     const fresh = clone(DEFAULT_WALLET);
     write(KEYS.WALLET, fresh);
     return fresh;
   }
+  const balance = Number(stored.balance);
   return {
-    balance: Number(stored.balance) || 0,
-    transactions: Array.isArray(stored.transactions) ? stored.transactions : []
+    balance: Number.isFinite(balance) && balance > 0 ? balance : 0,
+    transactions: Array.isArray(stored.transactions)
+      ? stored.transactions.filter((t) => t && typeof t === 'object' && Number.isFinite(Number(t.amount)))
+      : []
   };
 }
 
@@ -209,9 +217,10 @@ function createOrderNo(ts) {
   return format.buildOrderNo(ts || Date.now(), nextOrderSeq());
 }
 
+/** 订单列表。非对象、缺 id 的脏数据会被直接过滤掉，保证调用方拿到的每条都可渲染 */
 function listOrders() {
   return readArray(KEYS.ORDERS)
-    .filter((o) => o && o.id)
+    .filter((o) => o && typeof o === 'object' && typeof o.id === 'string' && o.id)
     .sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
 }
 
@@ -337,7 +346,7 @@ function listCoupons() {
     write(KEYS.COUPONS, fresh);
     return fresh;
   }
-  return stored;
+  return stored.filter((c) => c && typeof c === 'object' && typeof c.id === 'string' && Number.isFinite(Number(c.amount)));
 }
 
 /** 返回金额门槛内可用、面额最大的优惠券 */
@@ -353,6 +362,41 @@ function consumeCoupon(couponId) {
   const list = listCoupons().map((c) => (c.id === couponId ? Object.assign({}, c, { used: true }) : c));
   write(KEYS.COUPONS, list);
   return list;
+}
+
+/* -------------------------------------------------------------- 发票记录 */
+
+/**
+ * 开票记录结构：
+ * { id, orderId, orderNo, amount, type: 'personal' | 'company',
+ *   title, taxNo, email, remark, createdAt, status: 'issued' }
+ */
+function listInvoices() {
+  return readArray(KEYS.INVOICES)
+    .filter((v) => v && typeof v === 'object' && typeof v.id === 'string')
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+
+function getInvoiceByOrderId(orderId) {
+  if (!orderId) return null;
+  return listInvoices().find((v) => v.orderId === orderId) || null;
+}
+
+/** 新增一条开票记录（同一订单只保留最新一条），返回保存后的记录 */
+function saveInvoice(invoice) {
+  if (!invoice || !invoice.orderId) return null;
+  const record = Object.assign(
+    {
+      id: `iv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      createdAt: Date.now(),
+      status: 'issued'
+    },
+    invoice
+  );
+  const list = listInvoices().filter((v) => v.orderId !== record.orderId);
+  list.unshift(record);
+  write(KEYS.INVOICES, list.slice(0, 50));
+  return record;
 }
 
 /* ---------------------------------------------------------------- 重置 */
@@ -394,5 +438,8 @@ module.exports = {
   listCoupons,
   pickBestCoupon,
   consumeCoupon,
+  listInvoices,
+  getInvoiceByOrderId,
+  saveInvoice,
   resetAll
 };

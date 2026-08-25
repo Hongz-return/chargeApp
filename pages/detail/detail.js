@@ -2,6 +2,7 @@ const mock = require('../../utils/mock');
 const storage = require('../../utils/storage');
 const charging = require('../../utils/charging');
 const format = require('../../utils/format');
+const config = require('../../utils/config');
 
 const app = getApp();
 
@@ -133,11 +134,20 @@ Page({
   },
 
   onCall() {
+    const { hotline, workTime, note } = config.SUPPORT;
     wx.showModal({
       title: '客服热线',
-      content: '400-000-1234（演示数据，未接入真实电话）',
+      content: `${hotline}\n服务时间：${workTime}\n\n${note}。`,
       showCancel: false
     });
+  },
+
+  onShareAppMessage() {
+    const { station } = this.data;
+    return {
+      title: station ? `${station.name} · 空闲 ${station.idle}/${station.total}` : '充电站详情',
+      path: station ? `/pages/detail/detail?id=${station.id}` : '/pages/index/index'
+    };
   },
 
   /* ---------------------------------------------------------- 开始充电 */

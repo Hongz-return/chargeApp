@@ -197,10 +197,12 @@
 
 .bg-green {
   background: #e8f8ee;
+  color: var(--brand);
 }
 
 .bg-orange {
   background: #fff2e0;
+  color: #ff8a00;
 }
 
 .bg-red {
@@ -210,6 +212,7 @@
 
 .bg-blue {
   background: #e8f0ff;
+  color: var(--info);
 }
 
 .quick-label {
@@ -231,8 +234,64 @@
 
 /* --------------------------------------------------------------- 其它 */
 
-.danger-row .row-label {
+.danger-row .row-label,
+.danger-row .row-icon {
   color: #fa5151;
+}
+
+.list-row .row-icon {
+  color: var(--text-2);
+}
+
+/* ---------------------------------------------------------- 演示版声明 */
+
+.notice-card {
+  background: #f8fbf9;
+  border: 1rpx solid #dff2e6;
+  box-shadow: none;
+}
+
+.notice-title {
+  display: flex;
+  align-items: center;
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--brand-dark);
+}
+
+.notice-title-text {
+  margin-left: 10rpx;
+}
+
+.notice-item {
+  position: relative;
+  font-size: 23rpx;
+  color: var(--text-2);
+  line-height: 1.7;
+  margin-top: 12rpx;
+  padding-left: 20rpx;
+}
+
+.notice-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 16rpx;
+  width: 8rpx;
+  height: 8rpx;
+  border-radius: 50%;
+  background: #a9d9bd;
+}
+
+.notice-strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.notice-more {
+  margin-top: 20rpx;
+  font-size: 23rpx;
+  color: var(--brand);
 }
 
 .footer-note {

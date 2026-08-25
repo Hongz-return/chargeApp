@@ -50,6 +50,388 @@ page {
   padding-bottom: 200rpx;
 }
 
+/* ------------------------------------------------------------------ 图标 */
+
+/*
+ * 纯 CSS 图标：用 ::before / ::after 两个伪元素拼出线性图标。
+ * 尺寸跟随 font-size（1em × 1em），颜色跟随 currentColor，
+ * 因此可以直接放进按钮、列表行、空态里而不需要额外的图片资源。
+ *
+ *   <view class="ic ic-wallet"></view>
+ */
+.ic {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.14em;
+  flex-shrink: 0;
+}
+
+.ic::before,
+.ic::after {
+  content: '';
+  position: absolute;
+  box-sizing: border-box;
+}
+
+/* 定位（水滴） */
+.ic-pin::before {
+  left: 14%;
+  top: 6%;
+  width: 72%;
+  height: 72%;
+  border: 0.12em solid currentColor;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+}
+
+.ic-pin::after {
+  left: 38%;
+  top: 28%;
+  width: 24%;
+  height: 24%;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 搜索 */
+.ic-search::before {
+  left: 6%;
+  top: 6%;
+  width: 62%;
+  height: 62%;
+  border: 0.12em solid currentColor;
+  border-radius: 50%;
+}
+
+.ic-search::after {
+  left: 60%;
+  top: 62%;
+  width: 36%;
+  height: 0.12em;
+  background: currentColor;
+  border-radius: 0.12em;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+/* 扫码 */
+.ic-scan::before {
+  left: 6%;
+  top: 10%;
+  width: 88%;
+  height: 80%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.16em;
+}
+
+.ic-scan::after {
+  left: 6%;
+  top: 47%;
+  width: 88%;
+  height: 0.12em;
+  background: currentColor;
+}
+
+/* 地图 */
+.ic-map::before {
+  left: 4%;
+  top: 14%;
+  width: 92%;
+  height: 72%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.12em;
+}
+
+.ic-map::after {
+  left: 36%;
+  top: 14%;
+  width: 0.12em;
+  height: 72%;
+  background: currentColor;
+}
+
+/* 列表 */
+.ic-list::before {
+  left: 6%;
+  top: 16%;
+  width: 88%;
+  height: 34%;
+  border-top: 0.12em solid currentColor;
+  border-bottom: 0.12em solid currentColor;
+}
+
+.ic-list::after {
+  left: 6%;
+  top: 84%;
+  width: 88%;
+  height: 0.12em;
+  background: currentColor;
+}
+
+/* 回到当前位置（准星） */
+.ic-locate::before {
+  left: 8%;
+  top: 8%;
+  width: 84%;
+  height: 84%;
+  border: 0.12em solid currentColor;
+  border-radius: 50%;
+}
+
+.ic-locate::after {
+  left: 34%;
+  top: 34%;
+  width: 32%;
+  height: 32%;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 导航（罗盘） */
+.ic-compass::before {
+  left: 4%;
+  top: 4%;
+  width: 92%;
+  height: 92%;
+  border: 0.12em solid currentColor;
+  border-radius: 50%;
+}
+
+.ic-compass::after {
+  left: 30%;
+  top: 46%;
+  width: 44%;
+  height: 0.14em;
+  background: currentColor;
+  border-radius: 0.14em;
+  transform: rotate(-45deg);
+}
+
+/* 复制 */
+.ic-copy::before {
+  left: 2%;
+  top: 2%;
+  width: 62%;
+  height: 62%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.12em;
+}
+
+.ic-copy::after {
+  left: 34%;
+  top: 34%;
+  width: 64%;
+  height: 64%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.12em;
+}
+
+/* 电话 */
+.ic-phone::before {
+  left: 24%;
+  top: 4%;
+  width: 52%;
+  height: 92%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.16em;
+}
+
+.ic-phone::after {
+  left: 44%;
+  top: 76%;
+  width: 12%;
+  height: 12%;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 钱包 */
+.ic-wallet::before {
+  left: 2%;
+  top: 18%;
+  width: 96%;
+  height: 64%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.14em;
+}
+
+.ic-wallet::after {
+  right: 14%;
+  top: 44%;
+  width: 0.18em;
+  height: 0.18em;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* 单据 / 账单 / 发票 */
+.ic-doc::before {
+  left: 14%;
+  top: 2%;
+  width: 72%;
+  height: 96%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.1em;
+}
+
+.ic-doc::after {
+  left: 30%;
+  top: 26%;
+  width: 40%;
+  height: 0.1em;
+  background: currentColor;
+  box-shadow: 0 0.22em 0 currentColor, 0 0.44em 0 currentColor;
+}
+
+/* 优惠券 */
+.ic-ticket::before {
+  left: 2%;
+  top: 22%;
+  width: 96%;
+  height: 56%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.12em;
+}
+
+.ic-ticket::after {
+  left: 64%;
+  top: 30%;
+  width: 0.1em;
+  height: 40%;
+  background: currentColor;
+}
+
+/* 闪电：与 tabBar 图标（tools/gen-assets.js 的 BOLT）使用同一组顶点 */
+.ic-bolt::before {
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: currentColor;
+  clip-path: polygon(64% 4%, 22% 57%, 45% 57%, 37% 96%, 78% 43%, 55% 43%);
+}
+
+/* 车辆 */
+.ic-car::before {
+  left: 2%;
+  top: 28%;
+  width: 96%;
+  height: 42%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.16em 0.16em 0.08em 0.08em;
+}
+
+.ic-car::after {
+  left: 18%;
+  top: 74%;
+  width: 0.18em;
+  height: 0.18em;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0.42em 0 0 currentColor;
+}
+
+/* 会话 / 客服 */
+.ic-chat::before {
+  left: 4%;
+  top: 12%;
+  width: 92%;
+  height: 60%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.18em;
+}
+
+.ic-chat::after {
+  left: 26%;
+  top: 66%;
+  width: 0;
+  height: 0;
+  border-left: 0.14em solid transparent;
+  border-right: 0.14em solid transparent;
+  border-top: 0.24em solid currentColor;
+}
+
+/* 说明 */
+.ic-info::before {
+  left: 4%;
+  top: 4%;
+  width: 92%;
+  height: 92%;
+  border: 0.12em solid currentColor;
+  border-radius: 50%;
+}
+
+.ic-info::after {
+  left: 46%;
+  top: 44%;
+  width: 0.1em;
+  height: 0.28em;
+  background: currentColor;
+  box-shadow: 0 -0.2em 0 currentColor;
+}
+
+/* 删除 */
+.ic-trash::before {
+  left: 20%;
+  top: 26%;
+  width: 60%;
+  height: 68%;
+  border: 0.12em solid currentColor;
+  border-radius: 0 0 0.12em 0.12em;
+}
+
+.ic-trash::after {
+  left: 8%;
+  top: 14%;
+  width: 84%;
+  height: 0.12em;
+  background: currentColor;
+  border-radius: 0.12em;
+}
+
+/* 收藏（两个圆角半瓣旋转拼成实心心形） */
+.ic-heart::before,
+.ic-heart::after {
+  top: 8%;
+  width: 44%;
+  height: 68%;
+  background: currentColor;
+  border-radius: 0.5em 0.5em 0 0;
+}
+
+.ic-heart::before {
+  left: 50%;
+  transform: rotate(-45deg);
+  transform-origin: 0 100%;
+}
+
+.ic-heart::after {
+  left: 6%;
+  transform: rotate(45deg);
+  transform-origin: 100% 100%;
+}
+
+/* 充电枪 / 插头 */
+.ic-plug::before {
+  left: 20%;
+  top: 32%;
+  width: 60%;
+  height: 50%;
+  border: 0.12em solid currentColor;
+  border-radius: 0.1em 0.1em 0.3em 0.3em;
+}
+
+.ic-plug::after {
+  left: 34%;
+  top: 8%;
+  width: 0.12em;
+  height: 0.26em;
+  background: currentColor;
+  box-shadow: 0.26em 0 0 currentColor;
+}
+
 /* ------------------------------------------------------------------ 卡片 */
 
 .card {

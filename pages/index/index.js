@@ -12,6 +12,9 @@ const FILTERS = [
   { key: 'favorite', label: '收藏' }
 ];
 
+/** 首次进入的演示声明是否已被关闭 */
+const NOTICE_KEY = 'cp_notice_dismissed';
+
 const SORTS = [
   { key: 'distance', label: '距离最近' },
   { key: 'price', label: '价格最低' },
@@ -33,11 +36,27 @@ Page({
     markers: [],
     selectedStation: null,
     mapCenter: mock.USER_LOCATION,
-    stats: { total: 0, idle: 0 }
+    stats: { total: 0, idle: 0 },
+    showNotice: false
   },
 
   onLoad() {
+    this.setData({ showNotice: !storage.read(NOTICE_KEY, false) });
     this.loadStations(true);
+  },
+
+  /** 演示声明只在首次进入时出现，关闭状态写入本机 */
+  onCloseNotice() {
+    storage.write(NOTICE_KEY, true);
+    this.setData({ showNotice: false });
+  },
+
+  onShareAppMessage() {
+    return { title: '充电桩小程序演示版：找站、扫码、充电、结算全流程', path: '/pages/index/index' };
+  },
+
+  onShareTimeline() {
+    return { title: '充电桩小程序演示版' };
   },
 
   onShow() {

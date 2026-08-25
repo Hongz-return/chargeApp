@@ -8,7 +8,9 @@
     "pages/order-detail/order-detail",
     "pages/wallet/wallet",
     "pages/favorites/favorites",
-    "pages/coupons/coupons"
+    "pages/coupons/coupons",
+    "pages/invoice/invoice",
+    "pages/about/about"
   ],
   "window": {
     "navigationBarBackgroundColor": "#07c160",

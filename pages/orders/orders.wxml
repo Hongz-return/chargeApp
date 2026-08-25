@@ -85,7 +85,7 @@
 
     <empty
       wx:if="{{orders.length === 0}}"
-      icon="🧾"
+      icon="doc"
       text="{{activeTab === 'all' ? '还没有充电订单' : '该分类下暂无订单'}}"
       sub="完成一次充电后，订单会自动保存在本地"
       action-text="去找充电桩"

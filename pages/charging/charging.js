@@ -57,6 +57,7 @@ Page({
 
   onUnload() {
     this.stopTimer();
+    this.setLeaveAlert(false);
   },
 
   onHide() {
@@ -150,8 +151,27 @@ Page({
     });
   },
 
+  /**
+   * 结算阶段拦截返回：订单已经变成「待支付」，直接退出容易让人以为费用丢了，
+   * 所以先提示一次，用户仍可离开并从订单页继续支付。
+   */
+  setLeaveAlert(enabled) {
+    try {
+      if (enabled) {
+        wx.enableAlertBeforeUnload({
+          message: '订单尚未支付，离开后可在「订单」中继续支付。确定离开吗？'
+        });
+      } else {
+        wx.disableAlertBeforeUnload();
+      }
+    } catch (err) {
+      // 基础库 2.12.0 以下不支持，忽略即可
+    }
+  },
+
   enterSettle(order) {
     this.stopTimer();
+    this.setLeaveAlert(true);
     const coupon = storage.pickBestCoupon(order.totalCost);
     wx.setNavigationBarTitle({ title: '订单结算' });
     this.setData(
@@ -227,6 +247,7 @@ Page({
       }
 
       app.refreshTabBarBadge();
+      this.setLeaveAlert(false);
       wx.setNavigationBarTitle({ title: '支付成功' });
       this.setData({
         phase: 'paid',

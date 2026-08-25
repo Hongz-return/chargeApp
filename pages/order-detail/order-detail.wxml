@@ -102,14 +102,15 @@
     <!-- 其它 -->
     <view class="card">
       <view class="list-row" bindtap="onCopyOrderNo">
-        <text class="row-icon">🧾</text>
+        <view class="row-icon"><view class="ic ic-copy"></view></view>
         <text class="row-label">订单号</text>
         <text class="row-value">{{order.orderNo}}</text>
         <text class="row-arrow">复制</text>
       </view>
       <view class="list-row" bindtap="onInvoice">
-        <text class="row-icon">📮</text>
+        <view class="row-icon"><view class="ic ic-doc"></view></view>
         <text class="row-label">申请开票</text>
+        <text class="row-value">{{invoiceHint}}</text>
         <text class="row-arrow">›</text>
       </view>
     </view>

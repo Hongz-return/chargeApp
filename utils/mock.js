@@ -9,6 +9,9 @@
  *  - idle    空闲，可开始充电
  *  - busy    使用中
  *  - offline 维护中/离线
+ *
+ * 站点的 `icon` 是一个中文场景徽标（商/快/写/超/购/社/铁/枢），
+ * 直接渲染在站点卡片与详情页的色块里，避免在界面上使用 emoji。
  */
 
 const storage = require('./storage');
@@ -37,7 +40,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.4,
     tags: ['免停车费', '24小时', '有雨棚', '商场配套'],
     theme: 'green',
-    icon: '⚡',
+    icon: '商',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.85, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.25, label: '平时' },
@@ -65,7 +68,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.35,
     tags: ['路侧车位', '大功率', '扫码即充'],
     theme: 'blue',
-    icon: '🔌',
+    icon: '快',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.72, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.05, label: '平时' },
@@ -91,7 +94,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.3,
     tags: ['写字楼', '车位充足', '慢充为主'],
     theme: 'purple',
-    icon: '🏢',
+    icon: '写',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.65, label: '谷时' },
       { period: '08:00 - 18:00', price: 0.95, label: '平时' },
@@ -118,7 +121,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.5,
     tags: ['超充', '免停车费', '休息室', '24小时'],
     theme: 'orange',
-    icon: '🚀',
+    icon: '超',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.98, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.45, label: '平时' },
@@ -145,7 +148,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.38,
     tags: ['商场配套', '快慢兼备', '有雨棚'],
     theme: 'green',
-    icon: '🛍️',
+    icon: '购',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.8, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.18, label: '平时' },
@@ -172,7 +175,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.25,
     tags: ['社区', '价格实惠', '24小时'],
     theme: 'blue',
-    icon: '🏡',
+    icon: '社',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.6, label: '谷时' },
       { period: '08:00 - 18:00', price: 0.88, label: '平时' },
@@ -199,7 +202,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.45,
     tags: ['超充', '地铁口', '扫码即充'],
     theme: 'orange',
-    icon: '🚇',
+    icon: '铁',
     priceRules: [
       { period: '00:00 - 08:00', price: 0.9, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.32, label: '平时' },
@@ -224,7 +227,7 @@ const STATIONS = [
     serviceFeePerKwh: 0.32,
     tags: ['交通枢纽', '车位多', '立体车库'],
     theme: 'purple',
-    icon: '🚄',
+    icon: '枢',
     priceRules: [
       { period: '05:30 - 08:00', price: 0.75, label: '谷时' },
       { period: '08:00 - 18:00', price: 1.1, label: '平时' },

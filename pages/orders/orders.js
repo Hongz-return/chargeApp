@@ -35,6 +35,10 @@ Page({
     this.loadOrders(false);
   },
 
+  onShareAppMessage() {
+    return { title: '充电桩小程序演示版：充电订单与账单明细', path: '/pages/index/index' };
+  },
+
   loadOrders(showLoading) {
     if (showLoading) this.setData({ loading: true });
 

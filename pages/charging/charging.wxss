@@ -210,6 +210,7 @@
 .coupon-icon {
   font-size: 36rpx;
   margin-right: 18rpx;
+  color: #ff8a00;
 }
 
 .coupon-main {
@@ -287,6 +288,11 @@
 .pay-icon {
   font-size: 40rpx;
   margin-right: 18rpx;
+  color: var(--text-2);
+}
+
+.pay-icon.brand {
+  color: var(--brand);
 }
 
 .pay-main {

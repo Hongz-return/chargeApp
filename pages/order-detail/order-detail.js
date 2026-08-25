@@ -5,7 +5,8 @@ Page({
   data: {
     loading: true,
     order: null,
-    timeline: []
+    timeline: [],
+    invoiceHint: ''
   },
 
   onLoad(options) {
@@ -41,6 +42,7 @@ Page({
     this.setData({
       loading: false,
       timeline,
+      invoiceHint: storage.getInvoiceByOrderId(raw.id) ? '已开票' : '',
       order: Object.assign({}, raw, {
         statusText: statusMeta.text,
         statusDesc: statusMeta.desc,
@@ -80,11 +82,24 @@ Page({
   },
 
   onInvoice() {
-    wx.showModal({
-      title: '申请开票',
-      content: '演示环境暂未接入开票服务，实际项目中此处可跳转发票抬头填写页。',
-      showCancel: false
-    });
+    const { order } = this.data;
+    if (order.status !== 'paid') {
+      wx.showToast({ title: '订单完成支付后可开票', icon: 'none' });
+      return;
+    }
+    const existing = storage.getInvoiceByOrderId(order.id);
+    if (existing) {
+      wx.showModal({
+        title: '该订单已开票',
+        content: `抬头「${existing.title}」，接收邮箱 ${existing.email}。可在发票管理中查看记录。`,
+        confirmText: '查看记录',
+        success: (res) => {
+          if (res.confirm) wx.navigateTo({ url: '/pages/invoice/invoice' });
+        }
+      });
+      return;
+    }
+    wx.navigateTo({ url: `/pages/invoice/invoice?orderId=${order.id}` });
   },
 
   onDelete() {

@@ -1,0 +1,215 @@
+/* ---------------------------------------------------------------- 分类 */
+
+.tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  font-size: 27rpx;
+  color: var(--text-2);
+  padding: 26rpx 0 20rpx;
+  position: relative;
+}
+
+.tab.active {
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 56rpx;
+  height: 5rpx;
+  border-radius: 5rpx;
+  background: var(--brand);
+}
+
+.section-title .section-sub {
+  color: var(--brand);
+}
+
+/* ------------------------------------------------------------ 可开票订单 */
+
+.order-item {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.order-item:last-child {
+  border-bottom: none;
+}
+
+.iv-check {
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  border: 2rpx solid #d5d8dc;
+  color: #fff;
+  font-size: 22rpx;
+  line-height: 34rpx;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.iv-check.on {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.oi-main {
+  flex: 1;
+  margin-left: 20rpx;
+  min-width: 0;
+}
+
+.oi-station {
+  font-size: 27rpx;
+  font-weight: 500;
+}
+
+.oi-meta {
+  font-size: 21rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+.oi-no {
+  font-size: 20rpx;
+  color: #c2c7cc;
+  margin-top: 6rpx;
+}
+
+.oi-amount {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #ff6f00;
+  margin-left: 16rpx;
+  flex-shrink: 0;
+}
+
+/* -------------------------------------------------------------- 抬头类型 */
+
+.type-row {
+  display: flex;
+}
+
+.type-item {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--text-2);
+  padding: 20rpx 0;
+  border: 1rpx solid #e3e6e9;
+  border-radius: 14rpx;
+}
+
+.type-item:first-child {
+  margin-right: 20rpx;
+}
+
+.type-item.active {
+  color: var(--brand-dark);
+  border-color: var(--brand);
+  background: var(--brand-light);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------- 表单字段 */
+
+.field {
+  display: flex;
+  align-items: center;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.field-label {
+  width: 200rpx;
+  flex-shrink: 0;
+  font-size: 27rpx;
+  color: var(--text-2);
+}
+
+.field-input {
+  flex: 1;
+  font-size: 27rpx;
+  text-align: right;
+}
+
+.field-placeholder {
+  color: #c2c7cc;
+  font-size: 25rpx;
+}
+
+.field-tip {
+  font-size: 21rpx;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-top: 18rpx;
+}
+
+/* -------------------------------------------------------------- 开票记录 */
+
+.iv-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.iv-title {
+  flex: 1;
+  font-size: 30rpx;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.iv-status {
+  font-size: 21rpx;
+  color: var(--brand);
+  background: var(--brand-light);
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.iv-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.iv-no {
+  font-size: 21rpx;
+  color: var(--muted);
+}
+
+.iv-amount {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #ff6f00;
+}
+
+/* ---------------------------------------------------------------- 底栏 */
+
+.footer-summary {
+  font-size: 24rpx;
+  color: var(--text-2);
+  text-align: center;
+  margin-bottom: 14rpx;
+}
+
+.footer-strong {
+  color: #ff6f00;
+  font-weight: 700;
+}

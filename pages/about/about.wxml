@@ -1,0 +1,74 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-logo">
+      <view class="ic ic-bolt"></view>
+    </view>
+    <view class="hero-name">充电桩小程序</view>
+    <view class="hero-badge">演示版 v{{version}}</view>
+    <view class="hero-sub">纯前端实现 · 本地 mock 数据 · 无后端依赖</view>
+  </view>
+
+  <!-- 演示声明 -->
+  <view class="card">
+    <view class="section-title">演示声明</view>
+    <view wx:for="{{statements}}" wx:key="title" class="st-item">
+      <view class="st-index">{{index + 1}}</view>
+      <view class="st-main">
+        <view class="st-title">{{item.title}}</view>
+        <view class="st-text">{{item.text}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 本机保存了哪些数据 -->
+  <view class="card">
+    <view class="section-title">
+      本机保存的数据
+      <text class="section-sub">微信小程序本地 Storage</text>
+    </view>
+    <view wx:for="{{storageKeys}}" wx:key="key" class="kv-row">
+      <text class="kv-key">{{item.key}}</text>
+      <text class="kv-desc">{{item.desc}}</text>
+    </view>
+    <view class="card-tip">以上数据不会离开本机，可在「我的 → 清除本地数据」一键删除并恢复初始演示状态。</view>
+  </view>
+
+  <!-- 未接入真实服务的能力 -->
+  <view class="card">
+    <view class="section-title">演示边界</view>
+    <view wx:for="{{limits}}" wx:key="*this" class="limit-row">
+      <text class="limit-mark">—</text>
+      <text class="limit-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 客服与分享 -->
+  <view class="card">
+    <view class="section-title">帮助与客服</view>
+    <view class="list-row">
+      <view class="row-icon"><view class="ic ic-phone"></view></view>
+      <text class="row-label">客服热线</text>
+      <text class="row-value">{{support.hotline}}</text>
+    </view>
+    <view class="list-row">
+      <view class="row-icon"><view class="ic ic-chat"></view></view>
+      <text class="row-label">服务时间</text>
+      <text class="row-value">{{support.workTime}}</text>
+    </view>
+    <view class="list-row" bindtap="onCopyHotline">
+      <view class="row-icon"><view class="ic ic-copy"></view></view>
+      <text class="row-label">复制客服热线</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="card-tip">{{support.note}}。演示版不提供在线客服会话。</view>
+  </view>
+
+  <view class="card">
+    <button class="share-btn" open-type="share">分享这个演示小程序</button>
+    <view class="card-tip">也可以点击右上角「···」→ 转发。分享内容不含任何本机数据。</view>
+  </view>
+
+  <view class="footer-note">
+    以 MIT 协议开源 · 接入真实后端时只需替换 utils/mock.js 与 utils/charging.js
+  </view>
+</view>

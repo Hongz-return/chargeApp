@@ -1,5 +1,6 @@
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const config = require('../../utils/config');
 
 const app = getApp();
 
@@ -10,8 +11,10 @@ Page({
     balance: '0.00',
     couponCount: 0,
     favoriteCount: 0,
+    invoiceCount: 0,
     stats: { orderCount: 0, unpaidCount: 0, totalEnergy: 0, totalCost: 0 },
-    hasCharging: false
+    hasCharging: false,
+    version: config.VERSION
   },
 
   onShow() {
@@ -33,6 +36,7 @@ Page({
       balance: format.formatMoney(wallet.balance),
       couponCount: storage.listCoupons().filter((c) => !c.used).length,
       favoriteCount: storage.listFavorites().length,
+      invoiceCount: storage.listInvoices().length,
       stats: storage.getStats(),
       hasCharging: !!app.globalData.chargingSession
     });
@@ -82,21 +86,33 @@ Page({
     });
   },
 
-  onMockEntry(e) {
-    const name = e.currentTarget.dataset.name;
+  onInvoiceTap() {
+    wx.navigateTo({ url: '/pages/invoice/invoice' });
+  },
+
+  onVehicleTap() {
+    const { plateNo, carModel } = this.data.user;
     wx.showModal({
-      title: name,
-      content: '这是演示 Demo，该功能未接入真实服务。实际项目中可在此对接后端接口。',
+      title: '我的车辆',
+      content: `${carModel}\n车牌：${plateNo}\n\n演示版内置一台示例车辆，车牌可在页面顶部修改；实际项目中此处对接车辆管理接口。`,
       showCancel: false
     });
   },
 
-  onAbout() {
+  onServiceTap() {
+    const { hotline, workTime, note } = config.SUPPORT;
     wx.showModal({
-      title: '关于本 Demo',
-      content: '充电桩微信小程序演示版\n纯前端实现，数据全部来自本地 mock 与 Storage，无任何后端依赖。',
-      showCancel: false
+      title: '帮助与客服',
+      content: `客服热线：${hotline}\n服务时间：${workTime}\n\n${note}。演示版的常见问题与业务边界见「演示说明与隐私」。`,
+      confirmText: '查看说明',
+      success: (res) => {
+        if (res.confirm) this.onAbout();
+      }
     });
+  },
+
+  onAbout() {
+    wx.navigateTo({ url: '/pages/about/about' });
   },
 
   onResetData() {

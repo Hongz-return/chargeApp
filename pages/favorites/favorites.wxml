@@ -16,7 +16,7 @@
 
     <empty
       wx:if="{{stations.length === 0}}"
-      icon="♡"
+      icon="heart"
       text="还没有收藏的充电站"
       sub="在充电站列表或详情页点击 ♡ 即可收藏常用站点"
       action-text="去逛逛"

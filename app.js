@@ -91,6 +91,23 @@ App({
     } catch (err) {
       // 低版本基础库忽略
     }
+
+    this.watchNetwork();
+  },
+
+  /**
+   * 演示版不发任何网络请求，断网时功能完全可用。
+   * 这里只在网络恢复/断开时给一次轻提示，避免用户以为界面「加载失败」。
+   */
+  watchNetwork() {
+    try {
+      wx.onNetworkStatusChange((res) => {
+        if (res.isConnected) return;
+        wx.showToast({ title: '当前无网络，演示版可离线使用', icon: 'none', duration: 2000 });
+      });
+    } catch (err) {
+      // 基础库不支持时忽略
+    }
   },
 
   onShow() {
