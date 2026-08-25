@@ -30,6 +30,7 @@ Page({
   loadProfile() {
     const user = storage.getUser();
     const wallet = storage.getWallet();
+    const stats = storage.getStats();
     this.setData({
       user,
       phoneText: format.maskPhone(user.phone),
@@ -37,7 +38,10 @@ Page({
       couponCount: storage.listCoupons().filter((c) => !c.used).length,
       favoriteCount: storage.listFavorites().length,
       invoiceCount: storage.listInvoices().length,
-      stats: storage.getStats(),
+      stats: Object.assign({}, stats, {
+        totalEnergyText: format.formatEnergy(stats.totalEnergy),
+        totalCostText: format.formatMoney(stats.totalCost)
+      }),
       hasCharging: !!app.globalData.chargingSession
     });
   },

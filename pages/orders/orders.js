@@ -16,6 +16,14 @@ const STATUS_META = {
   paid: { text: '已完成', className: 'paid' }
 };
 
+/** 汇总数字统一保留两位小数，避免出现 156.2 这类不齐的金额 */
+function decorateStats(stats) {
+  return Object.assign({}, stats, {
+    totalEnergyText: format.formatEnergy(stats.totalEnergy),
+    totalCostText: format.formatMoney(stats.totalCost)
+  });
+}
+
 Page({
   data: {
     tabs: TABS,
@@ -66,7 +74,7 @@ Page({
         });
       });
 
-      this.setData({ orders, counts, stats: storage.getStats(), loading: false });
+      this.setData({ orders, counts, stats: decorateStats(storage.getStats()), loading: false });
     };
 
     if (showLoading) setTimeout(run, 260);

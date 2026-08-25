@@ -59,25 +59,27 @@
   margin-top: 10rpx;
 }
 
+/* 车牌与「修改」放进同一个胶囊，避免第二行文字压到头部渐变的浅色区域 */
 .plate {
   flex-shrink: 0;
-  text-align: right;
+  display: flex;
+  align-items: center;
   color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 10rpx 18rpx;
+  border-radius: 12rpx;
 }
 
 .plate-no {
-  display: block;
   font-size: 24rpx;
-  background: rgba(255, 255, 255, 0.22);
-  padding: 8rpx 18rpx;
-  border-radius: 10rpx;
 }
 
 .plate-edit {
-  display: block;
   font-size: 20rpx;
-  opacity: 0.8;
-  margin-top: 8rpx;
+  opacity: 0.85;
+  margin-left: 14rpx;
+  padding-left: 14rpx;
+  border-left: 1rpx solid rgba(255, 255, 255, 0.45);
 }
 
 /* --------------------------------------------------------------- 钱包 */

@@ -61,19 +61,24 @@
   border-radius: 999rpx;
 }
 
+/* 提示落在 hero 渐变的分界线附近，做成白底胶囊在深浅背景上都清晰 */
 .charging-hint {
   margin-top: 28rpx;
   font-size: 26rpx;
-  color: #fff;
+  color: var(--brand-dark);
   display: flex;
   align-items: center;
+  background: #fff;
+  padding: 10rpx 26rpx;
+  border-radius: 999rpx;
+  box-shadow: 0 4rpx 16rpx rgba(6, 140, 76, 0.16);
 }
 
 .hint-dot {
   width: 14rpx;
   height: 14rpx;
   border-radius: 50%;
-  background: #fff;
+  background: var(--brand);
   margin-right: 12rpx;
   animation: blink 1.2s ease-in-out infinite;
 }

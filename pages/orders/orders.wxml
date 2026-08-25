@@ -6,11 +6,11 @@
       <view class="summary-label">累计订单</view>
     </view>
     <view class="summary-cell">
-      <view class="summary-value">{{stats.totalEnergy}}</view>
+      <view class="summary-value">{{stats.totalEnergyText}}</view>
       <view class="summary-label">累计充电（度）</view>
     </view>
     <view class="summary-cell">
-      <view class="summary-value">¥{{stats.totalCost}}</view>
+      <view class="summary-value">¥{{stats.totalCostText}}</view>
       <view class="summary-label">累计消费</view>
     </view>
   </view>

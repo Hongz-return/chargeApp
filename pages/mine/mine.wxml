@@ -48,11 +48,11 @@
         <view class="stat-label">充电次数</view>
       </view>
       <view class="stat-cell">
-        <view class="stat-value">{{stats.totalEnergy}}</view>
-        <view class="stat-label">累计电量(度)</view>
+        <view class="stat-value">{{stats.totalEnergyText}}</view>
+        <view class="stat-label">累计电量（度）</view>
       </view>
       <view class="stat-cell">
-        <view class="stat-value">¥{{stats.totalCost}}</view>
+        <view class="stat-value">¥{{stats.totalCostText}}</view>
         <view class="stat-label">累计消费</view>
       </view>
       <view class="stat-cell">
