@@ -150,8 +150,26 @@ files
     });
   });
 
-/* 6. WXML 标签闭合 + 事件处理函数在对应 js 中存在 */
+/* 6. WXML 标签闭合 + 事件处理函数与页面 js 双向对齐 */
 const VOID_TAGS = new Set(['image', 'input', 'import', 'include', 'wxs', 'icon', 'progress', 'slot']);
+
+/** 由小程序框架调用的钩子，不需要在 WXML 里绑定 */
+const LIFECYCLE_HOOKS = new Set([
+  'onLoad',
+  'onShow',
+  'onReady',
+  'onHide',
+  'onUnload',
+  'onPullDownRefresh',
+  'onReachBottom',
+  'onPageScroll',
+  'onResize',
+  'onTabItemTap',
+  'onShareAppMessage',
+  'onShareTimeline',
+  'onAddToFavorites',
+  'onSaveExitState'
+]);
 
 files
   .filter((f) => f.endsWith('.wxml'))
@@ -180,15 +198,26 @@ files
     if (!fs.existsSync(jsFile)) return;
     const js = fs.readFileSync(jsFile, 'utf8');
     const handlerRe = /\b(?:bind|catch|mut-bind|capture-bind|capture-catch)-?:?[\w-]+\s*=\s*"([^"{}\s]+)"/g;
-    const seen = new Set();
+    const bound = new Set();
     while ((m = handlerRe.exec(source))) {
       const handler = m[1];
-      if (seen.has(handler)) continue;
-      seen.add(handler);
+      if (bound.has(handler)) continue;
+      bound.add(handler);
       checked.handlers++;
       if (!new RegExp(`\\b${handler}\\s*[(:]`).test(js)) {
         fail(`WXML 绑定的事件处理函数在页面中不存在: ${rel(file)} -> ${handler}`);
       }
+    }
+
+    // 反过来：js 里写了 onXxx 却没人绑、也没人调，就是点不到的死代码
+    const jsBody = js.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    const declRe = /^ {2}(on[A-Z]\w*)\s*\(/gm;
+    while ((m = declRe.exec(jsBody))) {
+      const name = m[1];
+      if (LIFECYCLE_HOOKS.has(name) || bound.has(name)) continue;
+      // 在 js 内部被调用（this.onXxx() / 传引用）也算用上了
+      if (new RegExp(`this\\.${name}\\b`).test(jsBody)) continue;
+      fail(`页面里定义了点不到的事件处理函数（未绑定也未被调用）: ${rel(jsFile)} -> ${name}`);
     }
   });
 

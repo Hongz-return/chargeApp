@@ -320,9 +320,5 @@ Page({
 
   onBackHome() {
     wx.switchTab({ url: '/pages/index/index' });
-  },
-
-  onGoOrders() {
-    wx.switchTab({ url: '/pages/orders/orders' });
   }
 });

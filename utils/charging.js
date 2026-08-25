@@ -261,12 +261,18 @@ function payOrder(orderId, method, coupon) {
 
   if (validCoupon) storage.consumeCoupon(validCoupon.id);
 
+  // 应付为 0 有两种来路：券全额抵扣，或者对账结转出来的 0 元订单。写成同一个「优惠券抵扣」
+  // 会让后者的账单出现「优惠减免 ¥0.00 / 支付方式 优惠券抵扣」这种自相矛盾的组合。
+  let payMethodText;
+  if (payAmount > 0) payMethodText = method === 'balance' ? '余额支付' : '微信支付';
+  else payMethodText = couponAmount > 0 ? '优惠券抵扣' : '无需支付';
+
   const paid = storage.updateOrder(orderId, {
     status: 'paid',
     couponId: validCoupon ? validCoupon.id : '',
     couponAmount: +couponAmount.toFixed(2),
     payAmount,
-    payMethod: payAmount > 0 ? (method === 'balance' ? '余额支付' : '微信支付') : '优惠券抵扣',
+    payMethod: payMethodText,
     paidAt: Date.now()
   });
 

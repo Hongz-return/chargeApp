@@ -252,6 +252,19 @@ test('会话丢失的「充电中」订单会被结转为待支付并释放枪�
   assert.strictEqual(charging.startCharging(STATION, PILE, { now: T0 + 61 * 1000 }).ok, true);
 });
 
+test('对账结转出来的 0 元订单支付后记为「无需支付」而不是「优惠券抵扣」', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  storage.clearSession();
+  charging.reconcile(T0 + 60 * 1000);
+
+  const res = charging.payOrder(session.orderId, 'balance', null);
+
+  assert.strictEqual(res.ok, true);
+  assert.strictEqual(res.order.payAmount, 0);
+  assert.strictEqual(res.order.couponAmount, 0);
+  assert.strictEqual(res.order.payMethod, '无需支付', '没用券就不能写成券抵扣');
+});
+
 test('订单已不存在的孤儿会话会被清理', () => {
   const { session } = charging.startCharging(STATION, PILE, { now: T0 });
   storage.removeOrder(session.orderId);

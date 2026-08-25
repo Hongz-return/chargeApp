@@ -70,7 +70,7 @@ curl http://127.0.0.1:3000/api/health    # 确认已就绪
 无需 `npm install`，Node ≥ 18：
 
 ```bash
-npm run check    # 工程静态校验 + 121 个测试用例
+npm run check    # 工程静态校验 + 122 个测试用例
 npm run smoke    # 本地后端 30 项闭环检查（会自己在随机空闲端口起实例）
 ```
 
@@ -83,8 +83,8 @@ CI（`.github/workflows/ci.yml`）在每次 push 与 PR 上跑三个 job：
 | `assets` | 重跑 `npm run build:assets`，生成物与仓库有 diff 即失败 |
 
 `npm run validate` 会拦下的问题：JSON / JS 语法、页面四件套缺失、组件引用悬空、
-WXML 标签未闭合、绑定的处理函数不存在、未注册的页面目录、静态资源缺失、
-三处版本号不一致、`project.config.json` 写成开发者工具不接受的形式、Markdown 死链。
+WXML 标签未闭合、绑定的处理函数不存在、页面里点不到的死处理函数、未注册的页面目录、
+静态资源缺失、三处版本号不一致、`project.config.json` 写成开发者工具不接受的形式、Markdown 死链。
 
 ---
 
@@ -118,7 +118,7 @@ WXML 标签未闭合、绑定的处理函数不存在、未注册的页面目录
 | 可选本地后端（零依赖、内存态、20 个接口、冒烟脚本） | ✅ |
 | 数据源可切换（`local` / `remote`，默认 `local`） | ✅ |
 | 工程静态校验脚本 `npm run validate` | ✅ |
-| 测试 121 个用例（单元 + 页面级 + 接口契约 + remote 闭环） | ✅ |
+| 测试 122 个用例（单元 + 页面级 + 接口契约 + remote 闭环） | ✅ |
 | CI：Node 18/20/22 + 后端冒烟 + 生成物一致性 | ✅ |
 | 界面图 12 张与静态预览页（脚本从源码生成） | ✅ |
 | README / CHANGELOG / LICENSE(MIT) / 本文件 | ✅ |
