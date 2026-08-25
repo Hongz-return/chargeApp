@@ -21,8 +21,11 @@
     "ignore": [
       { "type": "folder", "value": "tests" },
       { "type": "folder", "value": "tools" },
+      { "type": "folder", "value": "docs" },
+      { "type": "folder", "value": ".github" },
       { "type": "file", "value": "package.json" },
       { "type": "file", "value": "README.md" },
+      { "type": "file", "value": "CHANGELOG.md" },
       { "type": "file", "value": ".gitignore" }
     ]
   },
@@ -34,7 +37,9 @@
         { "name": "扫码进入-指定枪", "pathName": "pages/detail/detail", "query": "id=st-004&pileId=p-004-a1&from=scan", "scene": null },
         { "name": "我的订单", "pathName": "pages/orders/orders", "query": "", "scene": null },
         { "name": "我的", "pathName": "pages/mine/mine", "query": "", "scene": null },
-        { "name": "我的钱包", "pathName": "pages/wallet/wallet", "query": "", "scene": null }
+        { "name": "我的钱包", "pathName": "pages/wallet/wallet", "query": "", "scene": null },
+        { "name": "发票管理", "pathName": "pages/invoice/invoice", "query": "", "scene": null },
+        { "name": "演示说明与隐私", "pathName": "pages/about/about", "query": "", "scene": null }
       ]
     }
   },
