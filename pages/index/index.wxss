@@ -186,9 +186,10 @@
 
 /* ---------------------------------------------------------------- 地图 */
 
+/* 头部（定位栏 + 搜索 + 筛选 + 排序）实测约 304rpx，地图铺满剩余高度 */
 .map-wrap {
   position: relative;
-  height: calc(100vh - 400rpx);
+  height: calc(100vh - 312rpx);
   margin-top: 8rpx;
 }
 
