@@ -1,0 +1,11 @@
+{
+  "pages": ["pages/index/index", "pages/detail/detail"],
+  "window": {
+    "navigationBarTitleText": "充电桩",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundTextStyle": "light"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

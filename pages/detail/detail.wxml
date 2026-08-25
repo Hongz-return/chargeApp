@@ -1,0 +1,11 @@
+<view class="container" wx:if="{{station}}">
+  <view class="name">{{station.name}}</view>
+  <view class="item">地址：{{station.address}}</view>
+  <view class="item">距离：{{station.distanceKm}} km</view>
+  <view class="item">空闲枪口：{{station.availableGuns}}</view>
+  <view class="item">电价：¥{{station.pricePerKwh}} / kWh</view>
+
+  <button class="charge-btn" type="primary" bindtap="startCharging">开始充电</button>
+</view>
+
+<view class="empty" wx:else>未找到充电站信息</view>

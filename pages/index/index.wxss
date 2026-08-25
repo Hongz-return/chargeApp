@@ -1,0 +1,38 @@
+.container {
+  padding: 24rpx;
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.06);
+}
+
+.name {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.meta {
+  margin-top: 8rpx;
+  color: #4b5563;
+}
+
+.price {
+  margin-top: 10rpx;
+  color: #1d4ed8;
+  font-weight: 600;
+}

@@ -1,0 +1,16 @@
+<view class="container">
+  <view class="title">可用充电站</view>
+  <view class="list">
+    <view
+      class="card"
+      wx:for="{{stations}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="openDetail"
+    >
+      <view class="name">{{item.name}}</view>
+      <view class="meta">距离 {{item.distanceKm}} km · 空闲 {{item.availableGuns}} 枪</view>
+      <view class="price">¥{{item.pricePerKwh}} / kWh</view>
+    </view>
+  </view>
+</view>
