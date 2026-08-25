@@ -355,15 +355,30 @@ function clearPileStatus() {
 /* -------------------------------------------------------------- 优惠券 */
 
 const DEFAULT_COUPONS = [
-  { id: 'cp-01', title: '新人充电立减', amount: 5, threshold: 20, expireAt: '2026-12-31', used: false },
-  { id: 'cp-02', title: '服务费抵扣券', amount: 3, threshold: 10, expireAt: '2026-12-31', used: false },
-  { id: 'cp-03', title: '夜间充电券', amount: 8, threshold: 50, expireAt: '2026-12-31', used: false }
+  { id: 'cp-01', title: '新人充电立减', amount: 5, threshold: 20, used: false },
+  { id: 'cp-02', title: '服务费抵扣券', amount: 3, threshold: 10, used: false },
+  { id: 'cp-03', title: '夜间充电券', amount: 8, threshold: 50, used: false }
 ];
+
+/**
+ * 演示券的有效期：从播种那天起算 90 天。
+ *
+ * 写死一个日期的话，Demo 放过那天之后所有券都过期，结算页再也匹配不到券，
+ * 「自动抵扣最优惠券」这一步就悄无声息地从演示里消失了。
+ */
+const COUPON_VALID_DAYS = 90;
+
+function buildDefaultCoupons(now) {
+  const d = new Date((now || Date.now()) + COUPON_VALID_DAYS * 24 * 3600 * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  const expireAt = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return DEFAULT_COUPONS.map((c) => Object.assign({}, c, { expireAt }));
+}
 
 function listCoupons() {
   const stored = read(KEYS.COUPONS, null);
   if (!Array.isArray(stored)) {
-    const fresh = clone(DEFAULT_COUPONS);
+    const fresh = buildDefaultCoupons();
     write(KEYS.COUPONS, fresh);
     return fresh;
   }
@@ -460,6 +475,8 @@ module.exports = {
   KEYS,
   LIMITS,
   MONEY_EPSILON,
+  COUPON_VALID_DAYS,
+  buildDefaultCoupons,
   read,
   write,
   remove,

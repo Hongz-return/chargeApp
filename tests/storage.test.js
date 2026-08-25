@@ -127,6 +127,27 @@ test('优惠券按门槛挑选面额最大的一张', () => {
   assert.strictEqual(storage.listCoupons().find((c) => c.id === 'cp-03').used, true);
 });
 
+test('演示券的有效期跟着播种时间走，Demo 放久了也不会整批过期', () => {
+  // 播种日期写死的话，过了那天所有券都过期，结算页再也匹配不到券
+  const farFuture = Date.parse('2030-06-01T10:00:00');
+  const seeded = storage.buildDefaultCoupons(farFuture);
+
+  assert.strictEqual(seeded.length, 3);
+  assert.ok(
+    seeded.every((c) => storage.isCouponUsable(c, 100, farFuture)),
+    '在播种当天全部可用'
+  );
+  assert.ok(
+    seeded.every((c) => storage.isCouponUsable(c, 100, farFuture + (storage.COUPON_VALID_DAYS - 1) * 86400000)),
+    '有效期内一直可用'
+  );
+  assert.ok(
+    seeded.every((c) => !storage.isCouponUsable(c, 100, farFuture + (storage.COUPON_VALID_DAYS + 2) * 86400000)),
+    '过了有效期才失效'
+  );
+  assert.match(seeded[0].expireAt, /^\d{4}-\d{2}-\d{2}$/, '页面直接展示这个字段');
+});
+
 test('优惠券可用性同时看核销状态、有效期与门槛', () => {
   const base = { id: 'cp-x', amount: 5, threshold: 20, expireAt: '2026-12-31', used: false };
   const now = Date.parse('2026-08-25T12:00:00');
