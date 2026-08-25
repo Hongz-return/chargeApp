@@ -11,7 +11,9 @@ const STORAGE_DESC = {
   SESSION: '进行中的充电会话',
   PILE_STATUS: '充电枪占用状态',
   COUPONS: '优惠券与核销状态',
-  INVOICES: '开票记录'
+  INVOICES: '开票记录',
+  SEEDED: '示例历史订单是否已播种',
+  NOTICE_DISMISSED: '首页演示声明提示条是否已关闭'
 };
 
 const LIMITS = [

@@ -1,5 +1,6 @@
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const nav = require('../../utils/nav');
 
 const app = getApp();
 
@@ -77,8 +78,12 @@ Page({
       this.setData({ orders, counts, stats: decorateStats(storage.getStats()), loading: false });
     };
 
-    if (showLoading) setTimeout(run, 260);
+    if (showLoading) nav.delay(this, run, 260);
     else run();
+  },
+
+  onUnload() {
+    nav.clearDelays(this);
   },
 
   onTabTap(e) {
@@ -125,6 +130,6 @@ Page({
 
   onPullDownRefresh() {
     this.loadOrders(true);
-    setTimeout(() => wx.stopPullDownRefresh(), 400);
+    nav.delay(this, () => wx.stopPullDownRefresh(), 400);
   }
 });

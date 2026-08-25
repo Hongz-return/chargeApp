@@ -15,6 +15,7 @@
  */
 
 const storage = require('./storage');
+const format = require('./format');
 
 /** 模拟的用户当前位置（深圳南山科技园一带） */
 const USER_LOCATION = { latitude: 22.535, longitude: 113.942 };
@@ -365,7 +366,21 @@ function setPileStatus(stationId, pileId, status) {
   return getStationById(stationId);
 }
 
-/** 地图 marker 数据 */
+/**
+ * 站点卡片视图模型：补上距离文案与收藏态。
+ * 首页与收藏页共用，避免两处各写一份而算出不一样的距离格式。
+ */
+function toStationCards(stations, favoriteIds) {
+  const ids = Array.isArray(favoriteIds) ? favoriteIds : [];
+  return stations.map((s) =>
+    Object.assign({}, s, {
+      distanceText: format.formatDistance(s.distanceKm),
+      isFavorite: ids.indexOf(s.id) >= 0
+    })
+  );
+}
+
+/** 地图 marker 数据。无空闲枪的站点用灰色 pin，与列表里的空闲数保持一致 */
 function getMarkers(stations) {
   return stations.map((s, index) => ({
     id: index,
@@ -374,7 +389,7 @@ function getMarkers(stations) {
     longitude: s.longitude,
     width: 32,
     height: 32,
-    iconPath: '/assets/marker/pin.png',
+    iconPath: s.idle > 0 ? '/assets/marker/pin.png' : '/assets/marker/pin-gray.png',
     callout: {
       content: `${s.name}\n空闲 ${s.idle}/${s.total} · ¥${s.totalPricePerKwh}/度`,
       color: '#1f2429',
@@ -453,6 +468,7 @@ module.exports = {
   getStationsByIds,
   getPile,
   setPileStatus,
+  toStationCards,
   getMarkers,
   resolveScanCode,
   randomIdlePile

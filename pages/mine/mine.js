@@ -1,6 +1,7 @@
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
 const config = require('../../utils/config');
+const nav = require('../../utils/nav');
 
 const app = getApp();
 
@@ -22,9 +23,13 @@ Page({
     this.loadProfile();
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+  },
+
   onPullDownRefresh() {
     this.loadProfile();
-    setTimeout(() => wx.stopPullDownRefresh(), 300);
+    nav.delay(this, () => wx.stopPullDownRefresh(), 300);
   },
 
   loadProfile() {
@@ -126,8 +131,8 @@ Page({
       confirmColor: '#fa5151',
       success: (res) => {
         if (!res.confirm) return;
+        // resetAll 已包含播种标记与首页提示条状态，清完直接重新播种即可
         storage.resetAll();
-        storage.remove('cp_seeded');
         app.reseedDemoData();
         wx.showToast({ title: '已恢复初始状态', icon: 'success' });
         this.loadProfile();

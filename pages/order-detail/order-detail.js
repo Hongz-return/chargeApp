@@ -1,5 +1,8 @@
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const nav = require('../../utils/nav');
+
+const app = getApp();
 
 Page({
   data: {
@@ -18,12 +21,16 @@ Page({
     if (!this.data.loading) this.loadOrder();
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+  },
+
   loadOrder() {
     const raw = storage.getOrderById(this.orderId);
     if (!raw) {
       this.setData({ loading: false });
       wx.showToast({ title: '订单不存在', icon: 'none' });
-      setTimeout(() => wx.navigateBack(), 1200);
+      nav.delay(this, () => nav.backOrHome(), 1200);
       return;
     }
 
@@ -110,8 +117,9 @@ Page({
       success: (res) => {
         if (!res.confirm) return;
         storage.removeOrder(this.data.order.id);
+        app.refreshTabBarBadge();
         wx.showToast({ title: '已删除', icon: 'none' });
-        setTimeout(() => wx.navigateBack(), 700);
+        nav.delay(this, () => nav.backOrHome(), 700);
       }
     });
   }

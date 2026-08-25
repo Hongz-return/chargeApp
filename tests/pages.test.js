@@ -280,6 +280,60 @@ test('充电页：余额不足时提示充值且订单保持待支付', async ()
   page.onUnload();
 });
 
+test('充电页：优惠券在别处被核销后，支付会重算金额而不是静默多扣', async () => {
+  await startChargingFromDetail('st-001');
+
+  const page = env.loadPage('pages/charging/charging.js');
+  page.onLoad({});
+  rewindSession(10);
+  page.tick();
+  page.onStopCharging();
+  await wait(700);
+
+  const staleCoupon = page.data.coupon;
+  assert.ok(staleCoupon);
+  storage.consumeCoupon(staleCoupon.id); // 另一笔结算把这张券用掉了
+
+  page.onPay();
+  await wait(1000);
+
+  assert.strictEqual(page.data.phase, 'settle', '支付被拒，留在结算页');
+  assert.ok(env.calls.toast.indexOf('优惠券已失效，已为你重新计算金额') >= 0);
+  assert.strictEqual(storage.getOrderById(page.data.order.id).status, 'unpaid');
+  assert.notStrictEqual(page.data.coupon && page.data.coupon.id, staleCoupon.id, '换成另一张仍可用的券');
+
+  // 重新确认后可以正常付掉
+  page.onPay();
+  await wait(1000);
+  assert.strictEqual(page.data.phase, 'paid');
+  page.onUnload();
+});
+
+test('充电页：离开页面后挂起的延时任务不再执行', async () => {
+  await startChargingFromDetail('st-001');
+
+  const page = env.loadPage('pages/charging/charging.js');
+  page.onLoad({});
+  page.onStopCharging(); // 内部有 600ms 的「正在停止」延时
+  page.onUnload();
+  await wait(800);
+
+  assert.strictEqual(page.data.phase, 'charging', '页面已卸载，不应再改动页面数据');
+  assert.ok(charging.getActiveSession(), '未卸载完成的结算流程不应把会话结掉');
+});
+
+test('充电页：没有进行中的订单且页面栈只剩一页时退回首页', async () => {
+  env.state.pageStackDepth = 1;
+  const page = env.loadPage('pages/charging/charging.js');
+  page.onLoad({});
+  await wait(1300);
+
+  assert.ok(env.calls.toast.indexOf('没有进行中的充电订单') >= 0);
+  assert.strictEqual(env.calls.switchTab.pop(), '/pages/index/index');
+  assert.strictEqual(env.calls.back.length, 0, '栈里没有上一页时不能调 navigateBack');
+  page.onUnload();
+});
+
 test('充电页：可从待支付订单直接进入结算', async () => {
   await startChargingFromDetail('st-001');
   const order = charging.stopCharging();
@@ -341,6 +395,45 @@ test('订单详情页：账单字段、时间线与删除', () => {
 
   page.onDelete();
   assert.strictEqual(storage.getOrderById('od-demo-2'), null);
+});
+
+test('订单详情页：删除订单后刷新 tabBar 角标并安全退出', async () => {
+  // 待支付订单让「订单」tab 亮着红点
+  storage.saveOrder({
+    id: 'od-unpaid',
+    orderNo: 'CD999',
+    status: 'unpaid',
+    stationId: 'st-001',
+    startTime: Date.now(),
+    energyKwh: 1,
+    totalCost: 5
+  });
+  app.refreshTabBarBadge();
+  assert.strictEqual(env.calls.tabBarRedDot.pop(), 'show');
+
+  const page = env.loadPage('pages/order-detail/order-detail.js');
+  page.onLoad({ id: 'od-unpaid' });
+  env.state.pageStackDepth = 1;
+  page.onDelete();
+
+  assert.strictEqual(storage.getOrderById('od-unpaid'), null);
+  assert.strictEqual(env.calls.tabBarRedDot.pop(), 'hide', '删除后红点应被撤掉');
+
+  await wait(800);
+  assert.strictEqual(env.calls.switchTab.pop(), '/pages/index/index');
+});
+
+test('app 启动会给中断的充电订单收尾', () => {
+  const started = charging.startCharging('st-001', 'p-001-a1');
+  assert.strictEqual(started.ok, true);
+  storage.clearSession(); // 模拟会话丢失，订单却停在「充电中」
+
+  env.loadApp(); // 重新启动小程序
+
+  const order = storage.getOrderById(started.session.orderId);
+  assert.strictEqual(order.status, 'unpaid');
+  assert.strictEqual(require('../utils/mock').getPile('st-001', 'p-001-a1').status, 'idle');
+  assert.strictEqual(charging.getActiveSession(), null);
 });
 
 /* ------------------------------------------------------- 我的 / 钱包等 */
@@ -408,6 +501,23 @@ test('钱包页：充值金额选择与流水记录', async () => {
   page.onCustomInput({ detail: { value: '0' } });
   page.onRecharge();
   assert.ok(env.calls.toast.indexOf('请输入有效的充值金额') >= 0);
+  page.onUnload();
+});
+
+test('钱包页：连点「立即充值」只充值一次', async () => {
+  const page = env.loadPage('pages/wallet/wallet.js');
+  page.onShow();
+  const before = Number(page.data.balance);
+
+  page.onAmountTap({ currentTarget: { dataset: { amount: '100' } } });
+  page.onRecharge();
+  page.onRecharge();
+  page.onRecharge();
+  await wait(900);
+
+  assert.strictEqual(Number(page.data.balance), before + 100);
+  assert.strictEqual(page.data.transactions.filter((t) => t.typeText === '账户充值').length, 1);
+  page.onUnload();
 });
 
 test('收藏页与优惠券页', () => {
@@ -549,6 +659,23 @@ test('charging-bar 组件在有会话时展示实时数据', async () => {
   bar.refresh();
   assert.strictEqual(bar.data.visible, false);
   bar.stopTimer();
+});
+
+test('charging-bar 组件没有会话时不空转定时器', async () => {
+  const bar = env.loadComponent('components/charging-bar/charging-bar.js');
+  bar.definition.lifetimes.attached.call(bar);
+  assert.strictEqual(bar.data.visible, false);
+  assert.ok(!bar._timer, '没有会话就不该起每秒定时器');
+
+  // 有会话时起定时器，会话结束后自己停掉
+  await startChargingFromDetail('st-001');
+  bar.definition.pageLifetimes.show.call(bar);
+  assert.ok(bar._timer);
+  assert.strictEqual(bar.data.visible, true);
+
+  charging.stopCharging();
+  bar.refresh();
+  assert.ok(!bar._timer, '会话结束后定时器应自动停掉');
 });
 
 test('station-card 与 empty 组件抛出的事件不与原生 tap 重名', () => {

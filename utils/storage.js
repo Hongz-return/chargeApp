@@ -9,6 +9,7 @@
  */
 
 const format = require('./format');
+const { createId } = require('./id');
 
 const KEYS = {
   ORDERS: 'cp_orders',
@@ -19,8 +20,16 @@ const KEYS = {
   SESSION: 'cp_charging_session',
   PILE_STATUS: 'cp_pile_status',
   COUPONS: 'cp_coupons',
-  INVOICES: 'cp_invoices'
+  INVOICES: 'cp_invoices',
+  SEEDED: 'cp_seeded',
+  NOTICE_DISMISSED: 'cp_notice_dismissed'
 };
+
+/** 本机保留上限：超出后丢弃最旧的记录 */
+const LIMITS = { ORDERS: 100, TRANSACTIONS: 50, INVOICES: 50 };
+
+/** 金额比较容差，避免 0.1 + 0.2 这类浮点误差把「刚好够付」判成余额不足 */
+const MONEY_EPSILON = 1e-6;
 
 function clone(value) {
   if (value === null || typeof value !== 'object') return value;
@@ -138,13 +147,13 @@ function getWallet() {
 function saveWallet(wallet) {
   write(KEYS.WALLET, {
     balance: +Number(wallet.balance || 0).toFixed(2),
-    transactions: (wallet.transactions || []).slice(0, 50)
+    transactions: (wallet.transactions || []).slice(0, LIMITS.TRANSACTIONS)
   });
 }
 
 function addTransaction(wallet, type, amount, note) {
   wallet.transactions.unshift({
-    id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: createId('tx'),
     type,
     amount: +Number(amount).toFixed(2),
     note: note || '',
@@ -172,7 +181,7 @@ function payByBalance(amount, note) {
   const wallet = getWallet();
   const value = Number(amount) || 0;
   if (value <= 0) return { ok: false, balance: wallet.balance, reason: 'invalid-amount' };
-  if (wallet.balance + 1e-6 < value) {
+  if (wallet.balance + MONEY_EPSILON < value) {
     return { ok: false, balance: wallet.balance, reason: 'insufficient' };
   }
   wallet.balance = +(wallet.balance - value).toFixed(2);
@@ -233,7 +242,7 @@ function saveOrder(order) {
   if (!order || !order.id) return null;
   const orders = readArray(KEYS.ORDERS).filter((o) => o && o.id !== order.id);
   orders.unshift(order);
-  write(KEYS.ORDERS, orders.slice(0, 100));
+  write(KEYS.ORDERS, orders.slice(0, LIMITS.ORDERS));
   return order;
 }
 
@@ -247,10 +256,6 @@ function removeOrder(id) {
   const orders = readArray(KEYS.ORDERS).filter((o) => o && o.id !== id);
   write(KEYS.ORDERS, orders);
   return orders;
-}
-
-function clearOrders() {
-  remove(KEYS.ORDERS);
 }
 
 /** 统计：累计订单数、累计电量、累计消费、待支付数量 */
@@ -349,12 +354,41 @@ function listCoupons() {
   return stored.filter((c) => c && typeof c === 'object' && typeof c.id === 'string' && Number.isFinite(Number(c.amount)));
 }
 
+/**
+ * 优惠券是否已过期。expireAt 是 YYYY-MM-DD，按当天 24:00 到期；
+ * 日期缺失或格式非法时按「不过期」处理，避免脏数据把可用券判死。
+ */
+function isCouponExpired(coupon, now) {
+  const raw = coupon && coupon.expireAt;
+  if (!raw) return false;
+  const deadline = Date.parse(`${String(raw).slice(0, 10)}T23:59:59`);
+  if (!Number.isFinite(deadline)) return false;
+  return (now || Date.now()) > deadline;
+}
+
+/** 未核销、未过期、且订单金额达到门槛 */
+function isCouponUsable(coupon, amount, now) {
+  if (!coupon || coupon.used) return false;
+  if (isCouponExpired(coupon, now)) return false;
+  return (Number(amount) || 0) + MONEY_EPSILON >= (Number(coupon.threshold) || 0);
+}
+
 /** 返回金额门槛内可用、面额最大的优惠券 */
-function pickBestCoupon(amount) {
-  const value = Number(amount) || 0;
-  const usable = listCoupons().filter((c) => !c.used && value >= c.threshold);
+function pickBestCoupon(amount, now) {
+  const usable = listCoupons().filter((c) => isCouponUsable(c, amount, now));
   if (!usable.length) return null;
   return usable.sort((a, b) => b.amount - a.amount)[0];
+}
+
+/**
+ * 按 id 从本机重新取一张仍然可用的券。
+ * 页面上的券对象可能是几分钟前算出来的（另一个结算流程已经把它核销了），
+ * 支付前必须以本机记录为准，否则同一张券会被抵扣两次。
+ */
+function findUsableCoupon(couponId, amount, now) {
+  if (!couponId) return null;
+  const coupon = listCoupons().find((c) => c.id === couponId);
+  return isCouponUsable(coupon, amount, now) ? coupon : null;
 }
 
 function consumeCoupon(couponId) {
@@ -387,7 +421,7 @@ function saveInvoice(invoice) {
   if (!invoice || !invoice.orderId) return null;
   const record = Object.assign(
     {
-      id: `iv-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      id: createId('iv'),
       createdAt: Date.now(),
       status: 'issued'
     },
@@ -395,7 +429,7 @@ function saveInvoice(invoice) {
   );
   const list = listInvoices().filter((v) => v.orderId !== record.orderId);
   list.unshift(record);
-  write(KEYS.INVOICES, list.slice(0, 50));
+  write(KEYS.INVOICES, list.slice(0, LIMITS.INVOICES));
   return record;
 }
 
@@ -408,6 +442,8 @@ function resetAll() {
 
 module.exports = {
   KEYS,
+  LIMITS,
+  MONEY_EPSILON,
   read,
   write,
   remove,
@@ -424,7 +460,6 @@ module.exports = {
   saveOrder,
   updateOrder,
   removeOrder,
-  clearOrders,
   getStats,
   getSession,
   setSession,
@@ -436,7 +471,10 @@ module.exports = {
   setPileStatus,
   clearPileStatus,
   listCoupons,
+  isCouponExpired,
+  isCouponUsable,
   pickBestCoupon,
+  findUsableCoupon,
   consumeCoupon,
   listInvoices,
   getInvoiceByOrderId,

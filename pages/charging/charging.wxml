@@ -62,7 +62,7 @@
     </view>
 
     <view class="footer-bar">
-      <view class="btn-danger" bindtap="onStopCharging">结束充电</view>
+      <view class="btn-danger" aria-role="button" aria-label="结束本次充电" bindtap="onStopCharging">结束充电</view>
     </view>
   </block>
 
@@ -156,7 +156,13 @@
         实付 <text class="pay-amount">¥{{payAmount}}</text>
         <text wx:if="{{couponAmount !== '0.00'}}" class="pay-saved">已优惠 ¥{{couponAmount}}</text>
       </view>
-      <view class="btn-primary {{paying ? 'disabled' : ''}}" bindtap="onPay">
+      <view
+        class="btn-primary {{paying ? 'disabled' : ''}}"
+        aria-role="button"
+        aria-disabled="{{paying}}"
+        aria-label="{{paying ? '正在支付，请稍候' : '确认支付 ' + payAmount + ' 元'}}"
+        bindtap="onPay"
+      >
         {{paying ? '支付中…' : '确认支付'}}
       </view>
     </view>

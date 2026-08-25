@@ -119,6 +119,25 @@ test('地图 marker 与站点一一对应', () => {
   });
 });
 
+test('marker 图标跟随空闲状态，与列表数据一致', () => {
+  const station = mock.getStationById('st-007'); // 2 把枪，1 空闲
+  assert.strictEqual(mock.getMarkers([station])[0].iconPath, '/assets/marker/pin.png');
+
+  station.piles.forEach((p) => mock.setPileStatus(station.id, p.id, 'busy'));
+  const busy = mock.getStationById('st-007');
+  assert.strictEqual(busy.idle, 0);
+  assert.strictEqual(mock.getMarkers([busy])[0].iconPath, '/assets/marker/pin-gray.png');
+  assert.ok(mock.getMarkers([busy])[0].callout.content.indexOf('空闲 0/2') > 0);
+});
+
+test('toStationCards 补齐距离文案与收藏态', () => {
+  const cards = mock.toStationCards(mock.getStations(), ['st-004']);
+  assert.ok(cards.every((s) => typeof s.distanceText === 'string' && s.distanceText.length > 0));
+  assert.deepStrictEqual(cards.filter((s) => s.isFavorite).map((s) => s.id), ['st-004']);
+  // 没有传收藏列表时不应把所有站点标成已收藏
+  assert.ok(mock.toStationCards(mock.getStations()).every((s) => s.isFavorite === false));
+});
+
 test('randomIdlePile 返回真实存在的空闲枪', () => {
   const pick = mock.randomIdlePile();
   assert.ok(pick, '演示数据应始终存在空闲枪');

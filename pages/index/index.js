@@ -1,6 +1,6 @@
 const mock = require('../../utils/mock');
 const storage = require('../../utils/storage');
-const format = require('../../utils/format');
+const nav = require('../../utils/nav');
 
 const app = getApp();
 
@@ -12,8 +12,8 @@ const FILTERS = [
   { key: 'favorite', label: '收藏' }
 ];
 
-/** 首次进入的演示声明是否已被关闭 */
-const NOTICE_KEY = 'cp_notice_dismissed';
+/** 搜索输入防抖：够短不影响手感，够长不至于每敲一个字重排一次列表 */
+const SEARCH_DEBOUNCE_MS = 250;
 
 const SORTS = [
   { key: 'distance', label: '距离最近' },
@@ -41,13 +41,13 @@ Page({
   },
 
   onLoad() {
-    this.setData({ showNotice: !storage.read(NOTICE_KEY, false) });
+    this.setData({ showNotice: !storage.read(storage.KEYS.NOTICE_DISMISSED, false) });
     this.loadStations(true);
   },
 
   /** 演示声明只在首次进入时出现，关闭状态写入本机 */
   onCloseNotice() {
-    storage.write(NOTICE_KEY, true);
+    storage.write(storage.KEYS.NOTICE_DISMISSED, true);
     this.setData({ showNotice: false });
   },
 
@@ -66,6 +66,7 @@ Page({
 
   onUnload() {
     if (this._searchTimer) clearTimeout(this._searchTimer);
+    nav.clearDelays(this);
   },
 
   /**
@@ -77,31 +78,20 @@ Page({
 
     const run = () => {
       const favorites = storage.listFavorites();
-      const stations = mock
-        .getStations({
+      const stations = mock.toStationCards(
+        mock.getStations({
           keyword: this.data.keyword,
           filter: this.data.filter,
           sort: this.data.sort,
           favoriteIds: favorites
-        })
-        .map((s) =>
-          Object.assign({}, s, {
-            distanceText: format.formatDistance(s.distanceKm),
-            isFavorite: favorites.indexOf(s.id) >= 0
-          })
-        );
-
-      const markers = mock.getMarkers(stations).map((m) => {
-        const station = stations.find((s) => s.id === m.stationId);
-        return Object.assign({}, m, {
-          iconPath: station && station.idle > 0 ? '/assets/marker/pin.png' : '/assets/marker/pin-gray.png'
-        });
-      });
+        }),
+        favorites
+      );
 
       this.setData({
         stations,
         favorites,
-        markers,
+        markers: mock.getMarkers(stations),
         loading: false,
         selectedStation: null,
         stats: {
@@ -112,7 +102,7 @@ Page({
     };
 
     // 模拟一次网络请求的加载态，让骨架屏可见
-    if (showLoading) setTimeout(run, 320);
+    if (showLoading) nav.delay(this, run, 320);
     else run();
   },
 
@@ -120,7 +110,7 @@ Page({
     const keyword = e.detail.value;
     this.setData({ keyword });
     if (this._searchTimer) clearTimeout(this._searchTimer);
-    this._searchTimer = setTimeout(() => this.loadStations(false), 250);
+    this._searchTimer = setTimeout(() => this.loadStations(false), SEARCH_DEBOUNCE_MS);
   },
 
   onSearchConfirm() {
@@ -168,7 +158,7 @@ Page({
 
   onMarkerTap(e) {
     const markerId = e.detail.markerId;
-    const marker = this.data.markers[markerId];
+    const marker = this.data.markers.find((m) => m.id === markerId);
     if (!marker) return;
     const selectedStation = this.data.stations.find((s) => s.id === marker.stationId) || null;
     this.setData({
@@ -233,16 +223,22 @@ Page({
     }
     wx.showToast({ title: '识别成功', icon: 'success', duration: 700 });
     const query = target.pileId ? `&pileId=${target.pileId}&from=scan` : '&from=scan';
-    setTimeout(() => {
-      wx.navigateTo({ url: `/pages/detail/detail?id=${target.stationId}${query}` });
-    }, 400);
+    nav.delay(
+      this,
+      () => wx.navigateTo({ url: `/pages/detail/detail?id=${target.stationId}${query}` }),
+      400
+    );
   },
 
   onPullDownRefresh() {
     this.loadStations(true);
-    setTimeout(() => {
-      wx.stopPullDownRefresh();
-      wx.showToast({ title: '已更新', icon: 'none', duration: 700 });
-    }, 500);
+    nav.delay(
+      this,
+      () => {
+        wx.stopPullDownRefresh();
+        wx.showToast({ title: '已更新', icon: 'none', duration: 700 });
+      },
+      500
+    );
   }
 });

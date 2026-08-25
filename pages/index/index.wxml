@@ -6,7 +6,12 @@
         <view class="location-icon ic ic-pin"></view>
         <text class="location-text">深圳 · 南山科技园</text>
       </view>
-      <view class="view-toggle" bindtap="onToggleView">
+      <view
+        class="view-toggle"
+        aria-role="button"
+        aria-label="{{viewMode === 'list' ? '切换到地图视图' : '切换到列表视图'}}"
+        bindtap="onToggleView"
+      >
         <view class="ic {{viewMode === 'list' ? 'ic-map' : 'ic-list'}}"></view>
         <text class="view-toggle-text">{{viewMode === 'list' ? '地图' : '列表'}}</text>
       </view>
@@ -26,7 +31,7 @@
         />
         <text wx:if="{{keyword}}" class="search-clear" catchtap="onClearKeyword">✕</text>
       </view>
-      <view class="scan-btn" bindtap="onScanTap">
+      <view class="scan-btn" aria-role="button" aria-label="扫描充电枪二维码" bindtap="onScanTap">
         <view class="scan-icon ic ic-scan"></view>
         <text class="scan-text">扫码</text>
       </view>
@@ -67,7 +72,7 @@
       <view class="dn-title">演示版小程序</view>
       <view class="dn-text">站点、充电与支付均为本地模拟，不联网、不产生真实充电与真实扣款。</view>
     </view>
-    <view class="dn-close" catchtap="onCloseNotice">✕</view>
+    <view class="dn-close" aria-role="button" aria-label="关闭演示声明" catchtap="onCloseNotice">✕</view>
   </view>
 
   <!-- 列表模式 -->
@@ -128,6 +133,9 @@
           bind:select="onStationTap"
           bind:favorite="onFavoriteTap"
         />
+      </view>
+      <view wx:elif="{{stations.length === 0}}" class="map-tip">
+        当前条件下没有充电站，换个关键词或把筛选调整为「全部」
       </view>
       <view wx:else class="map-tip">点击地图上的绿色标记查看充电站详情</view>
     </view>

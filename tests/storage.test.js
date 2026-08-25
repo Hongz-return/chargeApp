@@ -127,16 +127,57 @@ test('优惠券按门槛挑选面额最大的一张', () => {
   assert.strictEqual(storage.listCoupons().find((c) => c.id === 'cp-03').used, true);
 });
 
-test('resetAll 清空全部演示数据', () => {
+test('优惠券可用性同时看核销状态、有效期与门槛', () => {
+  const base = { id: 'cp-x', amount: 5, threshold: 20, expireAt: '2026-12-31', used: false };
+  const now = Date.parse('2026-08-25T12:00:00');
+
+  assert.strictEqual(storage.isCouponUsable(base, 30, now), true);
+  assert.strictEqual(storage.isCouponUsable(base, 19, now), false, '未达门槛');
+  assert.strictEqual(storage.isCouponUsable(Object.assign({}, base, { used: true }), 30, now), false);
+  assert.strictEqual(storage.isCouponUsable(Object.assign({}, base, { expireAt: '2026-08-24' }), 30, now), false);
+  // 有效期最后一天当天仍可用
+  assert.strictEqual(storage.isCouponUsable(Object.assign({}, base, { expireAt: '2026-08-25' }), 30, now), true);
+  // 日期缺失或非法时按不过期处理，避免脏数据把券判死
+  assert.strictEqual(storage.isCouponUsable(Object.assign({}, base, { expireAt: '' }), 30, now), true);
+  assert.strictEqual(storage.isCouponUsable(Object.assign({}, base, { expireAt: '不是日期' }), 30, now), true);
+});
+
+test('findUsableCoupon 以本机记录为准，核销后立刻不可用', () => {
+  assert.strictEqual(storage.findUsableCoupon('cp-01', 30).id, 'cp-01');
+  assert.strictEqual(storage.findUsableCoupon('cp-01', 5), null, '未达门槛');
+  assert.strictEqual(storage.findUsableCoupon('cp-not-exist', 30), null);
+
+  storage.consumeCoupon('cp-01');
+  assert.strictEqual(storage.findUsableCoupon('cp-01', 30), null);
+});
+
+test('同一毫秒内生成的流水与发票 id 不重复', () => {
+  storage.recharge(10, 'a');
+  storage.recharge(10, 'b');
+  storage.recharge(10, 'c');
+  const ids = storage.getWallet().transactions.map((t) => t.id);
+  assert.strictEqual(new Set(ids).size, 3);
+
+  const invoiceIds = ['od-1', 'od-2', 'od-3'].map(
+    (orderId) => storage.saveInvoice({ orderId, orderNo: orderId, amount: 1, title: 'x' }).id
+  );
+  assert.strictEqual(new Set(invoiceIds).size, 3);
+});
+
+test('resetAll 清空全部演示数据（含播种标记与提示条状态）', () => {
   storage.saveOrder({ id: 'a', status: 'paid', startTime: 1, energyKwh: 1, payAmount: 1 });
   storage.toggleFavorite('st-001');
   storage.recharge(50, 'x');
+  storage.write(storage.KEYS.SEEDED, true);
+  storage.write(storage.KEYS.NOTICE_DISMISSED, true);
 
   storage.resetAll();
 
   assert.strictEqual(storage.listOrders().length, 0);
   assert.strictEqual(storage.listFavorites().length, 0);
   assert.strictEqual(storage.getWallet().transactions.length, 0);
+  assert.strictEqual(storage.read(storage.KEYS.SEEDED, false), false);
+  assert.strictEqual(storage.read(storage.KEYS.NOTICE_DISMISSED, false), false);
 });
 
 /* ------------------------------------------------------------ 发票记录 */

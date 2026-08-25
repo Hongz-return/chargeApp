@@ -167,7 +167,13 @@
         {{selectedPile.typeText}} {{selectedPile.powerKw}}kW ·
         <text class="footer-strong">¥{{station.totalPricePerKwh}}/度</text>
       </view>
-      <view class="btn-primary {{selectedPileId ? '' : 'disabled'}}" bindtap="onStartCharging">
+      <view
+        class="btn-primary {{selectedPileId ? '' : 'disabled'}}"
+        aria-role="button"
+        aria-disabled="{{!selectedPileId}}"
+        aria-label="{{selectedPileId ? '开始充电' : '暂无空闲充电枪，按钮不可用'}}"
+        bindtap="onStartCharging"
+      >
         {{selectedPileId ? '开始充电' : '暂无空闲充电枪'}}
       </view>
     </view>

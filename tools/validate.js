@@ -6,6 +6,8 @@
  *  4. 页面/组件 json 里 usingComponents 指向的组件文件存在
  *  5. tabBar 图标、地图 marker 等静态资源存在
  *  6. WXML 标签正确闭合，且绑定的事件处理函数在对应 js 中有定义
+ *  7. pages/ 下没有未注册的页面目录（打不开的死代码）
+ *  8. package.json / utils/config.js / CHANGELOG 的版本号一致
  *
  *   node tools/validate.js
  */
@@ -18,7 +20,7 @@ const ROOT = path.join(__dirname, '..');
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.cursor']);
 
 const errors = [];
-const checked = { json: 0, js: 0, wxml: 0, pages: 0, components: 0, handlers: 0, assets: 0 };
+const checked = { json: 0, js: 0, wxml: 0, pages: 0, components: 0, handlers: 0, assets: 0, versions: 0 };
 
 function walk(dir, out) {
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
@@ -176,6 +178,43 @@ files
     }
   });
 
+/* 7. pages/ 下没有未注册的页面目录：注册不上的页面在小程序里根本打不开，属于死代码 */
+if (appJson) {
+  const registered = new Set(appJson.pages || []);
+  const pagesDir = path.join(ROOT, 'pages');
+  if (fs.existsSync(pagesDir)) {
+    fs.readdirSync(pagesDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .forEach((entry) => {
+        const route = `pages/${entry.name}/${entry.name}`;
+        if (!registered.has(route)) {
+          fail(`页面目录未在 app.json 的 pages 中注册: pages/${entry.name}/`);
+        }
+      });
+  }
+}
+
+/* 8. 版本号一致性：package.json / utils/config.js / CHANGELOG 最新条目 */
+try {
+  const pkgVersion = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).version;
+  const configSource = fs.readFileSync(path.join(ROOT, 'utils', 'config.js'), 'utf8');
+  const configMatch = configSource.match(/VERSION\s*=\s*['"]([^'"]+)['"]/);
+  const changelog = fs.readFileSync(path.join(ROOT, 'CHANGELOG.md'), 'utf8');
+  const changelogMatch = changelog.match(/^##\s*\[([\d.]+)\]/m);
+
+  checked.versions = 3;
+  if (!configMatch) fail('utils/config.js 中找不到 VERSION 常量');
+  else if (configMatch[1] !== pkgVersion) {
+    fail(`版本号不一致: package.json ${pkgVersion} ≠ utils/config.js ${configMatch[1]}`);
+  }
+  if (!changelogMatch) fail('CHANGELOG.md 中找不到形如 "## [1.2.0]" 的版本条目');
+  else if (changelogMatch[1] !== pkgVersion) {
+    fail(`版本号不一致: package.json ${pkgVersion} ≠ CHANGELOG 最新条目 ${changelogMatch[1]}`);
+  }
+} catch (err) {
+  fail(`版本号校验失败: ${err.message}`);
+}
+
 /* 额外检查：代码中引用的 /assets 资源存在 */
 const assetRefs = new Set();
 files
@@ -201,6 +240,7 @@ console.log(`注册页面       : ${checked.pages}`);
 console.log(`组件引用       : ${checked.components}`);
 console.log(`事件绑定       : ${checked.handlers}`);
 console.log(`静态资源引用   : ${checked.assets}`);
+console.log(`版本号来源     : ${checked.versions}`);
 console.log('----------------------------------------');
 
 if (errors.length) {

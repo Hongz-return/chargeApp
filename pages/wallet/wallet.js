@@ -1,7 +1,10 @@
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const nav = require('../../utils/nav');
 
 const AMOUNT_OPTIONS = [20, 50, 100, 200, 500];
+/** 单笔充值上限（演示值，避免输入天文数字把金额栏撑破） */
+const MAX_RECHARGE = 10000;
 
 const TYPE_META = {
   recharge: { text: '账户充值', sign: '+', className: 'in' },
@@ -57,38 +60,53 @@ Page({
   },
 
   onRecharge() {
+    // 确认弹窗是异步弹出的，连点会开出两个弹窗、充值两次，所以从点击那一刻就上锁
+    if (this.data.recharging || this._confirming) return;
+
     const amount = this.currentAmount();
     if (!amount || amount <= 0) {
       wx.showToast({ title: '请输入有效的充值金额', icon: 'none' });
       return;
     }
-    if (amount > 10000) {
-      wx.showToast({ title: '单笔充值不超过 10000 元', icon: 'none' });
+    if (amount > MAX_RECHARGE) {
+      wx.showToast({ title: `单笔充值不超过 ${MAX_RECHARGE} 元`, icon: 'none' });
       return;
     }
 
+    this._confirming = true;
     wx.showModal({
       title: '确认充值',
       content: `将为账户充值 ¥${format.formatMoney(amount)}（演示环境，不会真实扣款）`,
       confirmText: '确认充值',
       confirmColor: '#07c160',
+      complete: () => {
+        this._confirming = false;
+      },
       success: (res) => {
         if (!res.confirm) return;
         this.setData({ recharging: true });
         wx.showLoading({ title: '处理中…', mask: true });
-        setTimeout(() => {
-          storage.recharge(amount, '微信充值（演示）');
-          wx.hideLoading();
-          this.setData({ recharging: false, customAmount: '' });
-          wx.showToast({ title: '充值成功', icon: 'success' });
-          this.loadWallet();
-        }, 800);
+        nav.delay(
+          this,
+          () => {
+            storage.recharge(amount, '微信充值（演示）');
+            wx.hideLoading();
+            this.setData({ recharging: false, customAmount: '' });
+            wx.showToast({ title: '充值成功', icon: 'success' });
+            this.loadWallet();
+          },
+          800
+        );
       }
     });
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+  },
+
   onPullDownRefresh() {
     this.loadWallet();
-    setTimeout(() => wx.stopPullDownRefresh(), 300);
+    nav.delay(this, () => wx.stopPullDownRefresh(), 300);
   }
 });

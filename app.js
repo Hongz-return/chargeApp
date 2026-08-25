@@ -3,7 +3,7 @@ const charging = require('./utils/charging');
 
 /** 首次启动（或清除数据后）写入的演示历史订单，保证订单页/我的页开箱可演示 */
 function seedDemoOrders(force) {
-  if (!force && storage.read('cp_seeded', false)) return;
+  if (!force && storage.read(storage.KEYS.SEEDED, false)) return;
 
   const day = 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -67,15 +67,13 @@ function seedDemoOrders(force) {
   ];
 
   demos.forEach((o) => storage.saveOrder(o));
-  storage.write('cp_seeded', true);
+  storage.write(storage.KEYS.SEEDED, true);
 }
 
 App({
   globalData: {
     /** 进行中的充电会话（与 storage 同步，页面可直接读取） */
-    chargingSession: null,
-    statusBarHeight: 20,
-    launchedAt: Date.now()
+    chargingSession: null
   },
 
   onLaunch() {
@@ -83,14 +81,9 @@ App({
     // 初始化钱包/优惠券默认值，避免各页面重复判空
     storage.getWallet();
     storage.listCoupons();
+    // 本机数据可能停在半路（订单还是「充电中」但会话没了），启动时先收尾
+    charging.reconcile();
     this.globalData.chargingSession = charging.getActiveSession();
-
-    try {
-      const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
-      this.globalData.statusBarHeight = info.statusBarHeight || 20;
-    } catch (err) {
-      // 低版本基础库忽略
-    }
 
     this.watchNetwork();
   },

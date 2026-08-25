@@ -29,11 +29,19 @@ function createEnv(options) {
     navigationTitle: [],
     tabBarRedDot: [],
     leaveAlert: [],
-    networkListeners: []
+    networkListeners: [],
+    back: []
   };
 
   // showModal 默认点「确定」，可通过 env.modalConfirm 控制；modalContent 用于 editable 弹窗
-  const state = { modalConfirm: true, modalContent: '', scanResult: null, scanFails: true };
+  // pageStackDepth 模拟 getCurrentPages().length，用于验证「栈里只剩一页时退回首页」
+  const state = {
+    modalConfirm: true,
+    modalContent: '',
+    scanResult: null,
+    scanFails: true,
+    pageStackDepth: 2
+  };
 
   const wx = {
     getStorageSync(key) {
@@ -61,6 +69,7 @@ function createEnv(options) {
     showModal(o) {
       calls.modal.push(o && o.title);
       if (o && o.success) o.success({ confirm: state.modalConfirm, cancel: !state.modalConfirm, content: state.modalContent });
+      if (o && o.complete) o.complete({});
     },
     showActionSheet(o) {
       if (o && o.success) o.success({ tapIndex: 0 });
@@ -81,7 +90,10 @@ function createEnv(options) {
       calls.reLaunch.push(o.url);
       if (o.success) o.success({});
     },
-    navigateBack() {},
+    navigateBack(o) {
+      calls.back.push((o && o.delta) || 1);
+      if (o && o.success) o.success({});
+    },
     setNavigationBarTitle(o) {
       calls.navigationTitle.push(o.title);
     },
@@ -140,6 +152,7 @@ function createEnv(options) {
   }
 
   global.wx = wx;
+  global.getCurrentPages = () => new Array(Math.max(0, state.pageStackDepth)).fill({});
   global.App = (def) => {
     registry.app = def;
   };
@@ -202,6 +215,7 @@ function createEnv(options) {
 
   function reset() {
     store.clear();
+    state.pageStackDepth = 2;
     Object.keys(calls).forEach((k) => {
       if (Array.isArray(calls[k])) calls[k].length = 0;
     });

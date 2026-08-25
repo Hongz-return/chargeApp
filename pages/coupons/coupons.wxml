@@ -4,11 +4,11 @@
       可使用（{{usable.length}}）
     </view>
     <view class="tab {{activeTab === 'used' ? 'active' : ''}}" data-key="used" bindtap="onTabTap">
-      已使用（{{used.length}}）
+      已使用 / 已过期（{{used.length}}）
     </view>
   </view>
 
-  <view wx:for="{{list}}" wx:key="id" class="coupon {{item.used ? 'used' : ''}}">
+  <view wx:for="{{list}}" wx:key="id" class="coupon {{item.used || item.expired ? 'used' : ''}}">
     <view class="coupon-left">
       <view class="coupon-amount"><text class="yuan">¥</text>{{item.amount}}</view>
       <view class="coupon-threshold">满 {{item.threshold}} 可用</view>
@@ -18,14 +18,14 @@
       <view class="coupon-desc">充电订单结算时自动抵扣</view>
       <view class="coupon-expire">有效期至 {{item.expireAt}}</view>
     </view>
-    <view wx:if="{{item.used}}" class="coupon-stamp">已使用</view>
+    <view wx:if="{{item.used || item.expired}}" class="coupon-stamp">{{item.stampText}}</view>
     <view wx:else class="coupon-use" bindtap="onUse">去使用</view>
   </view>
 
   <empty
     wx:if="{{list.length === 0}}"
     icon="ticket"
-    text="{{activeTab === 'usable' ? '暂无可用优惠券' : '还没有使用过优惠券'}}"
+    text="{{activeTab === 'usable' ? '暂无可用优惠券' : '还没有已使用或已过期的券'}}"
     sub="结算时系统会自动为你匹配面额最大的可用券"
     action-text="去充电"
     bind:action="onGoCharge"

@@ -1,6 +1,6 @@
 const mock = require('../../utils/mock');
 const storage = require('../../utils/storage');
-const format = require('../../utils/format');
+const nav = require('../../utils/nav');
 
 Page({
   data: {
@@ -12,15 +12,13 @@ Page({
     this.loadFavorites();
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+  },
+
   loadFavorites() {
     const ids = storage.listFavorites();
-    const stations = mock.getStationsByIds(ids).map((s) =>
-      Object.assign({}, s, {
-        distanceText: format.formatDistance(s.distanceKm),
-        isFavorite: true
-      })
-    );
-    this.setData({ stations, loading: false });
+    this.setData({ stations: mock.toStationCards(mock.getStationsByIds(ids), ids), loading: false });
   },
 
   onStationTap(e) {
@@ -49,6 +47,6 @@ Page({
 
   onPullDownRefresh() {
     this.loadFavorites();
-    setTimeout(() => wx.stopPullDownRefresh(), 300);
+    nav.delay(this, () => wx.stopPullDownRefresh(), 300);
   }
 });

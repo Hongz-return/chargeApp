@@ -181,6 +181,100 @@ test('重复支付同一订单不会重复扣款', () => {
   assert.strictEqual(storage.getWallet().transactions.length, 1);
 });
 
+test('优惠券全额抵扣后应付 0 元，仍然可以支付成功', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  // 造一张刚好覆盖订单金额的券
+  storage.write(storage.KEYS.COUPONS, [
+    { id: 'cp-full', title: '全额抵扣券', amount: order.totalCost, threshold: 0, expireAt: '2099-12-31', used: false }
+  ]);
+  const coupon = storage.pickBestCoupon(order.totalCost);
+  const balanceBefore = storage.getWallet().balance;
+
+  const res = charging.payOrder(order.id, 'balance', coupon);
+
+  assert.strictEqual(res.ok, true, '应付 0 元不应被当成非法金额');
+  assert.strictEqual(res.order.status, 'paid');
+  assert.strictEqual(res.order.payAmount, 0);
+  assert.strictEqual(res.order.couponAmount, order.totalCost);
+  assert.strictEqual(res.order.payMethod, '优惠券抵扣');
+  assert.strictEqual(storage.getWallet().balance, balanceBefore, '0 元订单不动余额');
+  assert.strictEqual(storage.getWallet().transactions.length, 0, '0 元订单不产生流水');
+  assert.strictEqual(storage.listCoupons()[0].used, true);
+});
+
+test('已被核销的优惠券不能再抵扣第二笔订单', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const first = charging.stopCharging(T0 + 10 * 1000);
+  const coupon = storage.pickBestCoupon(first.totalCost);
+  charging.payOrder(first.id, 'wechat', coupon);
+
+  charging.startCharging(STATION, PILE, { now: T0 + 60 * 1000 });
+  const second = charging.stopCharging(T0 + 70 * 1000);
+
+  // 页面上还留着那张已经核销的券对象
+  const res = charging.payOrder(second.id, 'balance', coupon);
+  assert.strictEqual(res.ok, false);
+  assert.strictEqual(res.reason, 'coupon-unavailable');
+  assert.strictEqual(storage.getOrderById(second.id).status, 'unpaid', '支付被拒时订单保持待支付');
+  assert.strictEqual(storage.listCoupons().filter((c) => c.used).length, 1);
+});
+
+test('过期的优惠券既不会被自动匹配，也不能用于支付', () => {
+  charging.startCharging(STATION, PILE, { now: T0 });
+  const order = charging.stopCharging(T0 + 10 * 1000);
+
+  const expired = { id: 'cp-old', title: '过期券', amount: 20, threshold: 0, expireAt: '2020-01-01', used: false };
+  storage.write(storage.KEYS.COUPONS, [expired]);
+
+  assert.strictEqual(storage.pickBestCoupon(order.totalCost), null, '过期券不参与自动匹配');
+  const res = charging.payOrder(order.id, 'balance', expired);
+  assert.strictEqual(res.reason, 'coupon-unavailable');
+  assert.strictEqual(storage.getOrderById(order.id).status, 'unpaid');
+});
+
+/* ------------------------------------------------------------ 会话对账 */
+
+test('会话丢失的「充电中」订单会被结转为待支付并释放枪位', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  // 模拟会话被清掉（Storage 被外部清理 / 数据损坏），订单却还停在充电中
+  storage.clearSession();
+
+  const result = charging.reconcile(T0 + 60 * 1000);
+
+  assert.deepStrictEqual(result.closedOrderIds, [session.orderId]);
+  const order = storage.getOrderById(session.orderId);
+  assert.strictEqual(order.status, 'unpaid');
+  assert.strictEqual(order.endTime, T0 + 60 * 1000);
+  assert.strictEqual(mock.getPile(STATION, PILE).status, 'idle', '枪位不应永远停在使用中');
+  // 收尾后可以重新开单
+  assert.strictEqual(charging.startCharging(STATION, PILE, { now: T0 + 61 * 1000 }).ok, true);
+});
+
+test('订单已不存在的孤儿会话会被清理', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+  storage.removeOrder(session.orderId);
+
+  const result = charging.reconcile(T0 + 60 * 1000);
+
+  assert.strictEqual(result.clearedSession, true);
+  assert.strictEqual(storage.getSession(), null);
+  assert.strictEqual(mock.getPile(STATION, PILE).status, 'idle');
+});
+
+test('正常进行中的会话不会被对账误伤', () => {
+  const { session } = charging.startCharging(STATION, PILE, { now: T0 });
+
+  const result = charging.reconcile(T0 + 60 * 1000);
+
+  assert.strictEqual(result.clearedSession, false);
+  assert.deepStrictEqual(result.closedOrderIds, []);
+  assert.strictEqual(storage.getSession().orderId, session.orderId);
+  assert.strictEqual(storage.getOrderById(session.orderId).status, 'charging');
+  assert.strictEqual(mock.getPile(STATION, PILE).status, 'busy');
+});
+
 test('优惠券只在支付成功时核销一次', () => {
   charging.startCharging(STATION, PILE, { now: T0 });
   const order = charging.stopCharging(T0 + 10 * 1000);

@@ -21,8 +21,7 @@ Component({
 
   lifetimes: {
     attached() {
-      this.refresh();
-      this.startTimer();
+      if (this.refresh()) this.startTimer();
     },
     detached() {
       this.stopTimer();
@@ -31,8 +30,7 @@ Component({
 
   pageLifetimes: {
     show() {
-      this.refresh();
-      this.startTimer();
+      if (this.refresh()) this.startTimer();
     },
     hide() {
       this.stopTimer();
@@ -52,21 +50,31 @@ Component({
       }
     },
 
+    /** @returns {boolean} 是否仍有进行中的会话 */
     refresh() {
       const session = charging.getActiveSession();
       if (!session) {
         if (this.data.visible) this.setData({ visible: false });
-        return;
+        // 没有会话就没有可刷新的内容，不要让空转的定时器跟着每个页面跑
+        this.stopTimer();
+        return false;
       }
+
       const vm = charging.toViewModel(session);
-      this.setData({
+      const next = {
         visible: true,
         stationName: session.stationName,
         duration: vm.duration,
         energyKwh: vm.energyKwh,
         totalCost: vm.totalCost,
         soc: vm.soc
+      };
+      const patch = {};
+      Object.keys(next).forEach((key) => {
+        if (this.data[key] !== next[key]) patch[key] = next[key];
       });
+      if (Object.keys(patch).length) this.setData(patch);
+      return true;
     },
 
     onTap() {

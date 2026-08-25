@@ -3,8 +3,17 @@ const storage = require('../../utils/storage');
 const charging = require('../../utils/charging');
 const format = require('../../utils/format');
 const config = require('../../utils/config');
+const nav = require('../../utils/nav');
 
 const app = getApp();
+
+/** 启动失败原因 -> 用户可读文案 */
+const START_ERRORS = {
+  'session-exists': '已有进行中的充电订单',
+  'pile-busy': '该充电枪刚被占用，请重新选择',
+  'pile-not-found': '充电枪信息异常',
+  'station-not-found': '充电站信息异常'
+};
 
 Page({
   data: {
@@ -32,12 +41,16 @@ Page({
     if (this.stationId && !this.data.loading) this.loadStation(false);
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+  },
+
   loadStation(first) {
     const station = mock.getStationById(this.stationId);
     if (!station) {
       this.setData({ loading: false });
       wx.showToast({ title: '充电站不存在', icon: 'none' });
-      setTimeout(() => wx.navigateBack(), 1200);
+      nav.delay(this, () => nav.backOrHome(), 1200);
       return;
     }
 
@@ -183,27 +196,29 @@ Page({
   },
 
   doStart(pileId) {
+    if (this._starting) return;
+    this._starting = true;
     wx.showLoading({ title: '正在启动…', mask: true });
+
     // 模拟与充电桩握手的耗时
-    setTimeout(() => {
-      const result = charging.startCharging(this.data.station.id, pileId);
-      wx.hideLoading();
+    nav.delay(
+      this,
+      () => {
+        const result = charging.startCharging(this.data.station.id, pileId);
+        wx.hideLoading();
+        this._starting = false;
 
-      if (!result.ok) {
-        const messages = {
-          'session-exists': '已有进行中的充电订单',
-          'pile-busy': '该充电枪刚被占用，请重新选择',
-          'pile-not-found': '充电枪信息异常',
-          'station-not-found': '充电站信息异常'
-        };
-        wx.showToast({ title: messages[result.reason] || '启动失败', icon: 'none' });
-        this.loadStation(false);
-        return;
-      }
+        if (!result.ok) {
+          wx.showToast({ title: START_ERRORS[result.reason] || '启动失败', icon: 'none' });
+          this.loadStation(false);
+          return;
+        }
 
-      app.syncSession();
-      wx.showToast({ title: '启动成功', icon: 'success', duration: 700 });
-      setTimeout(() => wx.redirectTo({ url: '/pages/charging/charging' }), 500);
-    }, 600);
+        app.syncSession();
+        wx.showToast({ title: '启动成功', icon: 'success', duration: 700 });
+        nav.delay(this, () => wx.redirectTo({ url: '/pages/charging/charging' }), 500);
+      },
+      600
+    );
   }
 });
