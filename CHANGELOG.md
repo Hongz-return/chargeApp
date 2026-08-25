@@ -13,8 +13,8 @@
 - **CI**：`.github/workflows/ci.yml`，在 Node 18/20/22 上运行 `npm run check`，
   并校验脚本生成物（图标 / 预览页 / 界面图）与仓库内容一致。
 - **演示资产**：`tools/gen-preview.js` 把真实 WXML + WXSS 渲染为可在浏览器直接打开的
-  静态预览页 `docs/preview/index.html`；`tools/gen-screenshots.js` 生成 10 张 SVG 界面图到
-  `docs/screenshots/`，README 中的截图区不再是占位说明。
+  静态预览页 `docs/preview/index.html`；`tools/gen-screenshots.js` 用本机 Chrome 对预览页
+  逐屏截图，输出 12 张 750×1624 PNG 到 `docs/screenshots/`，README 中的截图区不再是占位说明。
 - **发票管理页**（`pages/invoice/invoice`）：原「申请开票」只有一个 toast，现在是可用的
   最小闭环——选择已完成订单、填写抬头/税号/邮箱、提交后生成本地开票记录并可查看历史。
 - **关于与演示声明页**（`pages/about/about`）：集中说明演示边界、本地数据存储范围、
@@ -40,6 +40,17 @@
   中的非法元素会被过滤，`balance` 为 `NaN`/负数时回落到 0，避免页面读取时抛错。
 - 结算页重复点击「确认支付」不会重复扣款（`paying` 标志 + `payOrder` 的
   `already-paid` 守卫，新增回归测试）。
+- 首页 / 详情 / 充电 / 我的四个页面的顶部渐变由斜向硬色标（`160deg` / `165deg`）改为纵向，
+  此前斜切边界会横穿排序栏、标签行与车牌徽标，看起来像渲染错位。
+- 订单页与「我的」页的累计电量、累计消费改用 `format` 统一格式化，不再出现 `156.2` 这类
+  少一位小数的展示。
+- `package.json` 的 `version` 与 `utils/config.js` 的 `VERSION` 对齐到 `1.1.0`。
+
+### 测试
+
+- 用例数 59 → 67：新增开票记录去重、Storage 损坏兜底、脏数据过滤、重复支付不重复扣款、
+  优惠券只核销一次、发票页校验与提交、演示声明页与 `storage.KEYS` 一致性、断网提示 8 组测试。
+  页面级冒烟测试覆盖的页面数 9 → 11。
 
 ## [1.0.0] - 2026-08-25
 
