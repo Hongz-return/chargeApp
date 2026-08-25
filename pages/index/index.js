@@ -176,7 +176,11 @@ Page({
       onlyFromCamera: false,
       scanType: ['qrCode', 'barCode'],
       success: (res) => this.handleScanResult(res.result),
-      fail: () => this.offerMockScan()
+      fail: (err) => {
+        // 用户主动取消不打扰；其余失败（如开发者工具无摄像头）走模拟扫码
+        if (err && /cancel/i.test(err.errMsg || '')) return;
+        this.offerMockScan();
+      }
     });
   },
 
