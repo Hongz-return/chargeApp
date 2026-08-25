@@ -51,8 +51,13 @@ Page({
   loadOrders(showLoading) {
     if (showLoading) this.setData({ loading: true });
 
+    // 远程数据源下切 tab 会连着发几次请求，只认最后一次的结果
+    const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
+    const stale = () => seq !== this._loadSeq;
+
     const run = () => {
       repo.listOrders((err, all) => {
+        if (stale()) return;
         if (err) {
           this.setData({ loading: false });
           repo.toastError(err, '订单加载失败');
@@ -82,6 +87,7 @@ Page({
         });
 
         repo.getStats((statsErr, stats) => {
+          if (stale()) return;
           this.setData({
             orders,
             counts,

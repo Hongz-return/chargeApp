@@ -76,8 +76,14 @@ Page({
   loadStations(showLoading) {
     if (showLoading) this.setData({ loading: true });
 
+    // 远程数据源下前后两次查询可能乱序返回（输入防抖 + 快速改筛选），
+    // 只认最后一次发起的那批结果，否则列表会闪回上一个关键词的内容
+    const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
+    const stale = () => seq !== this._loadSeq;
+
     const run = () => {
       repo.listFavorites((favErr, favorites) => {
+        if (stale()) return;
         if (favErr) return this.onLoadFailed(favErr);
         repo.listStations(
           {
@@ -87,6 +93,7 @@ Page({
             favoriteIds: favorites
           },
           (err, list) => {
+            if (stale()) return;
             if (err) return this.onLoadFailed(err);
             const stations = repo.toStationCards(list, favorites);
             this.setData({
