@@ -1,0 +1,99 @@
+.page {
+  padding-bottom: 40rpx;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  background: #fff;
+  padding: 16rpx 24rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.filter-item {
+  padding: 10rpx 36rpx;
+  margin-right: 20rpx;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #666;
+  background: #f2f3f5;
+}
+
+.filter-item.active {
+  color: #fff;
+  background: var(--brand);
+}
+
+/* 站点卡片 */
+.station-card {
+  transition: opacity 0.1s;
+}
+
+.station-card:active {
+  opacity: 0.8;
+}
+
+.station-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.station-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.station-distance {
+  font-size: 26rpx;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.station-address {
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-top: 8rpx;
+}
+
+.station-tags {
+  margin-top: 16rpx;
+}
+
+.station-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 16rpx;
+}
+
+.price-num {
+  color: #ff6f00;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.price-unit {
+  color: var(--muted);
+  font-size: 22rpx;
+  margin-left: 4rpx;
+}
+
+.idle {
+  font-size: 26rpx;
+  color: var(--brand);
+}
+
+.idle-none {
+  color: var(--muted);
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 120rpx 0;
+}

@@ -1,0 +1,81 @@
+<view class="page">
+  <!-- 充电进行中 -->
+  <block wx:if="{{phase === 'charging'}}">
+    <view class="ring-wrap">
+      <view class="ring">
+        <view class="ring-inner">
+          <view class="energy-num">{{energyKwh}}</view>
+          <view class="energy-unit">度（kWh）</view>
+        </view>
+      </view>
+      <view class="charging-hint">充电中，请勿拔枪</view>
+    </view>
+
+    <view class="card">
+      <view class="stat-row">
+        <view class="stat">
+          <view class="stat-value">{{duration}}</view>
+          <view class="stat-label">已充时长</view>
+        </view>
+        <view class="stat">
+          <view class="stat-value">{{pile.powerKw}}kW</view>
+          <view class="stat-label">当前功率</view>
+        </view>
+        <view class="stat">
+          <view class="stat-value stat-cost">¥{{totalCost}}</view>
+          <view class="stat-label">预计费用</view>
+        </view>
+      </view>
+      <view class="session-info">
+        {{station.name}} · {{pile.name}} 号枪
+      </view>
+    </view>
+
+    <view class="footer">
+      <view class="btn-danger" bindtap="onStopCharging">结束充电</view>
+    </view>
+  </block>
+
+  <!-- 充电完成账单 -->
+  <block wx:if="{{phase === 'finished'}}">
+    <view class="done-icon-wrap">
+      <view class="done-icon">✓</view>
+      <view class="done-title">充电完成</view>
+    </view>
+
+    <view class="card">
+      <view class="bill-row">
+        <text class="bill-label">充电站</text>
+        <text class="bill-value">{{bill.stationName}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">充电枪</text>
+        <text class="bill-value">{{bill.pileName}} 号枪</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">充电时长</text>
+        <text class="bill-value">{{bill.duration}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">充电电量</text>
+        <text class="bill-value">{{bill.energyKwh}} 度</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">电费</text>
+        <text class="bill-value">¥{{bill.electricityCost}}</text>
+      </view>
+      <view class="bill-row">
+        <text class="bill-label">服务费</text>
+        <text class="bill-value">¥{{bill.serviceCost}}</text>
+      </view>
+      <view class="bill-row bill-total">
+        <text class="bill-label">合计</text>
+        <text class="bill-value">¥{{bill.totalCost}}</text>
+      </view>
+    </view>
+
+    <view class="footer">
+      <view class="btn-primary" bindtap="onDone">完成，返回首页</view>
+    </view>
+  </block>
+</view>

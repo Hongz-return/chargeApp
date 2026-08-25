@@ -1,0 +1,52 @@
+<view class="page">
+  <!-- 快慢充筛选 -->
+  <view class="filter-bar">
+    <view
+      class="filter-item {{filter === 'all' ? 'active' : ''}}"
+      data-filter="all"
+      bindtap="onFilterTap"
+    >全部</view>
+    <view
+      class="filter-item {{filter === 'fast' ? 'active' : ''}}"
+      data-filter="fast"
+      bindtap="onFilterTap"
+    >快充</view>
+    <view
+      class="filter-item {{filter === 'slow' ? 'active' : ''}}"
+      data-filter="slow"
+      bindtap="onFilterTap"
+    >慢充</view>
+  </view>
+
+  <!-- 充电站卡片列表 -->
+  <view
+    wx:for="{{stations}}"
+    wx:key="id"
+    class="card station-card"
+    data-id="{{item.id}}"
+    bindtap="onStationTap"
+  >
+    <view class="station-header">
+      <text class="station-name">{{item.name}}</text>
+      <text class="station-distance">{{item.distanceKm}}km</text>
+    </view>
+    <view class="station-address">{{item.address}}</view>
+    <view class="station-tags">
+      <text wx:if="{{item.fastCount > 0}}" class="tag tag-fast">快充 {{item.fastCount}}</text>
+      <text wx:if="{{item.slowCount > 0}}" class="tag tag-slow">慢充 {{item.slowCount}}</text>
+    </view>
+    <view class="station-footer">
+      <view class="price">
+        <text class="price-num">{{item.totalPricePerKwh}}</text>
+        <text class="price-unit">元/度</text>
+      </view>
+      <view class="idle {{item.idle > 0 ? '' : 'idle-none'}}">
+        空闲 {{item.idle}}/{{item.total}}
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{stations.length === 0}}" class="empty">
+    附近暂无符合条件的充电站
+  </view>
+</view>

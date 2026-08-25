@@ -1,0 +1,74 @@
+/* 全局样式 */
+page {
+  background-color: #f5f6f8;
+  font-size: 28rpx;
+  color: #333;
+  --brand: #07c160;
+  --brand-dark: #06ad56;
+  --danger: #fa5151;
+  --warn: #ff9d00;
+  --muted: #999;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin: 20rpx 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  line-height: 88rpx;
+  text-align: center;
+}
+
+.btn-primary.disabled {
+  background: #c8c9cc;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  line-height: 88rpx;
+  text-align: center;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 6rpx;
+  margin-right: 12rpx;
+}
+
+.tag-fast {
+  color: #ff6f00;
+  background: #fff3e0;
+}
+
+.tag-slow {
+  color: #1976d2;
+  background: #e3f2fd;
+}
+
+.tag-idle {
+  color: var(--brand);
+  background: #e8f8ee;
+}
+
+.tag-busy {
+  color: var(--warn);
+  background: #fff5e6;
+}
+
+.tag-offline {
+  color: var(--muted);
+  background: #f0f0f0;
+}

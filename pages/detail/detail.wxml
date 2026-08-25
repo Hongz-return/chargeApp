@@ -1,0 +1,56 @@
+<view class="page" wx:if="{{station}}">
+  <!-- 站点信息 -->
+  <view class="card">
+    <view class="station-name">{{station.name}}</view>
+    <view class="info-row">
+      <text class="info-label">地址</text>
+      <text class="info-value">{{station.address}}（{{station.distanceKm}}km）</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">营业时间</text>
+      <text class="info-value">{{station.openTime}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">停车说明</text>
+      <text class="info-value">{{station.parkingNote}}</text>
+    </view>
+    <view class="price-row">
+      <view class="price-block">
+        <text class="price-num">{{station.totalPricePerKwh}}</text>
+        <text class="price-unit">元/度</text>
+      </view>
+      <text class="price-detail">电费 {{station.pricePerKwh}} + 服务费 {{station.serviceFeePerKwh}}</text>
+    </view>
+  </view>
+
+  <!-- 充电枪列表 -->
+  <view class="card">
+    <view class="section-title">
+      选择充电枪
+      <text class="section-sub">空闲 {{station.idle}}/{{station.total}}</text>
+    </view>
+    <view class="pile-grid">
+      <view
+        wx:for="{{station.piles}}"
+        wx:key="id"
+        class="pile {{item.status}} {{selectedPileId === item.id ? 'selected' : ''}}"
+        data-pile="{{item}}"
+        bindtap="onPileTap"
+      >
+        <view class="pile-name">{{item.name}}</view>
+        <view class="pile-power">{{item.type === 'fast' ? '快充' : '慢充'}} · {{item.powerKw}}kW</view>
+        <view class="tag {{item.status === 'idle' ? 'tag-idle' : (item.status === 'busy' ? 'tag-busy' : 'tag-offline')}}">
+          {{statusText[item.status]}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="footer">
+    <view
+      class="btn-primary {{selectedPileId ? '' : 'disabled'}}"
+      bindtap="onStartCharging"
+    >{{selectedPileId ? '开始充电' : '暂无空闲充电枪'}}</view>
+  </view>
+</view>

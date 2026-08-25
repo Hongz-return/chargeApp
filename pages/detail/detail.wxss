@@ -1,0 +1,112 @@
+.page {
+  padding-bottom: 160rpx;
+}
+
+.station-name {
+  font-size: 34rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.info-row {
+  display: flex;
+  margin-top: 12rpx;
+  font-size: 26rpx;
+}
+
+.info-label {
+  color: var(--muted);
+  width: 130rpx;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+  color: #333;
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.price-num {
+  color: #ff6f00;
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.price-unit {
+  color: var(--muted);
+  font-size: 22rpx;
+  margin-left: 4rpx;
+}
+
+.price-detail {
+  margin-left: 20rpx;
+  font-size: 22rpx;
+  color: var(--muted);
+}
+
+.section-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+}
+
+.section-sub {
+  font-size: 24rpx;
+  font-weight: 400;
+  color: var(--brand);
+  margin-left: 12rpx;
+}
+
+/* 充电枪宫格 */
+.pile-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.pile {
+  width: 200rpx;
+  border: 2rpx solid #e5e6eb;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  box-sizing: border-box;
+}
+
+.pile.busy,
+.pile.offline {
+  opacity: 0.55;
+}
+
+.pile.selected {
+  border-color: var(--brand);
+  background: #f0fbf4;
+}
+
+.pile-name {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.pile-power {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin: 8rpx 0 12rpx;
+}
+
+/* 底部固定按钮 */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 32rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.04);
+}

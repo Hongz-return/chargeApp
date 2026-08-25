@@ -1,0 +1,22 @@
+{
+  "description": "充电桩微信小程序（本地 mock 数据，无后端）",
+  "miniprogramRoot": "./",
+  "compileType": "miniprogram",
+  "libVersion": "3.4.0",
+  "appid": "touristappid",
+  "projectname": "charging-pile-miniprogram",
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "urlCheck": false,
+    "coverView": true,
+    "lazyloadPlaceholderEnable": false,
+    "ignoreUploadUnusedFiles": true
+  },
+  "condition": {},
+  "editorSetting": {
+    "tabIndent": "space",
+    "tabSize": 2
+  }
+}
