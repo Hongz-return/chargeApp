@@ -4,6 +4,67 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.3.0] - 2026-08-25
+
+补齐后端：项目从「只有前端」变成「默认纯前端、可选前后端分离」。**默认行为没有变化**，
+不启动后端时演示流程与全部测试照常。
+
+### 新增
+
+- **本地后端 `server/`**：只用 Node 内置 `http` 模块，**零 npm 依赖**，内存态，`npm start` 即起
+  （默认 `127.0.0.1:3000`，`PORT` / `HOST` 可覆盖）。20 个接口覆盖健康检查、站点查询与详情、
+  扫码解析、充电会话（start / tick / stop）、订单增删查、支付、钱包与充值、优惠券、收藏、
+  汇总统计与演示数据重置。跨域直接放开（`OPTIONS` 返回 204），方便开发者工具调试。
+  接口清单、错误码约定与真机联调方式见 [`server/README.md`](server/README.md)。
+- **后端不重写业务逻辑**：`server/store.js` 复用小程序的 `utils/mock.js` / `utils/storage.js` /
+  `utils/charging.js`（这些模块的 `wx.*` 是惰性解析的，Node 下自动回落到内存实现），
+  因此两端算出来的电量、费用、优惠券抵扣逐分逐厘一致，切换数据源时账目不会对不上。
+  加载时用一次性的 `require` 缓存清理拿到**私有实例**，并调用新增的 `storage.useMemoryStorage()`
+  把数据钉在进程内存里——否则同进程里跑着运行时模拟器时，服务端会误写进小程序的本机 Storage。
+- **前端接入层**：`utils/api.js` 是 `wx.request` 的 Promise 封装，统一 `{ ok, data }` /
+  `{ ok, error }` 剥壳与超时/网络/格式三类中文错误；`utils/repo.js` 是数据仓储层，
+  页面读写业务数据的唯一入口。
+- **数据源开关**：`utils/config.js` 新增 `dataSource`（`'local'` | `'remote'`，**默认 `local`**）、
+  `apiBaseUrl` 与 `setDataSource()` / `setApiBaseUrl()`，可在调试控制台运行时切换。
+- **冒烟脚本** `npm run smoke`：在随机空闲端口起一个实例，走一遍
+  health → 站点 → 扫码 → 启停 → 支付 → 订单 → 钱包 → 收藏 → 重置，30 项检查逐条打印实际返回值。
+
+### 变更
+
+- **页面统一改走 `utils/repo.js`**：首页、详情、充电结算、订单、订单详情、收藏、钱包、优惠券、
+  我的九个页面不再直接 `require` `mock` / `storage` / `charging`。`repo` 约定 Node 风格回调
+  `(err, data)`——`local` 在当前调用栈里同步回调（页面行为、首屏与骨架屏、生成物都与 v1.2.0 一致），
+  `remote` 在 `wx.request` 返回后异步回调。**没有**统一成 Promise：那会让本地模式也退化成
+  「下一帧才有数据」，收益为零。
+- **业务失败与技术失败分两条通道**：业务失败（`session-exists` / `pile-busy` / `insufficient` /
+  `coupon-unavailable` …）走 data，形如 `{ ok: false, reason }`；后端用同名的 `error.code`，
+  `repo` 会还原成一样的结构，页面的错误分支只写一遍。只有连不上、超时、返回格式不对才走 err，
+  由 `repo.toastError()` 统一提示，文案里直接给排查动作（确认 `npm start`、勾选「不校验合法域名」）。
+- **远程模式下会话镜像回本机**：服务端是充电会话的权威，但悬浮条、tabBar 红点、`app.globalData`
+  需要同步读取会话，所以每次 start / stop / 拉取后把服务端的 session 写回本机 Storage 作缓存。
+- `app.js` 的启动播种、会话同步、tabBar 角标按数据源分流；`utils/demo.js` 抽出示例历史订单，
+  小程序与后端播种同一批数据。
+- `project.config.json`：`packOptions.ignore` 增加 `server/`；演示说明页文案与「已知限制」
+  补上后端相关说明；README 重写数据源章节。
+
+### 修复
+
+- **`project.config.json` 的 `editorSetting.tabIndent` 从非法值 `"space"` 改为 `"insertSpaces"`**。
+  微信开发者工具会对这个字段做枚举校验，`"space"` 会在导入项目时直接报错。
+
+### 测试
+
+- 用例数 85 → 115。
+- `tests/server.test.js`（15）：起真实 http 服务打接口契约——健康检查、CORS / 405 / 400、
+  站点查询与排序、三种二维码、start→tick→stop→pay 闭环与枪位余额同步、余额不足不扣款、
+  订单增删查、钱包与统计、收藏、reset，以及服务端 store 与本机 Storage 的隔离。
+- `tests/remote.test.js`（5）：把数据源切到 `remote`，在运行时模拟器里跑页面，请求走
+  基于 Node http 的真实 `wx.request`。验证订单/收藏/余额确实落在服务端而不是本机、
+  详情→充电→结算→支付闭环、会话镜像，以及后端没启动时给可排查提示而不是卡在骨架屏。
+- `tests/repo.test.js`（10）：默认数据源、`buildUrl` 拼接、**local 回调的同步性**、
+  业务原因码在两种数据源下同形、网络/超时/非本项目后端三类错误提示、会话镜像。
+- `tests/helpers/miniprogram.js` 增加基于 Node `http` 的 `wx.request` 实现，远程测试打的是真实 HTTP。
+
 ## [1.2.0] - 2026-08-25
 
 一轮完整的优化审查落地：修真实缺陷、堵定时器泄漏、去重公共逻辑、补回归测试。
@@ -132,6 +193,7 @@
 - **图标生成**：`tools/gen-assets.js` 用纯 Node（zlib）矢量绘制并导出 tabBar 与 marker PNG。
 - **测试**：59 个 `node:test` 用例，含小程序运行时模拟器驱动的页面级冒烟测试。
 
+[1.3.0]: https://github.com/Hongz-return/-/pull/4
 [1.2.0]: https://github.com/Hongz-return/-/pull/3
 [1.1.0]: https://github.com/Hongz-return/-/pull/2
 [1.0.0]: https://github.com/Hongz-return/-/pull/2

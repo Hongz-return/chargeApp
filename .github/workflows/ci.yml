@@ -24,6 +24,20 @@ jobs:
       - name: 校验 + 测试
         run: npm run check
 
+  smoke:
+    name: 本地后端冒烟
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 冒烟脚本自己在随机空闲端口起一个 server/ 实例，不需要先 npm start
+      - name: 后端闭环冒烟
+        run: npm run smoke
+
   assets:
     name: 生成物一致性
     runs-on: ubuntu-latest

@@ -1,12 +1,22 @@
 # 充电桩微信小程序（可交付演示版）
 
 [![CI](https://github.com/Hongz-return/-/actions/workflows/ci.yml/badge.svg)](https://github.com/Hongz-return/-/actions/workflows/ci.yml)
-![tests](https://img.shields.io/badge/tests-85%20passing-07c160)
+![tests](https://img.shields.io/badge/tests-115%20passing-07c160)
 ![deps](https://img.shields.io/badge/runtime%20deps-0-07c160)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
-一个**纯前端**的「充电桩」微信小程序 Demo：找站 → 选枪 → 扫码/手动启动 → 实时充电 → 结算支付 → 订单归档。
-所有数据来自本地 mock 与 `wx.setStorageSync`，**不依赖任何后端服务、不引入任何 npm 运行时依赖**，用微信开发者工具的**测试号**即可直接导入运行。
+一个「充电桩」微信小程序 Demo：找站 → 选枪 → 扫码/手动启动 → 实时充电 → 结算支付 → 订单归档。
+用微信开发者工具的**测试号**即可直接导入运行，**不引入任何 npm 运行时依赖**。
+
+**数据源有两种，默认第一种：**
+
+| 数据源 | 说明 | 怎么用 |
+| --- | --- | --- |
+| `local`（默认） | 纯前端：数据来自 `utils/mock.js` 与 `wx.setStorageSync`，不发任何网络请求，断网可用 | 导入项目直接编译，什么都不用装 |
+| `remote` | 前后端分离：数据来自仓库自带的本地后端 `server/`（Node 内置 http 模块，零依赖，内存态） | 根目录 `npm start`，再把 `utils/config.js` 的 `dataSource` 改成 `'remote'` |
+
+两种数据源下**页面代码完全一样**——所有取数、下单、支付都走 `utils/repo.js` 这一层，
+切换开关只影响它内部走 mock 还是走 `wx.request`。详见[五、数据源与后端](#五数据源与后端)。
 
 ```
 首页                  订单               我的
@@ -21,9 +31,10 @@
 > 这是一个**演示版**小程序，用于展示完整的充电桩业务流程：
 >
 > - **不产生真实充电、不产生真实扣款**：充电按 60 倍速仿真，支付为本地 mock，不对接任何支付通道。
-> - **不采集、不上传任何个人信息**：没有登录、没有后端接口，运行期间不发起任何网络请求，断网也能完整体验。
+> - **不采集、不上传任何个人信息**：没有登录；默认数据源不发起任何网络请求，断网也能完整体验。
 > - **数据只保存在本机**：订单、钱包流水、收藏、优惠券、发票记录都写入小程序本地 Storage，
 >   可在「我的 → 清除本地数据」一键删除。
+> - **可选的本地后端也只在你自己的机器上**：`server/` 是内存态的演示服务，不连任何云端，进程退出即清空。
 >
 > 同样的声明在小程序内也能看到：首页首次进入的一次性提示条、「我的」页常驻声明卡片，
 > 以及「我的 → 演示说明与隐私」（`pages/about`）。
@@ -39,7 +50,20 @@
 
 > 项目已在 `project.config.json` 的 `condition` 中预置了 8 个编译模式（首页、站点详情、扫码进入、订单、
 > 我的、钱包、发票管理、演示说明），可在工具右上角「普通编译」下拉框中直接切换到指定页面调试。
-> `packOptions.ignore` 已排除 `tests/`、`tools/`、`docs/`、`.github/` 等仅用于开发的目录，不会打进小程序包。
+> `packOptions.ignore` 已排除 `tests/`、`tools/`、`server/`、`docs/`、`.github/` 等仅用于开发的目录，不会打进小程序包。
+
+### 想顺便跑一下后端（可选）
+
+默认不需要。要体验前后端分离的版本，再多做三步：
+
+```bash
+npm start                         # 终端 1：启动本地后端，监听 127.0.0.1:3000
+curl http://127.0.0.1:3000/api/health   # 确认已就绪
+```
+
+然后把 `utils/config.js` 里的 `dataSource` 从 `DATA_SOURCE.LOCAL` 改成 `DATA_SOURCE.REMOTE`，
+在开发者工具「详情 → 本地设置」勾上「不校验合法域名」（仓库已带 `urlCheck: false`，通常已勾好），重新编译即可。
+完整说明见 [`server/README.md`](server/README.md)。
 
 ### 5 分钟演示路径（建议按此顺序走查）
 
@@ -114,8 +138,22 @@
 | 生命周期 | 页面里的 `setTimeout` 统一登记到 `utils/nav.js`，`onUnload` 一次清空，杜绝「退出页面后被跳走 / setData 到已销毁页面」 |
 | 可维护性 | 抽出 `utils/id.js`、`utils/nav.js`、`mock.toStationCards`；魔法数常量化；删除死代码；`validate` 新增版本一致性与未注册页面检查 |
 
-刻意**没有**做的：不引入任何后端或 npm 运行时依赖，不为了「更好的架构」重排目录，
+刻意**没有**做的：不引入任何 npm 运行时依赖，不为了「更好的架构」重排目录，
 60 倍速仿真、固定定位、mock 支付这些演示取舍保持不变（见「九、已知限制」）。
+
+### 后端与数据源（v1.3.0）
+
+此前的版本只有前端：业务在 `utils/mock.js` + `utils/storage.js` + `utils/charging.js`，
+用 `wx.setStorageSync` 落本机，没有 `wx.request`、没有服务端。v1.3.0 补齐了另一半，
+但**默认行为一点没变**，明细见 [CHANGELOG](CHANGELOG.md#130---2026-08-25)：
+
+| 维度 | 内容 |
+| --- | --- |
+| 后端 | `server/`：Node 内置 `http` 模块、零依赖、内存态；20 个接口覆盖站点/扫码/启停/订单/支付/钱包/券/收藏；`npm start` 起、`npm run smoke` 验 |
+| 接入层 | `utils/api.js`（`wx.request` 的 Promise 封装）+ `utils/repo.js`（数据仓储层）；9 个页面不再直接 `require` 领域模块 |
+| 开关 | `utils/config.js` 的 `dataSource: 'local' \| 'remote'`，**默认 `local`**；不启动后端时演示与全部测试照常绿 |
+| 一致性 | 后端复用小程序的领域层，不重写业务逻辑；错误码与本地 `reason` 同名，页面错误分支只写一遍 |
+| 测试 | 85 → 115 个用例，新增接口契约（真实 HTTP）、remote 模式页面闭环、仓储层契约三组 |
 
 ---
 
@@ -198,13 +236,24 @@ npm run docs   # = npm run preview && npm run screenshots
 │   └── about/                 # 演示说明与隐私、本机数据清单、客服、分享
 │
 ├── utils/
+│   ├── repo.js                # 数据仓储层：页面读写业务数据的唯一入口，屏蔽 local / remote 差异
+│   ├── api.js                 # wx.request 的 Promise 封装（只在 remote 数据源下被用到）
 │   ├── mock.js                # 站点/充电枪 mock 数据、搜索排序、扫码解析、卡片与 marker 视图模型
 │   ├── storage.js             # Storage 封装：订单/钱包/收藏/优惠券/会话/枪状态/发票
 │   ├── charging.js            # 充电领域逻辑：开始/进度推算/结束/会话对账/支付
+│   ├── demo.js                # 示例历史订单（小程序与后端播种同一批）
 │   ├── format.js              # 时间、金额、电量、距离、订单号格式化
 │   ├── id.js                  # 订单/流水/发票共用的 id 生成（同毫秒不撞号）
 │   ├── nav.js                 # 页面延时任务登记与「返回上一页 / 退回首页」兜底
-│   └── config.js              # 版本号、客服信息、演示声明文案（集中一处）
+│   └── config.js              # 版本号、客服信息、演示声明文案、数据源与后端地址开关
+│
+├── server/                    # 可选的本地后端（零依赖，内存态），详见 server/README.md
+│   ├── index.js               # 入口：npm start
+│   ├── app.js                 # HTTP 层：CORS / body 解析 / 错误包装
+│   ├── router.js              # 极简路由（method + :param 模板）
+│   ├── routes.js              # 接口实现
+│   ├── store.js               # 内存态 store：复用小程序领域层的私有实例 + 播种演示数据
+│   └── smoke.js               # 冒烟脚本：npm run smoke
 │
 ├── tools/
 │   ├── gen-assets.js          # 以纯 Node（zlib）矢量绘制并导出 PNG 图标
@@ -218,20 +267,78 @@ npm run docs   # = npm run preview && npm run screenshots
 │   ├── preview/               # 生成物：可在浏览器打开的静态预览页
 │   └── screenshots/           # 生成物：12 张 750×1624 界面图（README 引用）
 │
-└── tests/                     # node:test 测试（85 个用例）
-    ├── helpers/miniprogram.js  # 小程序运行时模拟器（wx.* 存根 + App/Page/Component）
+└── tests/                     # node:test 测试（115 个用例）
+    ├── helpers/miniprogram.js  # 小程序运行时模拟器（wx.* 存根 + App/Page/Component + wx.request）
     ├── format.test.js
     ├── storage.test.js
     ├── mock.test.js
     ├── charging.test.js
+    ├── repo.test.js           # 数据仓储层契约：local 同步回调 / remote 错误映射
+    ├── server.test.js         # 本地后端的接口契约（真实 HTTP）
+    ├── remote.test.js         # 切到 remote 后，页面跑通完整闭环
     └── pages.test.js          # 11 个页面 + 3 个组件的生命周期与交互冒烟测试
 ```
 
 ---
 
-## 五、数据与持久化
+## 五、数据源与后端
 
-所有业务数据通过 `utils/storage.js` 统一读写，Storage Key 一览：
+页面**不直接** `require` `mock.js` / `storage.js` / `charging.js`，而是统一走 `utils/repo.js`。
+数据源开关只在 `utils/config.js` 一处：
+
+```js
+const API = {
+  dataSource: DATA_SOURCE.LOCAL,     // 'local'（默认） | 'remote'
+  baseUrl: 'http://127.0.0.1:3000',
+  timeout: 8000
+};
+```
+
+```
+页面 (pages/*)
+    │  repo.listStations / startCharging / payOrder / getWallet …
+    ▼
+utils/repo.js ──── dataSource === 'local'  ──▶ utils/mock.js + utils/storage.js + utils/charging.js
+    │                                              （同步返回，断网可用）
+    └──────────── dataSource === 'remote' ──▶ utils/api.js ──▶ wx.request ──▶ server/
+                                                                              （复用同一套领域层）
+```
+
+**回调而不是 Promise，是有意的**：本地数据源是同步的，远程是异步的。统一成 Promise 会让本地模式
+也退化成「下一帧才有数据」，首屏和骨架屏都要跟着改，收益为零。所以 `repo` 约定 Node 风格回调
+`(err, data)`——`local` 在当前调用栈里就回调，`remote` 在 `wx.request` 返回后回调，页面只写一份代码。
+
+业务失败与技术失败分两条通道：
+- 业务失败（`session-exists` / `pile-busy` / `insufficient` / `coupon-unavailable` …）走 `data`，
+  形如 `{ ok: false, reason }`。后端用**同名**的 `error.code`，`repo` 会还原成一样的结构，
+  所以页面的错误分支只写一遍。
+- 技术失败（连不上、超时、返回格式不对）才走 `err`，页面统一 `repo.toastError()` 提示，
+  文案里直接给排查动作（「请确认已执行 `npm start`，并在开发者工具中勾选『不校验合法域名』」）。
+
+远程模式下充电会话仍会**镜像一份到本机 Storage**：服务端是权威，但悬浮条、tabBar 红点、
+`app.globalData` 都需要同步读取会话，镜像让这些地方不必改成异步。
+
+### 本地后端（可选）
+
+`server/` 是一套零依赖（只用 Node 内置 `http`）、内存态的演示后端，覆盖站点、扫码、充电启停、
+订单、支付、钱包、优惠券、收藏等接口。它**没有重写业务逻辑**，而是复用小程序的
+`utils/mock.js` / `utils/storage.js` / `utils/charging.js`（Node 下自动回落到内存实现），
+因此两端算出来的电量、费用、优惠券抵扣逐分逐厘一致。
+
+```bash
+npm start        # 启动，默认 http://127.0.0.1:3000
+npm run smoke    # 30 项检查的冒烟脚本，走一遍完整闭环
+```
+
+接口清单、错误码约定、真机联调方式见 [`server/README.md`](server/README.md)。
+
+> `dataSource` 默认是 `local`，**不启动后端时演示与测试完全不受影响**。
+> 换句话说：不看 `server/` 这个目录，这个仓库和 v1.2.0 一样是个纯前端 Demo。
+
+### 本机持久化
+
+`local` 数据源下所有业务数据通过 `utils/storage.js` 统一读写；`remote` 下只有用户资料、
+开票记录和会话镜像还在本机。Storage Key 一览：
 
 | Key | 内容 |
 | --- | --- |
@@ -251,7 +358,8 @@ npm run docs   # = npm run preview && npm run screenshots
 小程序内的「我的 → 演示说明与隐私」页同样列出了这份清单。
 
 `utils/storage.js` 的所有 `wx.*` 调用都是**惰性解析**的：检测不到 `wx` 时自动回落到等价的内存实现（读写做深拷贝，与 Storage 的序列化语义一致）。
-因此 `storage.js`、`mock.js`、`charging.js`、`format.js` 可以在 Node 中直接 `require` 并做单元测试，业务逻辑与小程序运行时完全一致。
+因此 `storage.js`、`mock.js`、`charging.js`、`format.js` 可以在 Node 中直接 `require` 并做单元测试，业务逻辑与小程序运行时完全一致——
+`server/` 能这么短，靠的也是这一点。
 
 读接口对**损坏数据**做了兜底：数组类 Key 拿到非数组时返回空数组，订单/优惠券/流水里的非法元素被过滤，
 钱包结构不可用时重建默认值、`balance` 为 `NaN` 或负数时回落到 0。所以手动改坏 Storage 也不会让页面白屏。
@@ -307,8 +415,10 @@ SOC = 100%  : 功率 = 0，自动结束充电并进入结算
 无需 `npm install`（没有任何依赖），Node ≥ 18 即可：
 
 ```bash
+npm start             # 启动可选的本地后端（server/），默认 http://127.0.0.1:3000
+npm run smoke         # 后端冒烟：起一个临时实例走完 health → 站点 → 启停 → 支付 → 订单闭环
 npm run validate      # 工程静态校验：JSON / JS 语法 / 页面四件套 / 组件引用 / WXML / 静态资源
-npm test              # 运行 85 个测试用例
+npm test              # 运行 115 个测试用例
 npm run check         # 上面两项一起跑（CI 跑的就是这个）
 npm run assets        # 重新生成 tabBar 与 marker 图标（改图标只需改 tools/gen-assets.js）
 npm run preview       # 重新生成 docs/preview 静态预览页
@@ -319,11 +429,12 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 
 ### 持续集成
 
-`.github/workflows/ci.yml` 在每次 push 与 PR 上跑两个 job：
+`.github/workflows/ci.yml` 在每次 push 与 PR 上跑三个 job：
 
 | Job | 内容 |
 | --- | --- |
 | `check` | 在 Node 18 / 20 / 22 三个版本上跑 `npm run check` |
+| `smoke` | 跑 `npm run smoke`，验证本地后端的完整闭环 |
 | `assets` | 重跑 `npm run build:assets`，若生成物与仓库内容有 diff 则失败，保证提交的图标与预览页没有过期 |
 
 `tools/validate.js` 会检查：
@@ -350,8 +461,12 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | `tests/mock.test.js` | 13 | 站点字段完整性与排序、关键词搜索、筛选、枪状态覆盖生效、**marker 灰/绿图标与空闲数一致**、`toStationCards`、扫码解析（含非法输入）、Haversine 距离 |
 | `tests/charging.test.js` | 20 | 开始充电占枪与建单、重复开单拦截、恒功率/涓流/充满三段曲线、结束充电放枪、余额/微信支付、优惠券抵扣、余额不足、**重复支付不重复扣款**、**券全额抵扣的 0 元订单**、**已核销/过期券不可用**、**三种会话对账场景**、完整闭环 |
 | `tests/pages.test.js` | 27 | 11 个页面 + 3 个组件的生命周期与交互：搜索/筛选/排序/地图/扫码、选枪与启动、充电结算支付、订单增删、我的与钱包、收藏与优惠券、**开票校验与提交**、**结算页券失效重算**、**卸载后延时任务不执行**、**栈内唯一页时退回首页**、**连点充值只充一次**、**悬浮条不空转**、**启动时收尾中断订单**、**演示声明页与 storage 清单一致性**、**断网提示** |
+| `tests/repo.test.js` | 10 | 数据仓储层契约：默认数据源、`buildUrl` 拼接、**local 回调的同步性**、业务原因码在两种数据源下同形、网络/超时/非本项目后端三类错误提示、**会话镜像** |
+| `tests/server.test.js` | 15 | 本地后端接口契约（真实 HTTP）：健康检查、CORS / 405 / 400、站点查询与排序、三种二维码、**start→tick→stop→pay 闭环与枪位余额同步**、余额不足不扣款、订单增删查、钱包与统计、收藏、reset、**服务端 store 与本机 Storage 的隔离** |
+| `tests/remote.test.js` | 5 | 把数据源切到 `remote` 后在运行时模拟器里跑页面（`wx.request` 是基于 Node http 的真实实现）：**订单/收藏/余额确实落在服务端**、详情→充电→结算→支付闭环、会话镜像、**后端没启动时给可排查提示而不是卡在骨架屏** |
 
-合计 **85 个用例，全部通过**，在 Node 18 / 20 / 22 上结果一致。
+合计 **115 个用例，全部通过**，在 Node 18 / 20 / 22 上结果一致。
+后端相关的 30 个用例会自己在随机空闲端口起服务，跑测试前**不需要**先 `npm start`。
 
 > `npm test` 用的是不带参数的 `node --test`（由测试运行器自己递归发现 `*.test.js`）。
 > 不要改成 `node --test "tests/*.test.js"`：`--test` 参数里的 glob 展开要 Node 21+ 才支持，
@@ -374,12 +489,14 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | Mock 数据补充经纬度等字段，充电结束更新枪状态 | ✅ |
 | 统一设计系统（主题色/间距/卡片/空态/加载态/反馈） | ✅ |
 | 各页面 empty / loading 状态 | ✅ |
-| 代码结构分层（format / storage / charging / mock + 4 个组件） | ✅ |
+| 代码结构分层（repo / api / format / storage / charging / mock + 4 个组件） | ✅ |
 | `app.json` tabBar 与路由配置 | ✅ |
 | `project.config.json` 测试号可直接导入 | ✅ |
 | README 完整文档 | ✅ |
 | JSON 合法性 + JS 语法 + WXML 校验脚本 | ✅ |
-| 单元测试 + 页面级冒烟测试 | ✅ 85 个用例 |
+| 单元测试 + 页面级冒烟测试 | ✅ 115 个用例 |
+| 可运行的本地后端（零依赖，内存态，含冒烟脚本） | ✅ v1.3.0 `server/` |
+| 前端数据源可切换（`local` / `remote`，默认 `local`） | ✅ v1.3.0 `utils/repo.js` |
 | GitHub Actions CI（Node 18/20/22 + 生成物一致性） | ✅ |
 | `LICENSE`（MIT，与 `package.json` 一致） | ✅ |
 | `CHANGELOG.md` | ✅ |
@@ -399,15 +516,18 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 
 这些限制是**演示版的有意取舍**，不是待修的缺陷：
 
-- 纯前端 Demo：没有登录、没有后端接口，`wx.getUserProfile` / 真实支付 / 真实开票均未接入，
+- 演示 Demo：没有登录，`wx.getUserProfile` / 真实支付 / 真实开票均未接入，
   发票页生成的是本地记录，不会真正开票；客服入口只展示演示号码，不接通真实通道。
+- `server/` 是**本机**演示后端：内存态、单用户、无鉴权、无数据库，进程退出数据即清空，
+  不能当生产服务用。它存在的意义是把「纯前端 Demo」变成可联调的「前后端分离 Demo」。
 - 未申请 `getLocation` 权限，用户位置为固定的模拟坐标；地图 marker 与距离基于该坐标计算。
 - 充电为 60 倍速仿真，不是真实充电桩协议，`SIM_SPEED` 设为 `1` 即真实速度。
-- 数据保存在设备本地 Storage，换设备或清缓存后会回到初始演示状态。
+- 默认数据源下数据保存在设备本地 Storage，换设备或清缓存后会回到初始演示状态。
 - `docs/screenshots/` 由无头 Chrome 渲染真实 WXML/WXSS 得到，与真机存在细微差异：
   地图与原生 `input` 以等价占位呈现。需要严格的真机效果请用微信开发者工具按上面的演示路径走查。
 
-接入真实后端时，替换 `utils/mock.js` 的数据来源与 `utils/charging.js` 的启停/支付实现即可，页面层无需改动。
+接入真实后端时不用改页面：把 `utils/config.js` 的 `baseUrl` 指过去，
+按 `server/README.md` 的接口契约实现同名接口即可；契约不一致的地方在 `utils/repo.js` 一处适配。
 
 ---
 
