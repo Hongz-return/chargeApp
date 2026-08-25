@@ -133,11 +133,13 @@
 │   ├── gen-assets.js          # 以纯 Node（zlib）矢量绘制并导出 PNG 图标
 │   └── validate.js            # 工程静态校验（JSON/JS/页面四件套/组件/资源）
 │
-└── tests/                     # node:test 单元测试（42 个用例）
+└── tests/                     # node:test 测试（59 个用例）
+    ├── helpers/miniprogram.js  # 小程序运行时模拟器（wx.* 存根 + App/Page/Component）
     ├── format.test.js
     ├── storage.test.js
     ├── mock.test.js
-    └── charging.test.js
+    ├── charging.test.js
+    └── pages.test.js          # 9 个页面 + 3 个组件的生命周期与交互冒烟测试
 ```
 
 ---
@@ -210,8 +212,8 @@ SOC = 100%  : 功率 = 0，自动结束充电并进入结算
 无需 `npm install`（没有任何依赖），Node ≥ 18 即可：
 
 ```bash
-npm run validate   # 工程静态校验：JSON 合法性 / JS 语法 / 页面四件套 / 组件引用 / 静态资源
-npm test           # 运行 42 个单元测试
+npm run validate   # 工程静态校验：JSON / JS 语法 / 页面四件套 / 组件引用 / WXML / 静态资源
+npm test           # 运行 59 个测试用例
 npm run check      # 上面两项一起跑
 npm run assets     # 重新生成 tabBar 与 marker 图标（改图标只需改 tools/gen-assets.js）
 ```
@@ -222,16 +224,22 @@ npm run assets     # 重新生成 tabBar 与 marker 图标（改图标只需改 
 2. 全部 `.js` 文件通过 `node --check` 语法检查；
 3. `app.json` 注册的每个页面 `js/json/wxml/wxss` 四件套齐全；
 4. 所有 `usingComponents` 指向的组件文件存在且声明了 `"component": true`；
-5. tabBar 图标、`sitemap.json`、代码中引用的 `/assets/**` 资源均存在。
+5. tabBar 图标、`sitemap.json`、代码中引用的 `/assets/**` 资源均存在；
+6. 所有 `.wxml` 标签正确闭合，且 `bindtap` / `catchtap` 等绑定的处理函数在对应 `.js` 中确实有定义。
 
 ### 测试覆盖
 
-| 测试文件 | 覆盖内容 |
-| --- | --- |
-| `tests/format.test.js` | 时长/金额/电量/距离/日期格式化、手机号打码、订单号生成 |
-| `tests/storage.test.js` | 用户资料、钱包充值与支付（含余额不足）、订单增删改查与统计、收藏、枪状态覆盖表、会话、优惠券挑选与核销、重置 |
-| `tests/mock.test.js` | 站点字段完整性与排序、关键词搜索、筛选、枪状态覆盖生效、marker 生成、扫码解析（含非法输入）、Haversine 距离 |
-| `tests/charging.test.js` | 开始充电占枪与建单、重复开单拦截、恒功率/涓流/充满三段曲线、结束充电放枪、余额/微信支付、优惠券抵扣、余额不足、完整闭环 |
+单元测试直接跑真实业务代码；页面测试则在 `tests/helpers/miniprogram.js` 提供的**小程序运行时模拟器**
+（wx.* 存根 + App/Page/Component/getApp）中执行页面的生命周期与事件处理函数，因此能在没有微信开发者工具的
+环境里跑通「找站 → 选枪 → 充电 → 结算 → 支付 → 订单」完整闭环。
+
+| 测试文件 | 用例 | 覆盖内容 |
+| --- | --- | --- |
+| `tests/format.test.js` | 7 | 时长/金额/电量/距离/日期格式化、手机号打码、订单号生成 |
+| `tests/storage.test.js` | 12 | 用户资料、钱包充值与支付（含余额不足）、订单增删改查与统计、收藏、枪状态覆盖表、会话、优惠券挑选与核销、重置 |
+| `tests/mock.test.js` | 11 | 站点字段完整性与排序、关键词搜索、筛选、枪状态覆盖生效、marker 生成、扫码解析（含非法输入）、Haversine 距离 |
+| `tests/charging.test.js` | 12 | 开始充电占枪与建单、重复开单拦截、恒功率/涓流/充满三段曲线、结束充电放枪、余额/微信支付、优惠券抵扣、余额不足、完整闭环 |
+| `tests/pages.test.js` | 17 | 9 个页面 + 3 个组件的生命周期与交互：搜索/筛选/排序/地图/扫码、选枪与启动、充电结算支付、订单增删、我的与钱包、收藏与优惠券 |
 
 ---
 
@@ -254,8 +262,8 @@ npm run assets     # 重新生成 tabBar 与 marker 图标（改图标只需改 
 | `app.json` tabBar 与路由配置 | ✅ |
 | `project.config.json` 测试号可直接导入 | ✅ |
 | README 完整文档 | ✅ |
-| JSON 合法性 + JS 语法校验脚本 | ✅ |
-| 单元测试脚本 | ✅ 42 个用例 |
+| JSON 合法性 + JS 语法 + WXML 校验脚本 | ✅ |
+| 单元测试 + 页面级冒烟测试 | ✅ 59 个用例 |
 
 ---
 

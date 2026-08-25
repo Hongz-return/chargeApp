@@ -1,9 +1,9 @@
 const storage = require('./utils/storage');
 const charging = require('./utils/charging');
 
-/** 首次启动时写入的演示历史订单，保证订单页/我的页开箱可演示 */
-function seedDemoOrders() {
-  if (storage.read('cp_seeded', false)) return;
+/** 首次启动（或清除数据后）写入的演示历史订单，保证订单页/我的页开箱可演示 */
+function seedDemoOrders(force) {
+  if (!force && storage.read('cp_seeded', false)) return;
 
   const day = 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -95,6 +95,15 @@ App({
 
   onShow() {
     this.syncSession();
+  },
+
+  /** 清除本地数据后重新播种演示数据，让界面立刻回到初始可演示状态 */
+  reseedDemoData() {
+    seedDemoOrders(true);
+    storage.getWallet();
+    storage.listCoupons();
+    this.globalData.chargingSession = null;
+    this.refreshTabBarBadge();
   },
 
   /** 从 storage 重新读取会话并刷新 tabBar 角标，页面 onShow 时可调用 */

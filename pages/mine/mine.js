@@ -108,8 +108,7 @@ Page({
         if (!res.confirm) return;
         storage.resetAll();
         storage.remove('cp_seeded');
-        app.globalData.chargingSession = null;
-        app.refreshTabBarBadge();
+        app.reseedDemoData();
         wx.showToast({ title: '已恢复初始状态', icon: 'success' });
         this.loadProfile();
       }

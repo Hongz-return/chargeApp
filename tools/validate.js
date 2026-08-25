@@ -5,6 +5,7 @@
  *  3. app.json 中注册的页面，四件套（js/json/wxml/wxss）齐全
  *  4. 页面/组件 json 里 usingComponents 指向的组件文件存在
  *  5. tabBar 图标、地图 marker 等静态资源存在
+ *  6. WXML 标签正确闭合，且绑定的事件处理函数在对应 js 中有定义
  *
  *   node tools/validate.js
  */
@@ -17,7 +18,7 @@ const ROOT = path.join(__dirname, '..');
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.cursor']);
 
 const errors = [];
-const checked = { json: 0, js: 0, pages: 0, components: 0, assets: 0 };
+const checked = { json: 0, js: 0, wxml: 0, pages: 0, components: 0, handlers: 0, assets: 0 };
 
 function walk(dir, out) {
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
@@ -133,6 +134,48 @@ files
     });
   });
 
+/* 6. WXML 标签闭合 + 事件处理函数在对应 js 中存在 */
+const VOID_TAGS = new Set(['image', 'input', 'import', 'include', 'wxs', 'icon', 'progress', 'slot']);
+
+files
+  .filter((f) => f.endsWith('.wxml'))
+  .forEach((file) => {
+    checked.wxml++;
+    const source = fs.readFileSync(file, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+
+    // 标签闭合
+    const stack = [];
+    const tagRe = /<(\/?)([\w-]+)((?:"[^"]*"|'[^']*'|[^>])*?)(\/?)>/g;
+    let m;
+    while ((m = tagRe.exec(source))) {
+      const [, closing, tag, , selfClosing] = m;
+      if (selfClosing || VOID_TAGS.has(tag)) continue;
+      if (closing) {
+        const open = stack.pop();
+        if (open !== tag) fail(`WXML 标签未正确闭合: ${rel(file)} -> </${tag}> 与 <${open || '空'}> 不匹配`);
+      } else {
+        stack.push(tag);
+      }
+    }
+    if (stack.length) fail(`WXML 存在未闭合标签: ${rel(file)} -> <${stack.join('>, <')}>`);
+
+    // 事件处理函数
+    const jsFile = file.replace(/\.wxml$/, '.js');
+    if (!fs.existsSync(jsFile)) return;
+    const js = fs.readFileSync(jsFile, 'utf8');
+    const handlerRe = /\b(?:bind|catch|mut-bind|capture-bind|capture-catch)-?:?[\w-]+\s*=\s*"([^"{}\s]+)"/g;
+    const seen = new Set();
+    while ((m = handlerRe.exec(source))) {
+      const handler = m[1];
+      if (seen.has(handler)) continue;
+      seen.add(handler);
+      checked.handlers++;
+      if (!new RegExp(`\\b${handler}\\s*[(:]`).test(js)) {
+        fail(`WXML 绑定的事件处理函数在页面中不存在: ${rel(file)} -> ${handler}`);
+      }
+    }
+  });
+
 /* 额外检查：代码中引用的 /assets 资源存在 */
 const assetRefs = new Set();
 files
@@ -153,8 +196,10 @@ console.log('小程序工程校验');
 console.log('----------------------------------------');
 console.log(`JSON 文件      : ${checked.json}`);
 console.log(`JS 文件        : ${checked.js}`);
+console.log(`WXML 文件      : ${checked.wxml}`);
 console.log(`注册页面       : ${checked.pages}`);
 console.log(`组件引用       : ${checked.components}`);
+console.log(`事件绑定       : ${checked.handlers}`);
 console.log(`静态资源引用   : ${checked.assets}`);
 console.log('----------------------------------------');
 
