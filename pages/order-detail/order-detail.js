@@ -8,6 +8,7 @@ const app = getApp();
 Page({
   data: {
     loading: true,
+    missing: false,
     order: null,
     timeline: [],
     invoiceHint: ''
@@ -39,7 +40,8 @@ Page({
 
   applyOrder(raw) {
     if (!raw) {
-      this.setData({ loading: false });
+      // 订单可能刚在别处被删掉。先给出空态再退回，避免白屏一秒多
+      this.setData({ loading: false, missing: true, order: null });
       wx.showToast({ title: '订单不存在', icon: 'none' });
       nav.delay(this, () => nav.backOrHome(), 1200);
       return;
@@ -59,6 +61,7 @@ Page({
 
     this.setData({
       loading: false,
+      missing: false,
       timeline,
       invoiceHint: storage.getInvoiceByOrderId(raw.id) ? '已开票' : '',
       order: Object.assign({}, raw, {
@@ -95,8 +98,13 @@ Page({
     wx.navigateTo({ url: '/pages/charging/charging' });
   },
 
-  onRecharge() {
+  /** 「再次充电」：回到这单所在的站点重新选枪 */
+  onChargeAgain() {
     wx.navigateTo({ url: `/pages/detail/detail?id=${this.data.order.stationId}` });
+  },
+
+  onGoOrders() {
+    wx.switchTab({ url: '/pages/orders/orders' });
   },
 
   onInvoice() {

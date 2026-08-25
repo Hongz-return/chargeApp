@@ -108,6 +108,8 @@ Page({
 
   onUnload() {
     nav.clearDelays(this);
+    // 充值动画期间被返回时不能把加载遮罩留在下一个页面上
+    if (this.data.recharging) wx.hideLoading();
   },
 
   onPullDownRefresh() {

@@ -1,5 +1,7 @@
+const repo = require('../../utils/repo');
 const storage = require('../../utils/storage');
 const format = require('../../utils/format');
+const nav = require('../../utils/nav');
 
 /** 抬头类型：个人只需要名称，企业还需要税号 */
 const TYPES = [
@@ -37,12 +39,34 @@ Page({
     this.loadData();
   },
 
+  onUnload() {
+    nav.clearDelays(this);
+    // 提交动画期间被返回时不能把加载遮罩留在下一个页面上
+    if (this.data.submitting) wx.hideLoading();
+  },
+
+  /**
+   * 候选订单跟着数据源走（remote 时订单在服务端），开票记录与用户资料是纯本机的演示数据。
+   * onLoad / onShow / 提交后都会调它，远程模式下请求可能乱序返回，只认最后一次。
+   */
   loadData() {
+    const seq = (this._loadSeq = (this._loadSeq || 0) + 1);
+
+    repo.listOrders((err, orders) => {
+      if (seq !== this._loadSeq) return;
+      if (err) {
+        repo.toastError(err, '订单加载失败');
+        return;
+      }
+      this.applyData(orders || []);
+    });
+  },
+
+  applyData(orders) {
     // 只有已支付且尚未开票的订单可以申请
     const invoiced = storage.listInvoices();
     const invoicedOrderIds = invoiced.map((v) => v.orderId);
-    const candidates = storage
-      .listOrders()
+    const candidates = orders
       .filter((o) => o.status === 'paid' && invoicedOrderIds.indexOf(o.id) < 0)
       .map((o) => ({
         id: o.id,
@@ -67,7 +91,7 @@ Page({
         candidates,
         selectedIds,
         title: this.data.title || user.nickName,
-        invoices: storage.listInvoices().map((v) =>
+        invoices: invoiced.map((v) =>
           Object.assign({}, v, {
             amountText: format.formatMoney(v.amount),
             createdText: format.formatDateTime(v.createdAt),
@@ -168,27 +192,32 @@ Page({
         this.setData({ submitting: true });
         wx.showLoading({ title: '提交中…', mask: true });
 
-        setTimeout(() => {
-          candidates
-            .filter((o) => selectedIds.indexOf(o.id) >= 0)
-            .forEach((o) =>
-              storage.saveInvoice({
-                orderId: o.id,
-                orderNo: o.orderNo,
-                amount: o.amount,
-                type,
-                title: title.trim(),
-                taxNo: type === 'company' ? taxNo.trim() : '',
-                email: email.trim(),
-                remark: String(remark || '').trim()
-              })
-            );
+        // 登记到页面上，用户在这 700ms 内返回时 onUnload 会把它清掉
+        nav.delay(
+          this,
+          () => {
+            candidates
+              .filter((o) => selectedIds.indexOf(o.id) >= 0)
+              .forEach((o) =>
+                storage.saveInvoice({
+                  orderId: o.id,
+                  orderNo: o.orderNo,
+                  amount: o.amount,
+                  type,
+                  title: title.trim(),
+                  taxNo: type === 'company' ? taxNo.trim() : '',
+                  email: email.trim(),
+                  remark: String(remark || '').trim()
+                })
+              );
 
-          wx.hideLoading();
-          this.presetOrderId = '';
-          this.setData({ submitting: false, selectedIds: [], activeTab: 'history' }, () => this.loadData());
-          wx.showToast({ title: '已提交开票申请', icon: 'success' });
-        }, 700);
+            wx.hideLoading();
+            this.presetOrderId = '';
+            this.setData({ submitting: false, selectedIds: [], activeTab: 'history' }, () => this.loadData());
+            wx.showToast({ title: '已提交开票申请', icon: 'success' });
+          },
+          700
+        );
       }
     });
   },

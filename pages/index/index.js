@@ -41,8 +41,17 @@ Page({
   },
 
   onLoad() {
-    this.setData({ showNotice: !storage.read(storage.KEYS.NOTICE_DISMISSED, false) });
+    this.refreshNotice();
     this.loadStations(true);
+  },
+
+  /**
+   * 「我的 → 清除本地数据」会连提示条的关闭状态一起清掉，首页只在 onLoad 读一次的话
+   * 要等下次冷启动才看得到「恢复初始演示状态」，所以每次 onShow 都对一遍。
+   */
+  refreshNotice() {
+    const showNotice = !storage.read(storage.KEYS.NOTICE_DISMISSED, false);
+    if (showNotice !== this.data.showNotice) this.setData({ showNotice });
   },
 
   /** 演示声明只在首次进入时出现，关闭状态写入本机 */
@@ -61,6 +70,7 @@ Page({
 
   onShow() {
     app.syncSession();
+    this.refreshNotice();
     this.loadStations(false);
   },
 

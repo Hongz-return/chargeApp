@@ -165,6 +165,28 @@ test('remote：钱包充值与「我的」汇总读的是服务端数据', async
   assert.strictEqual(mine.data.couponCount, 3);
 });
 
+test('remote：发票页的候选订单来自服务端，开票记录仍留在本机', async () => {
+  const page = env.loadPage('pages/invoice/invoice.js');
+  page.onLoad({});
+  await wait(300);
+
+  // 本机 Storage 里一条订单都没有，候选却应该有服务端那两条已完成订单
+  assert.strictEqual(storage.listOrders().length, 0);
+  assert.strictEqual(page.data.candidates.length, 2, '候选订单跟着数据源走');
+  assert.ok(env.calls.request.some((r) => r.indexOf('/api/orders') > 0));
+
+  page.onOrderTap({ currentTarget: { dataset: { id: page.data.candidates[0].id } } });
+  page.onTitleInput({ detail: { value: '演示用户' } });
+  page.onEmailInput({ detail: { value: 'demo@example.com' } });
+  page.onSubmit();
+  await wait(900);
+
+  assert.strictEqual(page.data.activeTab, 'history');
+  assert.strictEqual(storage.listInvoices().length, 1, '开票记录是纯本机的演示数据');
+  assert.strictEqual(page.data.candidates.length, 1, '已开票的订单从候选里去掉');
+  page.onUnload();
+});
+
 test('remote：后端没启动时给出可排查的提示，而不是卡在骨架屏', async () => {
   // 指向一个没人监听的端口，模拟「忘了 npm start」
   config.setApiBaseUrl('http://127.0.0.1:1');

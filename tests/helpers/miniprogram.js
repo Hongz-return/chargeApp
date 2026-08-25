@@ -21,6 +21,8 @@ function createEnv(options) {
     toast: [],
     modal: [],
     loading: 0,
+    /** 加载遮罩当前是否还开着：用来抓「showLoading 之后页面被返回，遮罩留在下一页」这类泄漏 */
+    loadingVisible: false,
     navigate: [],
     redirect: [],
     switchTab: [],
@@ -65,9 +67,12 @@ function createEnv(options) {
     hideToast() {},
     showLoading(o) {
       calls.loading++;
+      calls.loadingVisible = true;
       if (o && o.success) o.success({});
     },
-    hideLoading() {},
+    hideLoading() {
+      calls.loadingVisible = false;
+    },
     showModal(o) {
       calls.modal.push(o && o.title);
       if (o && o.success) o.success({ confirm: state.modalConfirm, cancel: !state.modalConfirm, content: state.modalContent });
@@ -269,6 +274,7 @@ function createEnv(options) {
       if (Array.isArray(calls[k])) calls[k].length = 0;
     });
     calls.loading = 0;
+    calls.loadingVisible = false;
   }
 
   return { wx, calls, state, loadApp, loadPage, loadComponent, reset, store };

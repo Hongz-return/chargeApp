@@ -73,6 +73,11 @@ Page({
     this.stopTimer();
     nav.clearDelays(this);
     this.setLeaveAlert(false);
+    // 停止 / 支付动画期间被返回时不能把加载遮罩留在下一个页面上
+    if (this._stopping || this.data.paying) {
+      this._stopping = false;
+      wx.hideLoading();
+    }
   },
 
   onHide() {
@@ -139,10 +144,12 @@ Page({
       confirmColor: '#fa5151',
       success: (res) => {
         if (!res.confirm) return;
+        this._stopping = true;
         wx.showLoading({ title: '正在停止…', mask: true });
         nav.delay(
           this,
           () => {
+            this._stopping = false;
             wx.hideLoading();
             this.finishCharging();
           },

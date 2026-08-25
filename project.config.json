@@ -39,6 +39,8 @@
         { "name": "我的订单", "pathName": "pages/orders/orders", "query": "", "scene": null },
         { "name": "我的", "pathName": "pages/mine/mine", "query": "", "scene": null },
         { "name": "我的钱包", "pathName": "pages/wallet/wallet", "query": "", "scene": null },
+        { "name": "我的收藏", "pathName": "pages/favorites/favorites", "query": "", "scene": null },
+        { "name": "优惠券", "pathName": "pages/coupons/coupons", "query": "", "scene": null },
         { "name": "发票管理", "pathName": "pages/invoice/invoice", "query": "", "scene": null },
         { "name": "演示说明与隐私", "pathName": "pages/about/about", "query": "", "scene": null }
       ]

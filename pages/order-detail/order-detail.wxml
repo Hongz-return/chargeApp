@@ -119,7 +119,16 @@
       <view wx:if="{{order.status === 'paid'}}" class="btn-ghost" bindtap="onDelete">删除订单</view>
       <view wx:if="{{order.status === 'charging'}}" class="btn-primary" bindtap="onViewCharging">查看充电进度</view>
       <view wx:elif="{{order.status === 'unpaid'}}" class="btn-primary" bindtap="onPay">立即支付 ¥{{order.payText}}</view>
-      <view wx:else class="btn-primary" bindtap="onRecharge">再次充电</view>
+      <view wx:else class="btn-primary" bindtap="onChargeAgain">再次充电</view>
     </view>
   </block>
+
+  <empty
+    wx:elif="{{missing}}"
+    icon="doc"
+    text="订单不存在或已被删除"
+    sub="正在返回上一页"
+    action-text="去看订单"
+    bind:action="onGoOrders"
+  />
 </view>

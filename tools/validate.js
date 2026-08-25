@@ -8,6 +8,9 @@
  *  6. WXML 标签正确闭合，且绑定的事件处理函数在对应 js 中有定义
  *  7. pages/ 下没有未注册的页面目录（打不开的死代码）
  *  8. package.json / utils/config.js / CHANGELOG 的版本号一致
+ *  9. project.config.json 可被开发者工具接受：tabIndent 枚举值、编译模式指向已注册页面、
+ *     packOptions.ignore 指向真实存在的路径
+ * 10. Markdown 里的相对链接与章节锚点都能打开（避免文档死链）
  *
  *   node tools/validate.js
  */
@@ -20,7 +23,18 @@ const ROOT = path.join(__dirname, '..');
 const SKIP_DIRS = new Set(['.git', 'node_modules', '.cursor']);
 
 const errors = [];
-const checked = { json: 0, js: 0, wxml: 0, pages: 0, components: 0, handlers: 0, assets: 0, versions: 0 };
+const checked = {
+  json: 0,
+  js: 0,
+  wxml: 0,
+  pages: 0,
+  components: 0,
+  handlers: 0,
+  assets: 0,
+  versions: 0,
+  conditions: 0,
+  links: 0
+};
 
 function walk(dir, out) {
   fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
@@ -215,6 +229,89 @@ try {
   fail(`版本号校验失败: ${err.message}`);
 }
 
+/* 9. project.config.json：开发者工具会对这个文件做枚举校验，写错了导入项目就报错 */
+const TAB_INDENTS = new Set(['insertSpaces', 'tab']);
+
+try {
+  const projectPath = path.join(ROOT, 'project.config.json');
+  const project = JSON.parse(fs.readFileSync(projectPath, 'utf8'));
+
+  const tabIndent = (project.editorSetting || {}).tabIndent;
+  if (tabIndent !== undefined && !TAB_INDENTS.has(tabIndent)) {
+    fail(`project.config.json 的 editorSetting.tabIndent 取值非法: "${tabIndent}"（应为 ${[...TAB_INDENTS].join(' / ')}）`);
+  }
+
+  const registeredPages = new Set((appJson && appJson.pages) || []);
+  const conditions = ((project.condition || {}).miniprogram || {}).list || [];
+  if (!conditions.length) fail('project.config.json 没有配置任何编译模式（condition.miniprogram.list）');
+  conditions.forEach((item) => {
+    checked.conditions++;
+    if (!item.pathName) {
+      fail(`编译模式「${item.name || '未命名'}」缺少 pathName`);
+    } else if (!registeredPages.has(item.pathName)) {
+      fail(`编译模式指向未注册的页面: ${item.pathName}（编译模式「${item.name || '未命名'}」）`);
+    }
+  });
+
+  ((project.packOptions || {}).ignore || []).forEach((rule) => {
+    if (!rule || !rule.value) return;
+    if (!fs.existsSync(path.join(ROOT, rule.value))) {
+      fail(`packOptions.ignore 指向不存在的路径: ${rule.value}`);
+    }
+  });
+} catch (err) {
+  fail(`project.config.json 校验失败: ${err.message}`);
+}
+
+/* 10. Markdown 相对链接与锚点：文档里的死链比缺文档更误导人 */
+function headingSlug(text) {
+  return text
+    .toLowerCase()
+    .replace(/[`*_[\]()]/g, '')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
+const anchorCache = new Map();
+
+function anchorsOf(file) {
+  if (anchorCache.has(file)) return anchorCache.get(file);
+  const set = new Set();
+  const source = fs.readFileSync(file, 'utf8');
+  const re = /^#{1,6}\s+(.+?)\s*$/gm;
+  let m;
+  while ((m = re.exec(source))) set.add(headingSlug(m[1]));
+  anchorCache.set(file, set);
+  return set;
+}
+
+files
+  .filter((f) => f.endsWith('.md'))
+  .forEach((file) => {
+    const source = fs.readFileSync(file, 'utf8');
+    const re = /\]\(([^)\s]+)\)/g;
+    let m;
+    while ((m = re.exec(source))) {
+      const target = m[1];
+      if (/^(?:[a-z][a-z0-9+.-]*:)/i.test(target)) continue; // http(s)、mailto 等外链不在本地校验
+      checked.links++;
+
+      const hash = target.indexOf('#');
+      const filePart = hash >= 0 ? target.slice(0, hash) : target;
+      const anchor = hash >= 0 ? decodeURIComponent(target.slice(hash + 1)).toLowerCase() : '';
+      const resolved = filePart ? path.resolve(path.dirname(file), decodeURIComponent(filePart)) : file;
+
+      if (!fs.existsSync(resolved)) {
+        fail(`Markdown 死链: ${rel(file)} -> ${target}`);
+        continue;
+      }
+      if (anchor && resolved.endsWith('.md') && !anchorsOf(resolved).has(anchor)) {
+        fail(`Markdown 锚点不存在: ${rel(file)} -> ${target}`);
+      }
+    }
+  });
+
 /* 额外检查：代码中引用的 /assets 资源存在 */
 const assetRefs = new Set();
 files
@@ -240,6 +337,8 @@ console.log(`注册页面       : ${checked.pages}`);
 console.log(`组件引用       : ${checked.components}`);
 console.log(`事件绑定       : ${checked.handlers}`);
 console.log(`静态资源引用   : ${checked.assets}`);
+console.log(`编译模式       : ${checked.conditions}`);
+console.log(`文档内部链接   : ${checked.links}`);
 console.log(`版本号来源     : ${checked.versions}`);
 console.log('----------------------------------------');
 

@@ -98,6 +98,26 @@ test('首页：加载、搜索、筛选、排序、收藏、地图与视图切�
   page.onUnload();
 });
 
+test('首页：清除本地数据后演示声明提示条会重新出现', async () => {
+  const page = env.loadPage('pages/index/index.js');
+  page.onLoad();
+  await wait(400);
+  assert.strictEqual(page.data.showNotice, true, '首次进入展示一次性声明');
+
+  page.onCloseNotice();
+  assert.strictEqual(page.data.showNotice, false);
+  page.onShow();
+  await wait(50);
+  assert.strictEqual(page.data.showNotice, false, '关过之后再回首页不该又冒出来');
+
+  // 「我的 → 清除本地数据」把关闭状态一起清掉，回到首页应恢复初始演示状态
+  storage.resetAll();
+  page.onShow();
+  await wait(50);
+  assert.strictEqual(page.data.showNotice, true);
+  page.onUnload();
+});
+
 test('首页：扫码失败时走模拟扫码并跳转到对应充电枪', async () => {
   const page = env.loadPage('pages/index/index.js');
   page.onLoad();
@@ -159,6 +179,22 @@ test('详情页：加载站点、筛选充电枪、收藏与导航', () => {
   page.onCopyAddress();
   assert.strictEqual(env.calls.clipboard.pop(), page.data.station.address);
   page.onCall();
+});
+
+test('详情页：握手动画途中离开不会把加载遮罩留给下一个页面', async () => {
+  const page = env.loadPage('pages/detail/detail.js');
+  page.onLoad({ id: 'st-001' });
+
+  page.onStartCharging();
+  assert.strictEqual(env.calls.loadingVisible, true, '「正在启动…」已经弹出来了');
+
+  // 握手的 600ms 还没走完，用户就返回了
+  page.onUnload();
+  assert.strictEqual(env.calls.loadingVisible, false, '遮罩必须随页面一起收掉');
+
+  await wait(1300);
+  assert.strictEqual(charging.getActiveSession(), null, '离开后不应偷偷开出一单');
+  assert.strictEqual(env.calls.redirect.length, 0);
 });
 
 test('详情页：扫码带入的充电枪会被预选', () => {
@@ -390,11 +426,29 @@ test('订单详情页：账单字段、时间线与删除', () => {
   page.onCopyOrderNo();
   assert.strictEqual(env.calls.clipboard.pop(), o.orderNo);
   page.onInvoice();
-  page.onRecharge();
+  page.onChargeAgain();
   assert.strictEqual(env.calls.navigate.pop(), '/pages/detail/detail?id=st-003');
 
   page.onDelete();
   assert.strictEqual(storage.getOrderById('od-demo-2'), null);
+  // 删除后有一个 700ms 的退场延时，不清掉会漏到下一个用例里
+  page.onUnload();
+});
+
+test('订单详情页：订单不存在时给空态而不是白屏', async () => {
+  const page = env.loadPage('pages/order-detail/order-detail.js');
+  page.onLoad({ id: 'od-not-exist' });
+
+  assert.strictEqual(page.data.loading, false);
+  assert.strictEqual(page.data.missing, true, '渲染空态而不是留一片空白');
+  assert.strictEqual(page.data.order, null);
+  assert.strictEqual(env.calls.toast.pop(), '订单不存在');
+
+  await wait(1400);
+  assert.strictEqual(env.calls.back.length, 1, '提示之后退回上一页');
+
+  page.onGoOrders();
+  assert.strictEqual(env.calls.switchTab.pop(), '/pages/orders/orders');
 });
 
 test('订单详情页：删除订单后刷新 tabBar 角标并安全退出', async () => {
@@ -608,6 +662,24 @@ test('发票页：候选订单、抬头校验与提交后写入开票记录', as
   assert.strictEqual(env.calls.clipboard.pop(), 'CD20260805084501002');
   page.onGoOrders();
   assert.strictEqual(env.calls.switchTab.pop(), '/pages/orders/orders');
+});
+
+test('发票页：提交动画途中离开不写记录也不留加载遮罩', async () => {
+  const page = env.loadPage('pages/invoice/invoice.js');
+  page.onLoad({ orderId: 'od-demo-1' });
+  page.onEmailInput({ detail: { value: 'demo@example.com' } });
+  page.onTitleInput({ detail: { value: '演示用户' } });
+
+  page.onSubmit();
+  assert.strictEqual(page.data.submitting, true);
+  assert.strictEqual(env.calls.loadingVisible, true);
+
+  // 提交的 700ms 还没走完，用户就返回了
+  page.onUnload();
+  assert.strictEqual(env.calls.loadingVisible, false, '遮罩必须随页面一起收掉');
+
+  await wait(900);
+  assert.strictEqual(storage.listInvoices().length, 0, '已卸载的页面不该再写开票记录');
 });
 
 test('演示说明页：声明条目、本机数据清单与客服信息', () => {

@@ -41,6 +41,11 @@ Page({
 
   onUnload() {
     nav.clearDelays(this);
+    // 握手动画期间被返回时不能把加载遮罩留在下一个页面上
+    if (this._starting) {
+      this._starting = false;
+      wx.hideLoading();
+    }
   },
 
   loadStation(first) {
