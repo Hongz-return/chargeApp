@@ -1,0 +1,11 @@
+{
+  "name": "charging-pile-miniprogram",
+  "install": "node --version && npm --version",
+  "terminals": [
+    {
+      "name": "backend",
+      "command": "HOST=0.0.0.0 PORT=3000 DEMO_MODE=1 npm start"
+    }
+  ],
+  "ports": [3000]
+}
