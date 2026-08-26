@@ -37,10 +37,13 @@ Page({
     selectedStation: null,
     mapCenter: repo.USER_LOCATION,
     stats: { total: 0, idle: 0 },
-    showNotice: false
+    showNotice: false,
+    showConsent: false,
+    consentChecked: false
   },
 
   onLoad() {
+    this.refreshConsent();
     this.refreshNotice();
     this.loadStations(true);
   },
@@ -53,6 +56,37 @@ Page({
     const showNotice = !storage.read(storage.KEYS.NOTICE_DISMISSED, false);
     if (showNotice !== this.data.showNotice) this.setData({ showNotice });
   },
+
+  refreshConsent() {
+    const showConsent = !storage.read(storage.KEYS.LEGAL_CONSENT, false);
+    if (showConsent !== this.data.showConsent) this.setData({ showConsent });
+  },
+
+  onToggleConsent() {
+    this.setData({ consentChecked: !this.data.consentChecked });
+  },
+
+  onOpenTerms() {
+    wx.navigateTo({ url: '/pages/legal/terms' });
+  },
+
+  onOpenPrivacy() {
+    wx.navigateTo({ url: '/pages/legal/privacy' });
+  },
+
+  onAgreeLegal() {
+    if (!this.data.consentChecked) {
+      wx.showToast({ title: '请先勾选同意协议', icon: 'none' });
+      return;
+    }
+    storage.write(storage.KEYS.LEGAL_CONSENT, {
+      acceptedAt: Date.now(),
+      version: '1.5.1'
+    });
+    this.setData({ showConsent: false });
+  },
+
+  noop() {},
 
   /** 演示声明只在首次进入时出现，关闭状态写入本机 */
   onCloseNotice() {
@@ -70,6 +104,7 @@ Page({
 
   onShow() {
     app.syncSession();
+    this.refreshConsent();
     this.refreshNotice();
     this.loadStations(false);
   },

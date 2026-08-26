@@ -142,4 +142,29 @@
   </block>
 
   <charging-bar bottom="{{40}}" />
+
+  <!-- 首次使用：用户协议与隐私政策同意（提审/上线前材料） -->
+  <view wx:if="{{showConsent}}" class="consent-mask" catchtouchmove="noop">
+    <view class="consent-card">
+      <view class="consent-title">服务协议与隐私保护</view>
+      <view class="consent-body">
+        为符合微信小程序审核与上线合规要求，请阅读并同意相关条款。演示环境不会上传真实身份证件；正式环境的数据用途见隐私政策。
+      </view>
+      <view class="consent-check" bindtap="onToggleConsent" aria-role="checkbox" aria-checked="{{consentChecked}}">
+        <view class="consent-box {{consentChecked ? 'on' : ''}}"></view>
+        <view class="consent-check-text">
+          我已阅读并同意
+          <text class="consent-link" catchtap="onOpenTerms">《用户服务协议》</text>
+          与
+          <text class="consent-link" catchtap="onOpenPrivacy">《隐私政策》</text>
+        </view>
+      </view>
+      <view
+        class="consent-btn {{consentChecked ? '' : 'disabled'}}"
+        aria-role="button"
+        aria-disabled="{{!consentChecked}}"
+        bindtap="onAgreeLegal"
+      >同意并继续</view>
+    </view>
+  </view>
 </view>

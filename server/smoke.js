@@ -99,6 +99,9 @@ async function main() {
     );
     ok('健康检查带上了持久化状态', health.body.data.persistence.writable === true, health.body.data.persistence.file);
 
+    const ready = await call(baseUrl, 'GET', '/api/ready');
+    ok('GET /api/ready', ready.status === 200 && ready.body.data.ready === true, ready.body.data.store);
+
     const anonymous = await call(baseUrl, 'GET', '/api/orders');
     ok('未登录访问订单被拒', anonymous.status === 401 && anonymous.body.error.code === 'unauthorized');
 

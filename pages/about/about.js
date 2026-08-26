@@ -14,6 +14,7 @@ const STORAGE_DESC = {
   INVOICES: '开票记录',
   SEEDED: '示例历史订单是否已播种',
   NOTICE_DISMISSED: '首页演示声明提示条是否已关闭',
+  LEGAL_CONSENT: '是否已同意用户协议与隐私政策',
   AUTH_TOKEN: '登录令牌（仅 remote 数据源会写入）'
 };
 
@@ -60,6 +61,14 @@ Page({
       data: config.SUPPORT.hotline,
       success: () => wx.showToast({ title: '客服热线已复制', icon: 'none' })
     });
+  },
+
+  onOpenTerms() {
+    wx.navigateTo({ url: '/pages/legal/terms' });
+  },
+
+  onOpenPrivacy() {
+    wx.navigateTo({ url: '/pages/legal/privacy' });
   },
 
   onShareAppMessage() {

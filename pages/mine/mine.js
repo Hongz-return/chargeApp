@@ -134,6 +134,14 @@ Page({
     wx.navigateTo({ url: '/pages/about/about' });
   },
 
+  onOpenTerms() {
+    wx.navigateTo({ url: '/pages/legal/terms' });
+  },
+
+  onOpenPrivacy() {
+    wx.navigateTo({ url: '/pages/legal/privacy' });
+  },
+
   onResetData() {
     wx.showModal({
       title: '清除本地数据',

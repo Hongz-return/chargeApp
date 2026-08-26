@@ -23,6 +23,8 @@ const KEYS = {
   INVOICES: 'cp_invoices',
   SEEDED: 'cp_seeded',
   NOTICE_DISMISSED: 'cp_notice_dismissed',
+  /** 是否已同意用户协议与隐私政策（首次进入需确认） */
+  LEGAL_CONSENT: 'cp_legal_consent',
   /** 远程数据源下的登录令牌；local 数据源永远不会写这个键 */
   AUTH_TOKEN: 'cp_auth_token'
 };

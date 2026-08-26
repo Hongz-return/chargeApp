@@ -72,7 +72,17 @@
       <text class="row-label">复制客服热线</text>
       <text class="row-arrow">›</text>
     </view>
-    <view class="card-tip">{{support.note}}。演示版不提供在线客服会话。</view>
+    <view class="list-row" bindtap="onOpenTerms">
+      <view class="row-icon"><view class="ic ic-doc"></view></view>
+      <text class="row-label">用户服务协议</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="list-row" bindtap="onOpenPrivacy">
+      <view class="row-icon"><view class="ic ic-doc"></view></view>
+      <text class="row-label">隐私政策</text>
+      <text class="row-arrow">›</text>
+    </view>
+    <view class="card-tip">{{support.note}}。演示版不提供在线客服会话。上线差距见仓库 docs/ROADMAP.md。</view>
   </view>
 
   <view class="card">

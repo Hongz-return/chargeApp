@@ -30,9 +30,15 @@ PERSIST=0 npm start      # 纯内存，进程退出即清空（一次性 Demo）
 
 ```bash
 curl http://127.0.0.1:3000/api/health
-# {"ok":true,"data":{"status":"ok","version":"1.5.0","env":"development","store":"file",
-#   "persistence":{"writable":true,...},"auth":{"mode":"mock"},
-#   "payment":{"balance":"sandbox","wechat":"not-configured"},...}}
+curl http://127.0.0.1:3000/api/ready
+# {"ok":true,"data":{"ready":true,"store":"file"}}
+```
+
+备份持久化目录（默认写到仓库根 `backups/backup-<时间戳>/`）：
+
+```bash
+npm run backup
+DATA_DIR=/var/lib/charging-pile BACKUP_DIR=/var/backups/cp npm run backup
 ```
 
 冒烟（自己在随机空闲端口起实例、用临时目录存数据，不和你正在跑的抢端口、不污染 `.data/`）：
@@ -106,6 +112,7 @@ POST /api/auth/login  { code }  →  { token, expiresAt, mode, user }
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
 | GET | `/api/health` | `[public]` 状态、版本、环境、持久化可写性、登录模式、支付能力 |
+| GET | `/api/ready` | `[public]` 编排用就绪探针（瘦响应；持久化不可写时 503） |
 | POST | `/api/auth/login` | `[public]` `{ code }` → `{ token, expiresAt, mode, user }` |
 | GET | `/api/auth/me` | 当前登录态自检 |
 | GET | `/api/stations` | `[public]` 站点列表，支持 `keyword` / `filter` / `sort` / `favoriteIds` / `ids` |

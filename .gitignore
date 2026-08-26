@@ -9,4 +9,5 @@ miniprogram_npm/
 # 服务端本地配置与持久化数据目录
 server/.env
 .data/
+backups/
 

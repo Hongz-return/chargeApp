@@ -112,6 +112,23 @@ function buildRoutes(options) {
     { public: true }
   );
 
+  /**
+   * 就绪探针：给编排/负载均衡用。进程活着但持久化挂了时返回 503，
+   * 避免把流量打到写不进盘的实例上。比 /api/health 更「瘦」，不含业务字段。
+   */
+  router.get(
+    '/api/ready',
+    () => {
+      const persistence = store.health();
+      const ready = persistence.mode === 'memory' || (persistence.writable && !persistence.error);
+      if (!ready) {
+        throw httpError(503, 'not-ready', `未就绪：${persistence.error || '数据目录不可写'}`);
+      }
+      return { ready: true, store: persistence.mode };
+    },
+    { public: true }
+  );
+
   /* ---------------------------------------------------------------- 登录 */
 
   /**

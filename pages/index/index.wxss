@@ -282,3 +282,102 @@
   border-radius: 999rpx;
   box-shadow: 0 4rpx 16rpx rgba(15, 34, 58, 0.12);
 }
+
+/* -------------------------------------------------------------- 协议同意 */
+
+.consent-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: rgba(15, 34, 58, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.consent-card {
+  width: 100%;
+  background: #fff;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.consent-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2329;
+  margin-bottom: 16rpx;
+}
+
+.consent-body {
+  font-size: 26rpx;
+  color: #646a73;
+  line-height: 1.65;
+  margin-bottom: 28rpx;
+}
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
+  margin-bottom: 28rpx;
+}
+
+.consent-box {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid #c2c7cc;
+  margin-top: 4rpx;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.consent-box.on {
+  background: #07c160;
+  border-color: #07c160;
+  position: relative;
+}
+
+.consent-box.on::after {
+  content: '';
+  position: absolute;
+  left: 8rpx;
+  top: 3rpx;
+  width: 10rpx;
+  height: 16rpx;
+  border: 3rpx solid #fff;
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(45deg);
+}
+
+.consent-check-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: #4e5969;
+  line-height: 1.6;
+}
+
+.consent-link {
+  color: #07c160;
+}
+
+.consent-btn {
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  background: #07c160;
+  color: #fff;
+  border-radius: 44rpx;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.consent-btn.disabled {
+  opacity: 0.45;
+}

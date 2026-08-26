@@ -122,6 +122,13 @@ test('GET /api/health 返回 ok、版本号与持久化状态', async () => {
   assert.strictEqual(res.body.data.payment.balance, 'sandbox');
 });
 
+test('GET /api/ready 是公开的瘦就绪探针', async () => {
+  const res = await anon('GET', '/api/ready');
+  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.body.data.ready, true);
+  assert.ok(res.body.data.store);
+});
+
 test('跨域头与 OPTIONS 预检', async () => {
   const res = await get('/api/health');
   assert.strictEqual(res.headers['access-control-allow-origin'], '*', '开发模式默认放开');
@@ -265,7 +272,7 @@ test('写接口全部要求登录，公开接口不要求', async () => {
   }
 
   // 站点、扫码、健康检查是公共信息，不登录也能看
-  for (const path of ['/api/health', '/api/stations', '/api/stations/st-001', '/api/scan/random']) {
+  for (const path of ['/api/health', '/api/ready', '/api/stations', '/api/stations/st-001', '/api/scan/random']) {
     assert.strictEqual((await anon('GET', path)).status, 200, `${path} 不应该要求登录`);
   }
   assert.strictEqual((await anon('POST', '/api/scan', { code: 'p-004-a4' })).status, 200);

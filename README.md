@@ -1,8 +1,8 @@
 # 充电桩微信小程序
 
 [![CI](https://github.com/Hongz-return/-/actions/workflows/ci.yml/badge.svg)](https://github.com/Hongz-return/-/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.5.0-07c160)
-![tests](https://img.shields.io/badge/tests-144%20passing-07c160)
+![version](https://img.shields.io/badge/version-1.5.1-07c160)
+![tests](https://img.shields.io/badge/tests-passing-07c160)
 ![deps](https://img.shields.io/badge/runtime%20deps-0-07c160)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -17,13 +17,13 @@
 > 把 `utils/config.js` 里的 `dataSource` 改成 `DATA_SOURCE.REMOTE`，重新编译即可——
 > 页面代码一行都不用动。详见[想顺便跑一下后端（可选）](#想顺便跑一下后端可选)。
 >
-> **想真的上线**：v1.5.0 起 `server/` 已经是生产形态（文件持久化、登录鉴权、按用户隔离、
-> 限流加固、Docker 部署）。剩下需要人工完成的是域名备案、小程序认证、
-> **微信支付商户号**与真实充电桩协议——边界与操作步骤见 [`docs/PRODUCTION.md`](docs/PRODUCTION.md)。
+> **想真的上线**：v1.5.x 起 `server/` 已经是生产形态（文件持久化、登录鉴权、按用户隔离、
+> 限流加固、Docker 部署）。**还差什么、谁做**见 [`docs/ROADMAP.md`](docs/ROADMAP.md)；
+> 操作步骤见 [`docs/PRODUCTION.md`](docs/PRODUCTION.md)。
 > **微信支付尚未接通**，服务端不会伪造「支付成功」。
 >
 > **验收清单、走查路径与已知限制**集中在 [`docs/DELIVERY.md`](docs/DELIVERY.md)。
-> 校验与测试：`npm run check`（工程校验 + 144 个用例）、`npm run smoke`（后端 41 项闭环检查）。
+> 校验与测试：`npm run check`、`npm run smoke`；数据备份：`npm run backup`。
 
 一个「充电桩」微信小程序：找站 → 选枪 → 扫码/手动启动 → 实时充电 → 结算支付 → 订单归档。
 用微信开发者工具的**测试号**即可直接导入运行，**不引入任何 npm 运行时依赖**（后端也是）。

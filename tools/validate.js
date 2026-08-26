@@ -221,18 +221,36 @@ files
     }
   });
 
-/* 7. pages/ 下没有未注册的页面目录：注册不上的页面在小程序里根本打不开，属于死代码 */
+/* 7. pages/ 下没有未注册的页面目录：注册不上的页面在小程序里根本打不开，属于死代码。
+ * 支持 pages/foo/foo 与 pages/group/bar/bar 两级结构。 */
 if (appJson) {
   const registered = new Set(appJson.pages || []);
   const pagesDir = path.join(ROOT, 'pages');
+
+  function assertPageRegistered(absDir, routePrefix) {
+    const base = path.basename(absDir);
+    const jsFile = path.join(absDir, `${base}.js`);
+    const wxmlFile = path.join(absDir, `${base}.wxml`);
+    if (fs.existsSync(jsFile) && fs.existsSync(wxmlFile)) {
+      const route = `${routePrefix}/${base}`;
+      if (!registered.has(route)) {
+        fail(`页面目录未在 app.json 的 pages 中注册: ${routePrefix}/`);
+      }
+      return;
+    }
+    if (!fs.existsSync(absDir)) return;
+    fs.readdirSync(absDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .forEach((entry) => {
+        assertPageRegistered(path.join(absDir, entry.name), `${routePrefix}/${entry.name}`);
+      });
+  }
+
   if (fs.existsSync(pagesDir)) {
     fs.readdirSync(pagesDir, { withFileTypes: true })
       .filter((entry) => entry.isDirectory())
       .forEach((entry) => {
-        const route = `pages/${entry.name}/${entry.name}`;
-        if (!registered.has(route)) {
-          fail(`页面目录未在 app.json 的 pages 中注册: pages/${entry.name}/`);
-        }
+        assertPageRegistered(path.join(pagesDir, entry.name), `pages/${entry.name}`);
       });
   }
 }

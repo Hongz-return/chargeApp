@@ -4,6 +4,25 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.5.1] - 2026-08-26
+
+**差距分析落地 + 合规材料补齐。** 云端子代理鉴权失败后由本机在独立分支完成。
+
+### 分析
+
+- 新增 [`docs/ROADMAP.md`](docs/ROADMAP.md)：按 P0/P1/P2 列出距真上线的缺口，并区分「代码可做」与「需人工」。
+
+### 新增
+
+- 用户服务协议 / 隐私政策页（`pages/legal/*`），首页首次进入需勾选同意；「我的 / 演示说明」可再次打开。
+- `npm run backup`：拷贝 `DATA_DIR` 到 `backups/backup-<时间戳>/`。
+- 访问日志改为单行 JSON（`server/log.js`），不记录 Authorization 全文。
+- `GET /api/ready`：编排用的瘦就绪探针。
+
+### 说明
+
+默认 `dataSource` 仍为 `local`。微信支付与桩协议仍未接通——见 ROADMAP P0。
+
 ## [1.5.0] - 2026-08-26
 
 **从「可交付演示版」走向「可部署后端」。** `server/` 从内存态 Demo 升级成生产形态的后端骨架：

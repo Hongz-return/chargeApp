@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="title">隐私政策</view>
+  <view class="meta">更新日期：{{updatedAt}} · 演示文案，上线前请按微信隐私指引正式填写</view>
+
+  <view class="section">
+    <view class="h">一、我们收集的信息</view>
+    <view class="p">正式上线后可能收集：微信登录标识（openid）、充电订单、支付结果、设备与日志信息，以及你主动填写的车牌等资料。演示模式下，数据默认只保存在本机；切到远程后端时保存在你部署的服务器数据目录。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">二、使用目的</view>
+    <view class="p">用于完成充电业务、客户服务、安全风控与法定合规。不会把个人信息出售给无关第三方。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">三、存储与安全</view>
+    <view class="p">传输应使用 HTTPS。服务端应对访问令牌与密钥做访问控制；演示环境请勿写入真实证件号或银行卡号。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">四、你的权利</view>
+    <view class="p">可在「我的」查看或清除本机演示数据。正式环境将提供账号注销与数据导出路径（需运营方另行实现）。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">五、未成年人</view>
+    <view class="p">本服务面向具备完全民事行为能力的用户。若你为未成年人，请在监护人指导下阅读并使用。</view>
+  </view>
+
+  <view class="foot">完整运营版请在微信公众平台配置「用户隐私保护指引」并与本页保持一致。</view>
+</view>

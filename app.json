@@ -10,7 +10,9 @@
     "pages/favorites/favorites",
     "pages/coupons/coupons",
     "pages/invoice/invoice",
-    "pages/about/about"
+    "pages/about/about",
+    "pages/legal/terms",
+    "pages/legal/privacy"
   ],
   "window": {
     "navigationBarBackgroundColor": "#07c160",

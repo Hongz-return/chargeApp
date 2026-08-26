@@ -103,6 +103,7 @@ test('首页：清除本地数据后演示声明提示条会重新出现', async
   page.onLoad();
   await wait(400);
   assert.strictEqual(page.data.showNotice, true, '首次进入展示一次性声明');
+  assert.strictEqual(page.data.showConsent, true, '首次进入展示协议同意');
 
   page.onCloseNotice();
   assert.strictEqual(page.data.showNotice, false);
@@ -115,6 +116,27 @@ test('首页：清除本地数据后演示声明提示条会重新出现', async
   page.onShow();
   await wait(50);
   assert.strictEqual(page.data.showNotice, true);
+  assert.strictEqual(page.data.showConsent, true, '清除数据后协议同意也要重新出现');
+  page.onUnload();
+});
+
+test('首页：勾选并同意用户协议后不再弹出', async () => {
+  const page = env.loadPage('pages/index/index.js');
+  page.onLoad();
+  await wait(200);
+  assert.strictEqual(page.data.showConsent, true);
+
+  page.onAgreeLegal();
+  assert.strictEqual(page.data.showConsent, true, '未勾选时不能关掉');
+  assert.ok(env.calls.toast.some((t) => /勾选/.test(t)), '应提示先勾选');
+
+  page.onToggleConsent();
+  assert.strictEqual(page.data.consentChecked, true);
+  page.onAgreeLegal();
+  assert.strictEqual(page.data.showConsent, false);
+  page.onShow();
+  await wait(50);
+  assert.strictEqual(page.data.showConsent, false);
   page.onUnload();
 });
 

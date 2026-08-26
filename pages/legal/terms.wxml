@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="title">用户服务协议</view>
+  <view class="meta">更新日期：{{updatedAt}} · 演示文案，上线前请法务审定替换</view>
+
+  <view class="section">
+    <view class="h">一、服务说明</view>
+    <view class="p">本小程序提供充电站查询、扫码启停、订单与钱包等功能。当前仓库默认以演示模式运行；接入真实场站与支付后，以运营方正式发布的协议为准。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">二、账号与使用</view>
+    <view class="p">你应通过微信授权登录使用相关服务，并对账号下的操作负责。禁止利用本服务从事违法或危害电网、场站安全的行为。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">三、费用与支付</view>
+    <view class="p">充电费用按场站公示电价与服务费计算。演示环境中的余额支付为沙箱，不产生真实扣款；正式环境将通过微信支付等合规通道结算。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">四、免责与中断</view>
+    <view class="p">因网络、设备、场站检修或不可抗力导致服务中断的，我们将在合理范围内协助处理订单异常，但不保证演示数据与真实经营数据一致。</view>
+  </view>
+
+  <view class="section">
+    <view class="h">五、协议变更</view>
+    <view class="p">我们可能更新本协议。重大变更将通过小程序内提示告知；继续使用视为知悉变更内容。</view>
+  </view>
+
+  <view class="foot">如有疑问，请通过「我的 → 帮助与客服」联系。</view>
+</view>

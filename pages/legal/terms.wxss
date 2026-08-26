@@ -1,0 +1,41 @@
+.page {
+  min-height: 100vh;
+  padding: 32rpx 32rpx 80rpx;
+  background: #f3f5f7;
+  box-sizing: border-box;
+}
+.title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #1f2329;
+  margin-bottom: 12rpx;
+}
+.meta {
+  font-size: 24rpx;
+  color: #8f959e;
+  margin-bottom: 28rpx;
+  line-height: 1.5;
+}
+.section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+.h {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f2329;
+  margin-bottom: 12rpx;
+}
+.p {
+  font-size: 28rpx;
+  color: #4e5969;
+  line-height: 1.7;
+}
+.foot {
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: #8f959e;
+  text-align: center;
+}

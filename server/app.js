@@ -19,6 +19,7 @@ const auth = require('./auth');
 const store = require('./store');
 const serverConfig = require('./config');
 const { createLimiter } = require('./ratelimit');
+const { formatAccessLog } = require('./log');
 
 const BASE_HEADERS = {
   'Access-Control-Allow-Methods': 'GET,POST,DELETE,OPTIONS',
@@ -134,7 +135,18 @@ function createHandler(options) {
     let who = '-';
 
     const finish = (status) => {
-      if (log) log(`${req.method} ${pathname} ${who} -> ${status} (${Date.now() - startedAt}ms)`);
+      if (!log) return;
+      log(
+        formatAccessLog({
+          method: req.method,
+          path: pathname,
+          status,
+          ms: Date.now() - startedAt,
+          ip: clientKey(req),
+          userId: who === '-' ? '' : who,
+          hasAuth: !!(req.headers && req.headers.authorization)
+        })
+      );
     };
     const fail = (status, code, message, extra) => {
       send(res, status, { ok: false, error: Object.assign({ code, message }, extra || {}) }, headers);
