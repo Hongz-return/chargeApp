@@ -376,10 +376,11 @@ function getProfileSummary(cb) {
 /** 「我的 → 清除本地数据」：本机一定要清，远程模式顺带把服务端的演示数据也重置掉 */
 function resetDemoData(cb) {
   const done = typeof cb === 'function' ? cb : noop;
-  // 令牌不在清除范围内：清完数据还要接着用同一个账号，重新登录只是多一次往返
-  const entry = token.get();
+  // 令牌也一起清掉：「清除本地数据」在界面上承诺的是清干净，留一个令牌在本机就名不副实了。
+  // 下一次远程调用会自动重新登录，用户感知不到（storage.resetAll 清的是本机副本，
+  // token 的内存缓存要单独丢）。
   storage.resetAll();
-  if (entry) token.set(entry);
+  token.clear();
 
   if (!isRemote()) {
     done(null, true);

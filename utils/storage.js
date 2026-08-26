@@ -22,7 +22,9 @@ const KEYS = {
   COUPONS: 'cp_coupons',
   INVOICES: 'cp_invoices',
   SEEDED: 'cp_seeded',
-  NOTICE_DISMISSED: 'cp_notice_dismissed'
+  NOTICE_DISMISSED: 'cp_notice_dismissed',
+  /** 远程数据源下的登录令牌；local 数据源永远不会写这个键 */
+  AUTH_TOKEN: 'cp_auth_token'
 };
 
 /** 本机保留上限：超出后丢弃最旧的记录 */

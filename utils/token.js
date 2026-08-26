@@ -10,7 +10,7 @@
 
 const storage = require('./storage');
 
-const KEY = 'cp_auth_token';
+const KEY = storage.KEYS.AUTH_TOKEN;
 
 /** 提前这么久就当作过期，避开「刚好在请求路上过期」的窗口 */
 const EXPIRY_SKEW_MS = 60 * 1000;
