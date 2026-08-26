@@ -1,4 +1,5 @@
 .page {
+  position: relative;
   padding-bottom: 60rpx;
 }
 
@@ -286,11 +287,11 @@
 /* -------------------------------------------------------------- 协议同意 */
 
 .consent-mask {
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  bottom: 0;
+  height: 100vh;
   z-index: 1000;
   background: rgba(15, 34, 58, 0.55);
   display: flex;
@@ -302,7 +303,7 @@
   width: 100%;
   background: #fff;
   border-radius: 28rpx 28rpx 0 0;
-  padding: 40rpx 36rpx calc(40rpx + env(safe-area-inset-bottom));
+  padding: 40rpx 36rpx 68rpx;
   box-sizing: border-box;
 }
 

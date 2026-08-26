@@ -6,12 +6,7 @@
         <view class="location-icon ic ic-pin"></view>
         <text class="location-text">深圳 · 南山科技园</text>
       </view>
-      <view
-        class="view-toggle"
-        aria-role="button"
-        aria-label="{{viewMode === 'list' ? '切换到地图视图' : '切换到列表视图'}}"
-        bindtap="onToggleView"
-      >
+      <view class="view-toggle" bindtap="onToggleView">
         <view class="ic {{viewMode === 'list' ? 'ic-map' : 'ic-list'}}"></view>
         <text class="view-toggle-text">{{viewMode === 'list' ? '地图' : '列表'}}</text>
       </view>
@@ -31,7 +26,7 @@
         />
         <text wx:if="{{keyword}}" class="search-clear" catchtap="onClearKeyword">✕</text>
       </view>
-      <view class="scan-btn" aria-role="button" aria-label="扫描充电枪二维码" bindtap="onScanTap">
+      <view class="scan-btn" bindtap="onScanTap">
         <view class="scan-icon ic ic-scan"></view>
         <text class="scan-text">扫码</text>
       </view>
@@ -72,7 +67,7 @@
       <view class="dn-title">演示版小程序</view>
       <view class="dn-text">站点、充电与支付均为本地模拟，不联网、不产生真实充电与真实扣款。</view>
     </view>
-    <view class="dn-close" aria-role="button" aria-label="关闭演示声明" catchtap="onCloseNotice">✕</view>
+    <view class="dn-close" catchtap="onCloseNotice">✕</view>
   </view>
 
   <!-- 列表模式 -->
@@ -150,7 +145,7 @@
       <view class="consent-body">
         为符合微信小程序审核与上线合规要求，请阅读并同意相关条款。演示环境不会上传真实身份证件；正式环境的数据用途见隐私政策。
       </view>
-      <view class="consent-check" bindtap="onToggleConsent" aria-role="checkbox" aria-checked="{{consentChecked}}">
+      <view class="consent-check" bindtap="onToggleConsent">
         <view class="consent-box {{consentChecked ? 'on' : ''}}"></view>
         <view class="consent-check-text">
           我已阅读并同意
@@ -159,12 +154,7 @@
           <text class="consent-link" catchtap="onOpenPrivacy">《隐私政策》</text>
         </view>
       </view>
-      <view
-        class="consent-btn {{consentChecked ? '' : 'disabled'}}"
-        aria-role="button"
-        aria-disabled="{{!consentChecked}}"
-        bindtap="onAgreeLegal"
-      >同意并继续</view>
+      <view class="consent-btn {{consentChecked ? '' : 'disabled'}}" bindtap="onAgreeLegal">同意并继续</view>
     </view>
   </view>
 </view>
