@@ -4,6 +4,79 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.5.0] - 2026-08-26
+
+**从「可交付演示版」走向「可部署后端」。** `server/` 从内存态 Demo 升级成生产形态的后端骨架：
+数据落盘、登录鉴权、按用户隔离、限流加固、容器化部署、上线手册。
+
+**小程序的默认行为一点没变**：`utils/config.js` 的 `dataSource` 仍是 `local`，
+clone 下来不装依赖、不起服务、断网也能跑完整流程。演示能力一个都没拆。
+
+**还没接通的**：真实微信支付（第六节是接入清单，不是「已完成」）、真实充电桩协议、
+真实发票通道。这些要么需要人工申请商户号与资质，要么需要对接外部系统，
+边界写在 [`docs/PRODUCTION.md`](docs/PRODUCTION.md) 里，没有假装接通。
+
+### 新增（服务端）
+
+- **持久化**（`server/persist.js`）：一个实现了 wx Storage 同步接口的文件适配器，
+  通过新增的 `storage.useStorageAdapter()` 塞给领域层，**领域层一行不改**。
+  内存里是权威副本（读没有 IO 成本），写打脏标记后合并落盘，用「临时文件 + rename」
+  保证原子性。数据目录由 `DATA_DIR` 配置；`PERSIST=0` 可退回 1.4.0 的纯内存行为。
+  数据文件损坏时不静默清库，而是改名成 `store.json.corrupt-<时间戳>` 留证后用空库继续跑。
+- **多用户隔离**：落盘的键带 `users/<userId>/` 前缀，每个请求进来前切到调用者的命名空间。
+  充电枪占用状态不带前缀——现实中那是同一根枪，A 占了 B 就不该能开。
+- **鉴权骨架**（`server/auth.js`）：`POST /api/auth/login` 用 `wx.login` 的 code 换令牌。
+  令牌是自实现的 HS256 JWT（十来行 `crypto`，不引入 `jsonwebtoken`，产出仍是标准格式），
+  校验用 `timingSafeEqual`。配了 `WX_APPID` / `WX_SECRET` 就真的调 `code2session`，
+  没配则走 mock 并持续告警。**接口默认要求登录**，只有站点查询、扫码解析、健康检查是公开的
+  ——路由不显式标 `public` 就是拒绝，新加接口忘了标注时失败在安全的一侧。
+- **环境配置**（`server/config.js` + `server/.env.example`）：`PORT` / `HOST` / `DATA_DIR` /
+  `NODE_ENV` / `JWT_SECRET` / `WX_APPID` / `WX_SECRET` / `CORS_ORIGIN` / 限流阈值等 17 项。
+  生产模式缺 `JWT_SECRET` **直接启动失败**（开发模式下随机生成会让每次重启都踢掉所有用户）；
+  CORS 生产默认不放通配；不适合生产的取值收集成 `[warn]` 在启动日志里列出来。
+- **生产加固**：单 IP 固定窗口限流（`server/ratelimit.js`）、请求体大小限制、
+  `X-Content-Type-Options: nosniff`、按 `X-Forwarded-For` 取真实 IP 的访问日志、
+  `SIGTERM` / `SIGINT` 优雅退出（关监听 → 等在途请求 → 同步落盘，顺序不能反）。
+- **健康检查升级**：`/api/health` 不只回「进程活着」，还会检查数据目录是否真的可写，
+  不可写时返回 `503 storage-unavailable`——磁盘满或卷没挂上的时候，进程照样 200，
+  但每一笔订单都在悄悄丢。响应里还如实标注登录模式（`wechat` / `mock`）与支付能力。
+- **容器化**：[`Dockerfile`](Dockerfile)（Alpine + tini + 数据卷 + HEALTHCHECK）。
+  用 tini 是因为收不到 `SIGTERM` 就走不了优雅退出，最后一批没落盘的写会丢。
+  CI 增加一个 job 构建镜像并起容器打健康检查。
+- **上线手册** [`docs/PRODUCTION.md`](docs/PRODUCTION.md)：环境要求、变量清单、三种部署方式、
+  Nginx + HTTPS 配置、Demo 切 prod 的改动点、**微信支付 14 步接入清单**、
+  微信后台要人工做的 7 件事、备份 / 日志 / 回滚 / 扩容边界、上线检查清单。
+
+### 变更（支付边界）
+
+- `POST /api/orders/:id/pay` 的 `method: 'wechat'` 现在返回
+  `501 wxpay-not-configured`（配了商户号后是 `wxpay-not-implemented`），错误信息里带文档位置。
+  1.4.0 里它会返回一个「支付成功 / 微信支付」——那是假的，删掉比留着更诚实。
+- 余额支付保留，但响应里带 `sandbox: true` 自曝是演示沙箱。
+- `DEMO_MODE=0`（生产默认）会禁用沙箱支付、演示充值与 `POST /api/reset`，
+  新用户从零余额开始而不是送 128.6 元。
+
+### 新增（小程序侧）
+
+- `utils/token.js`：令牌存取，写本机 Storage + 内存缓存，带过期容差。
+  单独一个文件是为了断开 `api.js` ↔ `auth.js` 的循环依赖。
+- `utils/auth.js`：`wx.login` → 换令牌，并发登录会共用同一个进行中的 Promise。
+- `utils/api.js` 自动带 `Authorization: Bearer …`；`utils/repo.js` 每次远程调用前
+  `ensureLogin()`，令牌被拒时重新登录并**只重试一次**（换过令牌还是 401 说明问题不在令牌上）。
+  **页面代码一行没改。**
+- `utils/config.js` 增加生产配置示例注释；演示声明新增一条「正式上线还需要人工配置」。
+
+### 测试
+
+- 用例数 124 → 144。新增：持久化读写与命名空间隔离、损坏文件留证、
+  **真的杀掉进程再起一个**验证订单/余额/收藏还在（子进程 + 真实 HTTP，不是在本进程里重新装载）、
+  写接口与用户态读接口全部拒绝未登录、令牌篡改/过期/换密钥各自的错误码、
+  跨用户数据不可见但枪位共享、生产模式缺 `JWT_SECRET` 启动失败、CORS 白名单、
+  超大 body 413、`DEMO_MODE=0` 下沙箱能力被禁、微信支付不伪造成功、
+  remote 模式自动登录与 401 重试。
+- `npm run smoke` 30 → 41 项，加入登录、未登录被拒、伪造令牌被拒、
+  微信支付如实报错、以及**重启后数据仍在**。冒烟数据落在临时目录，不再污染工作区。
+
 ## [1.4.0] - 2026-08-25
 
 **正式交付版本。** 内容全部是交付前的收尾：修完最后一轮自查出来的缺陷、把「怎么跑起来」
