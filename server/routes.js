@@ -5,10 +5,16 @@
  * 失败原因码（session-exists / pile-busy / insufficient / coupon-unavailable …）
  * 与小程序本地领域层 `utils/charging.js` 返回的 `reason` 同名，`utils/repo.js` 据此把
  * 远程错误还原成和本地一样的 `{ ok: false, reason }`，页面的错误分支只写一遍。
+ *
+ * 鉴权：除 `{ public: true }` 标注的接口外一律要求 `Authorization: Bearer …`。
+ * app.js 校验完令牌后，会在**该用户的数据命名空间里**同步执行 handler，
+ * 因此 handler 里的 `storage.*` 读写天然只看得到自己的数据。
  */
 
 const store = require('./store');
 const { createRouter } = require('./router');
+const auth = require('./auth');
+const serverConfig = require('./config');
 const config = require('../utils/config');
 
 const { storage, mock, charging } = store;
@@ -38,6 +44,12 @@ const REASON_MESSAGE = {
   'invalid-amount': '金额不合法'
 };
 
+/** 支付方式：balance 是演示沙箱，wechat 需要真实商户号（本版本未接入） */
+const PAY_METHODS = { BALANCE: 'balance', WECHAT: 'wechat' };
+
+/** 错误信息里给出的排查入口，指向上线手册中的微信支付接入清单 */
+const WXPAY_DOC = 'docs/PRODUCTION.md（第六节 接入微信支付）';
+
 function httpError(status, code, message, extra) {
   const err = new Error(message || code);
   err.status = status;
@@ -59,47 +71,116 @@ function splitIds(value) {
     .filter(Boolean);
 }
 
-function buildRoutes() {
+/**
+ * @param {{config?: object, code2session?: Function}} [options]
+ *   code2session 供测试注入，避免真的打微信服务器
+ */
+function buildRoutes(options) {
+  const opts = options || {};
+  const cfg = opts.config || serverConfig.get();
   const router = createRouter();
 
   /* ---------------------------------------------------------------- 健康 */
 
-  router.get('/api/health', () => ({
-    status: 'ok',
-    name: 'charging-pile-mock-server',
-    version: config.VERSION,
-    store: 'memory',
-    startedAt: STARTED_AT,
-    uptimeSec: Math.round((Date.now() - STARTED_AT) / 1000)
-  }));
+  /**
+   * 健康检查要能回答「这个实例现在能不能正常干活」，所以除了活着之外
+   * 还要看持久化目录是不是真的可写——磁盘满 / 卷没挂上的时候，进程照样
+   * 200，但每一笔订单都在悄悄丢。
+   */
+  router.get(
+    '/api/health',
+    () => {
+      const persistence = store.health();
+      const healthy = persistence.mode === 'memory' || (persistence.writable && !persistence.error);
+      if (!healthy) {
+        throw httpError(503, 'storage-unavailable', `持久化不可用：${persistence.error || '数据目录不可写'}`);
+      }
+      return {
+        status: 'ok',
+        name: 'charging-pile-server',
+        version: config.VERSION,
+        env: cfg.nodeEnv,
+        store: persistence.mode,
+        persistence,
+        auth: { mode: cfg.wxConfigured ? 'wechat' : 'mock' },
+        payment: { balance: 'sandbox', wechat: cfg.wxPayConfigured ? 'configured' : 'not-configured' },
+        demoMode: cfg.demoMode,
+        startedAt: STARTED_AT,
+        uptimeSec: Math.round((Date.now() - STARTED_AT) / 1000)
+      };
+    },
+    { public: true }
+  );
+
+  /* ---------------------------------------------------------------- 登录 */
+
+  /**
+   * `{ code }` -> `{ token, expiresAt, user, mode }`。
+   * 没配 WX_APPID/WX_SECRET 时任何 code 都换到同一个演示账号（mode: 'mock'）。
+   */
+  router.post(
+    '/api/auth/login',
+    (ctx) =>
+      auth
+        .resolveIdentity(ctx.body.code, cfg, { defaultUserId: store.DEFAULT_USER_ID, fetch: opts.code2session })
+        .then((identity) => {
+          if (identity.mode === 'mock') {
+            console.warn('[auth] mock 登录：未配置 WX_APPID / WX_SECRET，任何 code 都换到同一个演示账号');
+          }
+          store.seedUser(identity.userId);
+          const issued = auth.issueToken(identity, cfg);
+          return {
+            token: issued.token,
+            expiresAt: issued.expiresAt,
+            mode: identity.mode,
+            user: store.withUser(identity.userId, () => storage.getUser())
+          };
+        })
+        .catch((err) => {
+          if (err && err.code === 'bad-login-code') throw httpError(400, 'bad-login-code', '缺少 wx.login 返回的 code');
+          throw httpError(401, 'wechat-login-failed', (err && err.message) || '微信登录失败');
+        }),
+    { public: true }
+  );
+
+  /** 当前登录态自检，前端可用它判断 token 是否还有效 */
+  router.get('/api/auth/me', (ctx) => ({ user: storage.getUser(), auth: ctx.user }));
 
   /* -------------------------------------------------------------- 充电站 */
 
-  router.get('/api/stations', (ctx) => {
-    const ids = splitIds(ctx.query.ids);
-    if (ids.length) return { stations: mock.getStationsByIds(ids) };
-    return {
-      stations: mock.getStations({
-        keyword: ctx.query.keyword,
-        filter: ctx.query.filter,
-        sort: ctx.query.sort,
-        favoriteIds: ctx.query.favoriteIds ? splitIds(ctx.query.favoriteIds) : undefined
-      })
-    };
-  });
+  router.get(
+    '/api/stations',
+    (ctx) => {
+      const ids = splitIds(ctx.query.ids);
+      if (ids.length) return { stations: mock.getStationsByIds(ids) };
+      return {
+        stations: mock.getStations({
+          keyword: ctx.query.keyword,
+          filter: ctx.query.filter,
+          sort: ctx.query.sort,
+          favoriteIds: ctx.query.favoriteIds ? splitIds(ctx.query.favoriteIds) : undefined
+        })
+      };
+    },
+    { public: true }
+  );
 
-  router.get('/api/stations/:id', (ctx) => {
-    const station = mock.getStationById(ctx.params.id);
-    if (!station) throw fromReason('station-not-found');
-    return { station };
-  });
+  router.get(
+    '/api/stations/:id',
+    (ctx) => {
+      const station = mock.getStationById(ctx.params.id);
+      if (!station) throw fromReason('station-not-found');
+      return { station };
+    },
+    { public: true }
+  );
 
   /* ---------------------------------------------------------------- 扫码 */
 
   // 识别不出来不算错误：和本地 mock.resolveScanCode 一样返回 null，由前端弹「无法识别」
-  router.post('/api/scan', (ctx) => ({ target: mock.resolveScanCode(ctx.body.code) }));
+  router.post('/api/scan', (ctx) => ({ target: mock.resolveScanCode(ctx.body.code) }), { public: true });
 
-  router.get('/api/scan/random', () => ({ target: mock.randomIdlePile() }));
+  router.get('/api/scan/random', () => ({ target: mock.randomIdlePile() }), { public: true });
 
   /* ------------------------------------------------------------ 充电会话 */
 
@@ -147,11 +228,44 @@ function buildRoutes() {
     return { removed: true };
   });
 
+  /**
+   * 支付。
+   *
+   * `method: 'balance'` 是**演示沙箱**：只改本服务里的余额与订单状态，不产生任何资金流动，
+   * 响应里带 `sandbox: true`，前端与账单都应该如实标注。
+   *
+   * `method: 'wechat'` 目前一定失败。真实微信支付需要商户号、API 密钥、证书、
+   * 已备案的回调域名，这些都得人工申请；与其返回一个假的「支付成功」，
+   * 不如给出明确错误码和文档位置。接入清单见 docs/PRODUCTION.md。
+   */
   router.post('/api/orders/:id/pay', (ctx) => {
+    const method = ctx.body.method || PAY_METHODS.BALANCE;
+
+    if (method === PAY_METHODS.WECHAT) {
+      throw httpError(
+        501,
+        cfg.wxPayConfigured ? 'wxpay-not-implemented' : 'wxpay-not-configured',
+        cfg.wxPayConfigured
+          ? '已读到商户号配置，但本版本尚未实现微信支付下单（JSAPI 统一下单 + 支付回调），见 ' + WXPAY_DOC
+          : '未配置微信支付商户号，无法发起真实支付，见 ' + WXPAY_DOC,
+        { doc: WXPAY_DOC }
+      );
+    }
+    if (method !== PAY_METHODS.BALANCE) {
+      throw httpError(400, 'unsupported-pay-method', `不支持的支付方式：${method}`);
+    }
+    if (!cfg.demoMode) {
+      throw httpError(
+        403,
+        'sandbox-payment-disabled',
+        '演示余额支付已在生产模式下关闭（DEMO_MODE=0），请接入真实支付通道'
+      );
+    }
+
     const couponId = ctx.body.couponId || '';
-    const result = charging.payOrder(ctx.params.id, ctx.body.method || 'balance', couponId ? { id: couponId } : null);
+    const result = charging.payOrder(ctx.params.id, PAY_METHODS.BALANCE, couponId ? { id: couponId } : null);
     if (!result.ok) throw fromReason(result.reason, { balance: result.balance });
-    return { order: result.order, balance: result.balance };
+    return { order: result.order, balance: result.balance, sandbox: true };
   });
 
   router.get('/api/stats', () => ({ stats: storage.getStats() }));
@@ -163,7 +277,10 @@ function buildRoutes() {
   router.post('/api/wallet/recharge', (ctx) => {
     const amount = Number(ctx.body.amount);
     if (!Number.isFinite(amount) || amount <= 0) throw fromReason('invalid-amount');
-    return { wallet: storage.recharge(amount, ctx.body.note || '账户充值') };
+    if (!cfg.demoMode) {
+      throw httpError(403, 'sandbox-payment-disabled', '演示充值已在生产模式下关闭（DEMO_MODE=0）');
+    }
+    return { wallet: storage.recharge(amount, ctx.body.note || '账户充值'), sandbox: true };
   });
 
   /* -------------------------------------------------------------- 优惠券 */
@@ -192,12 +309,15 @@ function buildRoutes() {
     favoriteCount: storage.listFavorites().length
   }));
 
-  router.post('/api/reset', () => {
-    store.reset();
+  router.post('/api/reset', (ctx) => {
+    if (!cfg.demoMode) {
+      throw httpError(403, 'demo-mode-disabled', '演示数据重置已在生产模式下关闭（DEMO_MODE=0）');
+    }
+    store.reset(ctx.user.userId);
     return { reset: true };
   });
 
   return router;
 }
 
-module.exports = { buildRoutes, httpError, REASON_MESSAGE, REASON_STATUS };
+module.exports = { buildRoutes, httpError, fromReason, REASON_MESSAGE, REASON_STATUS, PAY_METHODS, WXPAY_DOC };

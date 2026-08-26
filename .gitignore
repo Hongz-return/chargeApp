@@ -5,3 +5,8 @@ node_modules/
 # 微信开发者工具本地私有配置
 project.private.config.json
 miniprogram_npm/
+
+# 服务端本地配置与持久化数据目录
+server/.env
+.data/
+

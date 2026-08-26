@@ -34,6 +34,7 @@ function createEnv(options) {
     leaveAlert: [],
     networkListeners: [],
     request: [],
+    login: [],
     back: []
   };
 
@@ -44,6 +45,7 @@ function createEnv(options) {
     modalContent: '',
     scanResult: null,
     scanFails: true,
+    loginFails: false,
     pageStackDepth: 2
   };
 
@@ -136,6 +138,17 @@ function createEnv(options) {
     },
     onNetworkStatusChange(cb) {
       calls.networkListeners.push(cb);
+    },
+    /** `wx.login`：真机上换的是微信 code，这里发一个自增的假 code */
+    login(o) {
+      const code = `test-code-${calls.login.length + 1}`;
+      calls.login.push(code);
+      if (state.loginFails) {
+        if (o && o.fail) o.fail({ errMsg: 'login:fail' });
+      } else if (o && o.success) {
+        o.success({ code });
+      }
+      if (o && o.complete) o.complete({});
     },
     getWindowInfo() {
       return { statusBarHeight: 44, windowWidth: 375, windowHeight: 812 };

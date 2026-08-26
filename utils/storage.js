@@ -78,6 +78,23 @@ function useMemoryStorage() {
   return pinnedStorage;
 }
 
+/**
+ * 钉住一个自定义的存储实现，忽略全局 `wx`。
+ *
+ * 只要求四个同步方法（`getStorageSync` / `setStorageSync` / `removeStorageSync` /
+ * `clearStorageSync`），语义与 wx Storage 一致。server/persist.js 用它把服务端数据
+ * 落到磁盘文件上：领域层一行不改，读写就从内存变成了「内存 + 异步落盘」。
+ *
+ * @param {{getStorageSync: Function, setStorageSync: Function, removeStorageSync: Function}} adapter
+ */
+function useStorageAdapter(adapter) {
+  if (!adapter || typeof adapter.getStorageSync !== 'function' || typeof adapter.setStorageSync !== 'function') {
+    throw new Error('storage adapter 必须实现 getStorageSync / setStorageSync');
+  }
+  pinnedStorage = adapter;
+  return pinnedStorage;
+}
+
 function read(key, fallback) {
   try {
     const value = resolveStorage().getStorageSync(key);
@@ -481,6 +498,7 @@ module.exports = {
   write,
   remove,
   useMemoryStorage,
+  useStorageAdapter,
   getUser,
   updateUser,
   getWallet,

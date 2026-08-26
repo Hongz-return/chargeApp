@@ -25,14 +25,25 @@ function compile(pattern) {
 function createRouter() {
   const routes = [];
 
-  function add(method, pattern, handler) {
+  /**
+   * @param {{public?: boolean}} [meta] 路由元信息。鉴权默认**关闭失败**：
+   *   不显式声明 `public: true` 的接口一律要求登录，新加接口忘了标注时是拒绝而不是放行。
+   */
+  function add(method, pattern, handler, meta) {
     const { regexp, keys } = compile(pattern);
-    routes.push({ method: method.toUpperCase(), pattern, regexp, keys, handler });
+    routes.push({
+      method: method.toUpperCase(),
+      pattern,
+      regexp,
+      keys,
+      handler,
+      public: !!(meta && meta.public)
+    });
     return api;
   }
 
   /**
-   * @returns {{handler: Function, params: object}|null} 命中的路由；
+   * @returns {{handler: Function, params: object, route: object}|null} 命中的路由；
    *   路径存在但方法不匹配时返回 `{ methodMismatch: true }`，便于回 405。
    */
   function match(method, pathname) {
@@ -47,7 +58,7 @@ function createRouter() {
       route.keys.forEach((key, idx) => {
         params[key] = decodeURIComponent(m[idx + 1]);
       });
-      return { handler: route.handler, params };
+      return { handler: route.handler, params, route };
     }
     return pathExists ? { methodMismatch: true } : null;
   }
@@ -56,9 +67,9 @@ function createRouter() {
     add,
     match,
     routes,
-    get: (pattern, handler) => add('GET', pattern, handler),
-    post: (pattern, handler) => add('POST', pattern, handler),
-    del: (pattern, handler) => add('DELETE', pattern, handler)
+    get: (pattern, handler, meta) => add('GET', pattern, handler, meta),
+    post: (pattern, handler, meta) => add('POST', pattern, handler, meta),
+    del: (pattern, handler, meta) => add('DELETE', pattern, handler, meta)
   };
 
   return api;

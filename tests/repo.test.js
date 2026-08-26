@@ -12,10 +12,12 @@ const config = require('../utils/config');
 const api = require('../utils/api');
 const repo = require('../utils/repo');
 const storage = require('../utils/storage');
+const token = require('../utils/token');
 
 test.afterEach(() => {
   config.setDataSource('local');
   config.setApiBaseUrl('http://127.0.0.1:3000');
+  token.clear();
   delete globalThis.wx;
 });
 
@@ -95,13 +97,35 @@ test('repo：local 模式的收藏与钱包直接落在本机 Storage', () => {
 
 /* ----------------------------------------------------------- remote 模式 */
 
-/** 用一个可编排的 wx.request 存根，验证远程分支的剥壳与错误映射 */
-function stubRequest(responder) {
+/**
+ * 用一个可编排的 wx.request 存根，验证远程分支的剥壳与错误映射。
+ *
+ * 登录请求由存根自己应答：remote 模式下每次调用前都要 `ensureLogin()`，
+ * 让每个用例各写一遍登录桩没有意义。传 `{ loginFails: true }` 可以反过来
+ * 只测「登不上」这条路径。
+ */
+function stubRequest(responder, options) {
+  const opts = options || {};
+  const calls = [];
   globalThis.wx = {
+    login(o) {
+      if (o && o.success) o.success({ code: 'test-code' });
+    },
     request(o) {
-      setTimeout(() => responder(o), 0);
+      calls.push(o);
+      setTimeout(() => {
+        if (String(o.url).indexOf('/api/auth/login') >= 0 && !opts.loginFails) {
+          o.success({
+            statusCode: 200,
+            data: { ok: true, data: { token: opts.token || 'test-token', expiresAt: Date.now() + 3600e3, mode: 'mock' } }
+          });
+          return;
+        }
+        responder(o, calls.length);
+      }, 0);
     }
   };
+  return calls;
 }
 
 test('repo：remote 模式下服务端的业务错误码被还原成本地同款 reason', async () => {
@@ -155,4 +179,80 @@ test('repo：remote 模式下会话被镜像回本机，供悬浮条同步读取
   stubRequest((o) => o.success({ statusCode: 200, data: { ok: true, data: { session: null } } }));
   await new Promise((resolve) => repo.syncSession(() => resolve()));
   assert.strictEqual(storage.getSession(), null, '服务端没有会话时本机镜像同步清掉');
+});
+
+/* -------------------------------------------------------------- 登录 */
+
+test('repo：remote 模式下自动登录一次，后续请求复用令牌并带上 Authorization', async () => {
+  config.setDataSource('remote');
+  const calls = stubRequest((o) => o.success({ statusCode: 200, data: { ok: true, data: { ids: [] } } }));
+
+  await new Promise((resolve) => repo.listFavorites(() => resolve()));
+  await new Promise((resolve) => repo.listFavorites(() => resolve()));
+
+  const logins = calls.filter((c) => String(c.url).indexOf('/api/auth/login') >= 0);
+  assert.strictEqual(logins.length, 1, '第二次调用直接复用已有令牌');
+  const business = calls.filter((c) => String(c.url).indexOf('/api/favorites') >= 0);
+  assert.strictEqual(business.length, 2);
+  assert.ok(
+    business.every((c) => c.header.Authorization === 'Bearer test-token'),
+    '业务请求都带上了 Bearer 令牌'
+  );
+});
+
+test('repo：令牌被后端拒绝时重新登录并重试一次', async () => {
+  config.setDataSource('remote');
+  token.set({ token: 'stale-token', expiresAt: Date.now() + 3600e3 });
+
+  let rejected = 0;
+  const calls = stubRequest(
+    (o) => {
+      // 第一次业务请求用的是过期令牌，拒掉；重新登录后放行
+      if (o.header.Authorization === 'Bearer stale-token') {
+        rejected++;
+        o.success({ statusCode: 401, data: { ok: false, error: { code: 'token-expired', message: '登录已过期' } } });
+        return;
+      }
+      o.success({ statusCode: 200, data: { ok: true, data: { wallet: { balance: 6.6, transactions: [] } } } });
+    },
+    { token: 'fresh-token' }
+  );
+
+  const wallet = await new Promise((resolve, reject) => {
+    repo.getWallet((err, data) => (err ? reject(err) : resolve(data)));
+  });
+
+  assert.strictEqual(rejected, 1);
+  assert.strictEqual(wallet.balance, 6.6);
+  assert.strictEqual(token.getToken(), 'fresh-token');
+  assert.strictEqual(calls.filter((c) => String(c.url).indexOf('/api/auth/login') >= 0).length, 1);
+});
+
+test('repo：登不上时错误直接抛给页面，不会静默变成空数据', async () => {
+  config.setDataSource('remote');
+  stubRequest(
+    (o) => o.success({ statusCode: 500, data: { ok: false, error: { code: 'x', message: '不该走到这' } } }),
+    { loginFails: true }
+  );
+  globalThis.wx.request = ((original) =>
+    function request(o) {
+      if (String(o.url).indexOf('/api/auth/login') >= 0) {
+        setTimeout(() => o.success({ statusCode: 401, data: { ok: false, error: { code: 'wechat-login-failed', message: '微信登录失败' } } }), 0);
+        return;
+      }
+      original(o);
+    })(globalThis.wx.request);
+
+  const err = await new Promise((resolve) => repo.listOrders((e) => resolve(e)));
+  assert.strictEqual(err.code, 'wechat-login-failed');
+  assert.strictEqual(token.getToken(), '', '登录失败不留下半个令牌');
+});
+
+test('token：过期令牌读出来就是 null，不会拿去发请求', () => {
+  token.set({ token: 'expiring', expiresAt: Date.now() + 1000 });
+  assert.strictEqual(token.getToken(), '', '距过期不足容差窗口，视为已过期');
+  token.set({ token: 'valid', expiresAt: Date.now() + 3600e3 });
+  assert.strictEqual(token.getToken(), 'valid');
+  token.clear();
+  assert.strictEqual(token.get(), null);
 });

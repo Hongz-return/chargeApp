@@ -9,6 +9,14 @@
  *  3. 后端没起来时给友好提示，而不是把页面卡在骨架屏里。
  */
 
+// 必须在 require('../server/...') 之前落定：store 在被 require 时就挂载持久化后端。
+// 这里跑纯内存，不碰仓库里的 `.data/`；持久化由 tests/persistence.test.js 单独验证。
+process.env.PERSIST = '0';
+process.env.JWT_SECRET = 'remote-test-secret';
+process.env.DEMO_MODE = '1';
+delete process.env.WX_APPID;
+delete process.env.WX_SECRET;
+
 const test = require('node:test');
 const assert = require('node:assert');
 

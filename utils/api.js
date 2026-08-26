@@ -10,6 +10,7 @@
  */
 
 const config = require('./config');
+const token = require('./token');
 
 /** 后端没起来时最常见的一类错误，提示里直接给出排查动作 */
 const NETWORK_MESSAGE = '连不上后端服务，请确认已执行 npm start，并在开发者工具中勾选「不校验合法域名」';
@@ -18,8 +19,14 @@ const CODES = {
   NO_REQUEST: 'no-request-api',
   NETWORK: 'network-error',
   TIMEOUT: 'timeout',
-  BAD_RESPONSE: 'bad-response'
+  BAD_RESPONSE: 'bad-response',
+  /** 与后端 app.js 下发的错误码同名，utils/repo.js 据此触发一次重新登录 */
+  UNAUTHORIZED: 'unauthorized',
+  TOKEN_EXPIRED: 'token-expired'
 };
+
+/** 需要重新登录的错误码 */
+const AUTH_CODES = [CODES.UNAUTHORIZED, CODES.TOKEN_EXPIRED];
 
 function createError(code, message, extra) {
   const err = new Error(message);
@@ -76,13 +83,17 @@ function request(options) {
     return Promise.reject(createError(CODES.NO_REQUEST, '当前环境不支持 wx.request，无法使用远程数据源'));
   }
 
+  const header = { 'content-type': 'application/json' };
+  const bearer = opts.token === undefined ? token.getToken() : opts.token;
+  if (bearer) header.Authorization = `Bearer ${bearer}`;
+
   return new Promise((resolve, reject) => {
     send({
       url: buildUrl(opts.path, opts.query),
       method: (opts.method || 'GET').toUpperCase(),
       data: opts.data || undefined,
       timeout: config.API.timeout,
-      header: { 'content-type': 'application/json' },
+      header,
       success: (res) => {
         const result = unwrap(res.statusCode, res.data);
         if (result.error) reject(result.error);
@@ -101,4 +112,9 @@ const get = (path, query) => request({ method: 'GET', path, query });
 const post = (path, data, query) => request({ method: 'POST', path, data, query });
 const del = (path, query) => request({ method: 'DELETE', path, query });
 
-module.exports = { CODES, NETWORK_MESSAGE, buildUrl, request, get, post, del, createError };
+/** 这个错误是不是「令牌不对，重新登录就能好」 */
+function isAuthError(err) {
+  return !!err && AUTH_CODES.indexOf(err.code) >= 0;
+}
+
+module.exports = { CODES, AUTH_CODES, NETWORK_MESSAGE, buildUrl, request, get, post, del, createError, isAuthError };

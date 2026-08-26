@@ -19,7 +19,9 @@ App({
 
   onLaunch() {
     if (config.isRemote()) {
-      // 远程数据源：订单、钱包、优惠券、会话都由 server/ 持有，本机不播种也不对账
+      // 远程数据源：订单、钱包、优惠券、会话都由 server/ 持有，本机不播种也不对账。
+      // 先把登录握手做掉，首屏那几个请求就不用各自等一次登录往返。
+      this.ensureLogin();
       this.syncSession();
     } else {
       seedDemoOrders();
@@ -54,6 +56,19 @@ App({
 
   onShow() {
     this.syncSession();
+  },
+
+  /**
+   * 远程数据源下换取登录令牌。
+   *
+   * 失败不拦着用户：`utils/repo.js` 的每次远程调用都会自己再确认一遍登录态，
+   * 这里只是把往返提前到启动时。真的登不上时由具体页面的错误提示来解释原因。
+   */
+  ensureLogin() {
+    if (!config.isRemote()) return;
+    repo.ensureLogin().catch((err) => {
+      console.warn('[auth] 登录失败，稍后由具体请求重试：', (err && err.message) || err);
+    });
   },
 
   /** 清除本地数据后重新播种演示数据，让界面立刻回到初始可演示状态 */

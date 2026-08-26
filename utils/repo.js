@@ -14,12 +14,19 @@
  *   所以每次 start / stop / 拉取会话后，都会把服务端返回的 session 原样写回本机 Storage 作为缓存，
  *   `charging.getActiveSession()` 因此在两种数据源下都可用。
  *
+ * 远程模式下的登录：
+ *   服务端的用户数据接口要求 `Authorization: Bearer …`，所以每次远程调用前都会
+ *   `auth.ensureLogin()`（已有有效令牌时是同步 resolve，不会多打请求），
+ *   令牌被拒绝时重新登录并重试一次。页面感知不到登录这件事的存在。
+ *
  * 覆盖范围：站点、扫码、充电会话、订单、支付、钱包、优惠券、收藏、汇总统计。
  * 用户资料与发票记录是纯本机的演示数据，两种数据源下都走 Storage。
  */
 
 const config = require('./config');
 const api = require('./api');
+const auth = require('./auth');
+const token = require('./token');
 const mock = require('./mock');
 const storage = require('./storage');
 const charging = require('./charging');
@@ -54,6 +61,23 @@ function toError(err) {
 }
 
 /**
+ * 带登录的远程调用：先确保有令牌，令牌被后端拒绝时重新登录并重试一次。
+ *
+ * 重试只做一次。令牌换过之后还是 401，说明问题不在令牌上（后端换了签名密钥、
+ * appid 配错），继续重试只会把错误提示拖成一串超时。
+ */
+function callRemote(remote) {
+  return auth
+    .ensureLogin()
+    .then(remote)
+    .catch((err) => {
+      if (!api.isAuthError(err)) throw err;
+      auth.logout();
+      return auth.ensureLogin().then(remote);
+    });
+}
+
+/**
  * 按当前数据源执行读写。
  * @param {Function} local 本地实现，同步返回结果
  * @param {Function} remote 远程实现，返回 Promise
@@ -72,7 +96,7 @@ function run(local, remote, cb) {
     done(null, data);
     return;
   }
-  remote().then(
+  callRemote(remote).then(
     (data) => done(null, data),
     (err) => done(toError(err))
   );
@@ -95,7 +119,7 @@ function runAction(local, remote, cb) {
     done(null, data);
     return;
   }
-  remote().then(
+  callRemote(remote).then(
     (data) => done(null, Object.assign({ ok: true }, data)),
     (err) => {
       const reason = err && err.code;
@@ -352,12 +376,16 @@ function getProfileSummary(cb) {
 /** 「我的 → 清除本地数据」：本机一定要清，远程模式顺带把服务端的演示数据也重置掉 */
 function resetDemoData(cb) {
   const done = typeof cb === 'function' ? cb : noop;
+  // 令牌不在清除范围内：清完数据还要接着用同一个账号，重新登录只是多一次往返
+  const entry = token.get();
   storage.resetAll();
+  if (entry) token.set(entry);
+
   if (!isRemote()) {
     done(null, true);
     return;
   }
-  api.post('/api/reset', {}).then(
+  callRemote(() => api.post('/api/reset', {})).then(
     () => done(null, true),
     (err) => done(toError(err))
   );
@@ -378,6 +406,8 @@ function toastError(err, fallback) {
 module.exports = {
   BUSINESS_REASONS,
   isRemote,
+  ensureLogin: auth.ensureLogin,
+  isLoggedIn: auth.isLoggedIn,
   // 纯视图模型工具，两种数据源共用（不含任何数据来源假设）
   USER_LOCATION: mock.USER_LOCATION,
   toStationCards: mock.toStationCards,
