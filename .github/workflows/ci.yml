@@ -38,6 +38,29 @@ jobs:
       - name: 后端闭环冒烟
         run: npm run smoke
 
+  docker:
+    name: 后端镜像可构建
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Dockerfile 是上线手册里的第一条路径，坏了要在合并前就知道
+      - name: 构建镜像
+        run: docker build -t charging-pile-server:ci .
+
+      - name: 起容器并检查健康检查
+        run: |
+          docker run -d --name charging-api-ci -p 3000:3000 \
+            -e JWT_SECRET=ci-only-secret-0123456789abcdef \
+            charging-pile-server:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000/api/health > /tmp/health.json; then break; fi
+            sleep 1
+          done
+          cat /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+          docker rm -f charging-api-ci
+
   assets:
     name: 生成物一致性
     runs-on: ubuntu-latest
