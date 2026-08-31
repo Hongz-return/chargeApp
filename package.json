@@ -1,6 +1,6 @@
 {
   "name": "charging-pile-miniprogram",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "description": "充电桩微信小程序。默认纯前端本地 mock 开箱演示，可选启动 server/ 下零依赖的后端（文件持久化 + 登录鉴权 + 生产加固）。小程序与后端运行时都不依赖任何 npm 包。",
   "scripts": {

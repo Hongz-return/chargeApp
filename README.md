@@ -1,7 +1,7 @@
 # 充电桩微信小程序
 
 [![CI](https://github.com/Hongz-return/-/actions/workflows/ci.yml/badge.svg)](https://github.com/Hongz-return/-/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-1.5.1-07c160)
+![version](https://img.shields.io/badge/version-1.5.2-07c160)
 ![tests](https://img.shields.io/badge/tests-passing-07c160)
 ![deps](https://img.shields.io/badge/runtime%20deps-0-07c160)
 ![license](https://img.shields.io/badge/license-MIT-blue)

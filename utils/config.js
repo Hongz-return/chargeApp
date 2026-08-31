@@ -4,7 +4,7 @@
  * 集中放在这里，避免版本号与「演示环境」说明散落在多个页面里各写一份。
  */
 
-const VERSION = '1.5.1';
+const VERSION = '1.5.2';
 
 /** 数据源取值 */
 const DATA_SOURCE = {

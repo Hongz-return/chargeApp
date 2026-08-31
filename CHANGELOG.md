@@ -4,6 +4,34 @@
 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循
 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [1.5.2] - 2026-08-31
+
+**把生产配置的最后一个「靠告警兜着」的口子堵上。**
+
+### 安全
+
+- 生产模式（`NODE_ENV=production`）缺 `WX_APPID` / `WX_SECRET` 时**直接拒绝启动**，不再只是一条 `[warn]`。
+  没配微信凭证时登录走 mock：任何 code 都换到同一个演示账号，线上就是**所有用户共享同一份订单和钱包数据**，
+  危害与缺 `JWT_SECRET` 同级。确实要拿 mock 登录跑公开演示环境时，显式设置 `ALLOW_MOCK_LOGIN=1` 放行，
+  放行之后启动日志里的告警仍然一直在。
+
+### 新增
+
+- `npm run coverage`：基于 `node --test --experimental-test-coverage` 的覆盖率报告，仍然零依赖（需 Node 22+）。
+  CI 增加同名 job，**只出报告不设阈值**——阈值定低了没意义，定高了会在无关改动上误伤。
+- [`AGENTS.md`](AGENTS.md)：仓库硬性约定（零依赖、生成物同步、版本号一致）与云端环境
+  （没有微信客户端时怎么拿界面证据、后端怎么起）的走查说明。
+
+### 修复
+
+- 重新生成 `docs/preview/` 与 `docs/screenshots/`：同意弹层那次改动之后没有重跑生成脚本，
+  CI 的「生成物一致性」job 一直是红的。
+
+### 说明
+
+小程序侧行为一点没变，默认 `dataSource` 仍为 `local`。微信支付与桩协议仍未接通——见
+[`docs/ROADMAP.md`](docs/ROADMAP.md) 的 P0。
+
 ## [1.5.1] - 2026-08-26
 
 **差距分析落地 + 合规材料补齐。** 云端子代理鉴权失败后由本机在独立分支完成。
