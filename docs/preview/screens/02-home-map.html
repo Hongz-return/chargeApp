@@ -779,6 +779,7 @@ img { display: block; }
 
 /* pages/index/index */
 .p-index .page {
+  position: relative;
   padding-bottom: 30px;
 }
 .p-index .header {
@@ -1013,11 +1014,11 @@ img { display: block; }
   box-shadow: 0 2px 8px rgba(15, 34, 58, 0.12);
 }
 .p-index .consent-mask {
-  position: fixed;
+  position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  bottom: 0;
+  height: var(--vh);
   z-index: 1000;
   background: rgba(15, 34, 58, 0.55);
   display: flex;
@@ -1028,7 +1029,7 @@ img { display: block; }
   width: 100%;
   background: #fff;
   border-radius: 14px 14px 0 0;
-  padding: 20px 18px calc(20px + 0px);
+  padding: 20px 18px 34px;
   box-sizing: border-box;
 }
 .p-index .consent-title {
@@ -3015,13 +3016,13 @@ html, body { margin: 0; padding: 0; width: 375px; height: 812px; overflow: hidde
       <span class="wx-title">附近充电桩</span>
       <span class="wx-capsule"><i class="wx-dots"></i><i class="wx-sep"></i><i class="wx-target"></i></span>
     </div>
-    <div class="wx-body" style="height:674px"><div class="page"><div class="header"><div class="header-top"><div class="location"><div class="location-icon ic ic-pin"></div><span class="location-text">深圳 · 南山科技园</span></div><div class="view-toggle" aria-role="button" aria-label="切换到列表视图"><div class="ic ic-list"></div><span class="view-toggle-text">列表</span></div></div><div class="search-row"><div class="search-box"><div class="search-icon ic ic-search"></div><div class="search-input wx-input"><span class="search-placeholder">搜索充电站名称 / 地址 / 运营商</span></div></div><div class="scan-btn" aria-role="button" aria-label="扫描充电枪二维码"><div class="scan-icon ic ic-scan"></div><span class="scan-text">扫码</span></div></div><div class="chip-scroll"><div class="chip-row"><div class="chip active">全部</div><div class="chip ">快充</div><div class="chip ">慢充</div><div class="chip ">有空闲</div><div class="chip ">收藏</div></div></div><div class="chip-scroll sort-scroll"><div class="chip-row"><span class="sort-label">排序</span><div class="sort-item active">距离最近</div><div class="sort-item ">价格最低</div><div class="sort-item ">空闲最多</div><div class="sort-item ">功率最高</div></div></div></div><div class="map-wrap"><div class="station-map"  data-wx="map"><div class="wx-map-canvas"><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:45.28%;top:70.93%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:43.30%;top:63.85%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:37.34%;top:79.90%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:38.09%;top:82.45%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:41.31%;top:85.00%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:59.18%;top:84.27%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:15.00%;top:72.97%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:85.00%;top:15.00%" /></div><div class="wx-map-note">地图区域 · 真机为腾讯地图</div></div><div class="map-recenter"><div class="ic ic-locate"></div></div><div class="map-preview"><div class="wx-comp"><div class="station-card"><div class="sc-head"><div class="sc-icon theme-blue">快</div><div class="sc-title-wrap"><div class="sc-name">科技园南区路边快充站</div><div class="sc-meta"><span class="sc-operator">特来电</span><span class="sc-dot">·</span><span class="sc-rating">★ 4.5</span><span class="sc-dot">·</span><span>最大 180kW</span></div></div><div class="sc-right"><div class="sc-fav ">♡</div><div class="sc-distance">700m</div></div></div><div class="sc-address">南山区粤海街道科技南十二路 8 号路侧</div><div class="sc-tags"><span class="tag tag-fast">快充 3</span><span class="tag tag-plain">路侧车位</span><span class="tag tag-plain">大功率</span></div><div class="sc-footer"><div class="sc-price"><span class="price-num">1.4</span><span class="price-unit">元/度</span><span class="sc-price-detail">电费1.05+服务费0.35</span></div><div class="sc-idle "><span class="sc-idle-num">1</span><span class="sc-idle-total">/3 空闲</span></div></div></div></div></div></div><div class="wx-comp"></div><div class="consent-mask"><div class="consent-card"><div class="consent-title">服务协议与隐私保护</div><div class="consent-body">
+    <div class="wx-body" style="height:674px"><div class="page"><div class="header"><div class="header-top"><div class="location"><div class="location-icon ic ic-pin"></div><span class="location-text">深圳 · 南山科技园</span></div><div class="view-toggle"><div class="ic ic-list"></div><span class="view-toggle-text">列表</span></div></div><div class="search-row"><div class="search-box"><div class="search-icon ic ic-search"></div><div class="search-input wx-input"><span class="search-placeholder">搜索充电站名称 / 地址 / 运营商</span></div></div><div class="scan-btn"><div class="scan-icon ic ic-scan"></div><span class="scan-text">扫码</span></div></div><div class="chip-scroll"><div class="chip-row"><div class="chip active">全部</div><div class="chip ">快充</div><div class="chip ">慢充</div><div class="chip ">有空闲</div><div class="chip ">收藏</div></div></div><div class="chip-scroll sort-scroll"><div class="chip-row"><span class="sort-label">排序</span><div class="sort-item active">距离最近</div><div class="sort-item ">价格最低</div><div class="sort-item ">空闲最多</div><div class="sort-item ">功率最高</div></div></div></div><div class="map-wrap"><div class="station-map"  data-wx="map"><div class="wx-map-canvas"><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:45.28%;top:70.93%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:43.30%;top:63.85%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:37.34%;top:79.90%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:38.09%;top:82.45%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:41.31%;top:85.00%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:59.18%;top:84.27%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:15.00%;top:72.97%" /><img class="wx-map-pin" src="../../../assets/marker/pin.png" style="left:85.00%;top:15.00%" /></div><div class="wx-map-note">地图区域 · 真机为腾讯地图</div></div><div class="map-recenter"><div class="ic ic-locate"></div></div><div class="map-preview"><div class="wx-comp"><div class="station-card"><div class="sc-head"><div class="sc-icon theme-blue">快</div><div class="sc-title-wrap"><div class="sc-name">科技园南区路边快充站</div><div class="sc-meta"><span class="sc-operator">特来电</span><span class="sc-dot">·</span><span class="sc-rating">★ 4.5</span><span class="sc-dot">·</span><span>最大 180kW</span></div></div><div class="sc-right"><div class="sc-fav ">♡</div><div class="sc-distance">700m</div></div></div><div class="sc-address">南山区粤海街道科技南十二路 8 号路侧</div><div class="sc-tags"><span class="tag tag-fast">快充 3</span><span class="tag tag-plain">路侧车位</span><span class="tag tag-plain">大功率</span></div><div class="sc-footer"><div class="sc-price"><span class="price-num">1.4</span><span class="price-unit">元/度</span><span class="sc-price-detail">电费1.05+服务费0.35</span></div><div class="sc-idle "><span class="sc-idle-num">1</span><span class="sc-idle-total">/3 空闲</span></div></div></div></div></div></div><div class="wx-comp"></div><div class="consent-mask"><div class="consent-card"><div class="consent-title">服务协议与隐私保护</div><div class="consent-body">
         为符合微信小程序审核与上线合规要求，请阅读并同意相关条款。演示环境不会上传真实身份证件；正式环境的数据用途见隐私政策。
-      </div><div class="consent-check" aria-role="checkbox"><div class="consent-box "></div><div class="consent-check-text">
+      </div><div class="consent-check"><div class="consent-box "></div><div class="consent-check-text">
           我已阅读并同意
           <span class="consent-link">《用户服务协议》</span>
           与
-          <span class="consent-link">《隐私政策》</span></div></div><div class="consent-btn disabled" aria-role="button" aria-disabled>同意并继续</div></div></div></div></div>
+          <span class="consent-link">《隐私政策》</span></div></div><div class="consent-btn disabled">同意并继续</div></div></div></div></div>
     <div class="wx-tabbar">
       <div class="wx-tab active"><img src="../../../assets/tabbar/charge-active.png" /><span>首页</span></div><div class="wx-tab"><img src="../../../assets/tabbar/order.png" /><span>订单</span></div><div class="wx-tab"><img src="../../../assets/tabbar/mine.png" /><span>我的</span></div>
     </div>
