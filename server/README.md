@@ -8,7 +8,7 @@
 | 场景 | 配置 | 行为 |
 | --- | --- | --- |
 | **联调 / 演示** | 默认 | mock 登录（任何 code 都换到同一个演示账号）、播种两条演示订单和 128.6 元余额、CORS 放开、余额沙箱支付可用 |
-| **生产** | `NODE_ENV=production` | 强制 `JWT_SECRET`、走真实 `code2session`、CORS 白名单、新用户零余额、沙箱支付与演示重置被禁 |
+| **生产** | `NODE_ENV=production` | 强制 `JWT_SECRET` 与微信凭证（缺了直接拒绝启动）、走真实 `code2session`、CORS 白名单、新用户零余额、沙箱支付与演示重置被禁 |
 
 上线步骤（域名、HTTPS、微信后台、微信支付接入清单）见 [`docs/PRODUCTION.md`](../docs/PRODUCTION.md)。
 

@@ -69,6 +69,16 @@ const del = (path) => call('DELETE', path);
 /** 不带令牌的调用，用来验证鉴权拦截 */
 const anon = (method, path, body) => call(method, path, body, '');
 
+/**
+ * 生产配置。默认带上 ALLOW_MOCK_LOGIN：生产模式没配微信凭证会直接拒绝启动，
+ * 而这些用例测的是 CORS / DEMO_MODE，不是登录方式。
+ */
+function prodConfig(overrides) {
+  return serverConfig.load(
+    Object.assign({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(32), ALLOW_MOCK_LOGIN: '1' }, overrides)
+  );
+}
+
 /** 把会话开始时间往前拨，等价于「已经充了更久」，免得测试真的等下去 */
 function rewindSession(realSeconds) {
   const session = store.storage.getSession();
@@ -141,11 +151,7 @@ test('跨域头与 OPTIONS 预检', async () => {
 
 test('生产配置下 CORS 收紧成白名单，不再下发 *', () => {
   const { corsHeaders } = require('../server/app');
-  const prod = serverConfig.load({
-    NODE_ENV: 'production',
-    JWT_SECRET: 'x'.repeat(32),
-    CORS_ORIGIN: 'https://admin.example.com'
-  });
+  const prod = prodConfig({ CORS_ORIGIN: 'https://admin.example.com' });
   assert.deepStrictEqual(prod.corsOrigins, ['https://admin.example.com']);
   assert.strictEqual(
     corsHeaders(prod, 'https://admin.example.com')['Access-Control-Allow-Origin'],
@@ -153,7 +159,7 @@ test('生产配置下 CORS 收紧成白名单，不再下发 *', () => {
   );
   assert.strictEqual(corsHeaders(prod, 'https://evil.example.com')['Access-Control-Allow-Origin'], undefined);
 
-  const noCors = serverConfig.load({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(32), CORS_ORIGIN: '' });
+  const noCors = prodConfig({ CORS_ORIGIN: '' });
   assert.deepStrictEqual(noCors.corsOrigins, [], '生产默认不放通配');
   assert.deepStrictEqual(corsHeaders(noCors, 'https://any.example.com'), {});
 });
@@ -166,6 +172,40 @@ test('生产模式缺 JWT_SECRET 直接启动失败，而不是随机生成', ()
   const dev = serverConfig.load({ NODE_ENV: 'development', JWT_SECRET: '' });
   assert.ok(dev.jwtSecret.length >= 32, '开发模式回落到随机密钥');
   assert.ok(dev.warnings.some((w) => /JWT_SECRET/.test(w)), '并且要告警');
+});
+
+test('生产模式缺微信凭证同样拒绝启动，除非显式打开 ALLOW_MOCK_LOGIN', () => {
+  // 放行 mock 登录 = 所有用户共享同一个演示账号，这种事故不能靠一条 [warn] 拦
+  assert.throws(
+    () => serverConfig.load({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(32) }),
+    /WX_APPID/
+  );
+  assert.throws(
+    () => serverConfig.load({ NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(32), WX_APPID: 'wx-only' }),
+    /WX_APPID/,
+    '只配一半等于没配'
+  );
+
+  const optedIn = prodConfig();
+  assert.strictEqual(optedIn.wxConfigured, false);
+  assert.strictEqual(optedIn.allowMockLogin, true);
+  assert.ok(
+    optedIn.warnings.some((w) => /ALLOW_MOCK_LOGIN/.test(w)),
+    '显式放行之后仍要在启动日志里持续告警'
+  );
+
+  const real = serverConfig.load({
+    NODE_ENV: 'production',
+    JWT_SECRET: 'x'.repeat(32),
+    WX_APPID: 'wx-test',
+    WX_SECRET: 'secret'
+  });
+  assert.strictEqual(real.wxConfigured, true);
+  assert.ok(!real.warnings.some((w) => /mock/i.test(w)), '配齐了就不该再有登录相关告警');
+
+  const dev = serverConfig.load({ NODE_ENV: 'development' });
+  assert.strictEqual(dev.wxConfigured, false, '开发模式照旧走 mock，不受影响');
+  assert.ok(dev.warnings.some((w) => /mock/.test(w)));
 });
 
 test('未知接口 404、方法不匹配 405、非法 JSON 400、超大 body 413', async () => {
@@ -466,11 +506,11 @@ test('关掉 DEMO_MODE 后，沙箱支付、充值与演示重置都被拒绝', 
   const prodCtx = await start({
     port: 0,
     log: null,
-    config: serverConfig.load({ NODE_ENV: 'production', JWT_SECRET: 'p'.repeat(32), PERSIST: '0', DEMO_MODE: '0' })
+    config: prodConfig({ JWT_SECRET: 'p'.repeat(32), PERSIST: '0', DEMO_MODE: '0' })
   });
   const prodToken = auth.issueToken(
     { userId: store.DEFAULT_USER_ID },
-    serverConfig.load({ NODE_ENV: 'production', JWT_SECRET: 'p'.repeat(32), PERSIST: '0' })
+    prodConfig({ JWT_SECRET: 'p'.repeat(32), PERSIST: '0' })
   ).token;
 
   const hit = (method, path, body) =>

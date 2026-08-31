@@ -404,7 +404,7 @@ utils/repo.js ──── dataSource === 'local'  ──▶ utils/mock.js + uti
 | 场景 | 配置 | 行为 |
 | --- | --- | --- |
 | 联调 / 演示 | 默认 | mock 登录、播种演示订单与余额、CORS 放开、余额沙箱支付可用 |
-| 生产 | `NODE_ENV=production` | 强制 `JWT_SECRET`、走真实微信 `code2session`、CORS 白名单、新用户零余额、沙箱能力关闭 |
+| 生产 | `NODE_ENV=production` | 强制 `JWT_SECRET` 与微信凭证（缺了直接拒绝启动）、走真实微信 `code2session`、CORS 白名单、新用户零余额、沙箱能力关闭 |
 
 ```bash
 npm start        # 启动，默认 http://127.0.0.1:3000，数据落到 ./.data/store.json

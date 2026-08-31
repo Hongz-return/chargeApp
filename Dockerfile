@@ -6,9 +6,13 @@
 #     -e NODE_ENV=production \
 #     -e HOST=0.0.0.0 \
 #     -e JWT_SECRET="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")" \
+#     -e WX_APPID=wxXXXXXXXXXXXXXXXX -e WX_SECRET=xxxxxxxx \
 #     -v charging-data:/data \
 #     -e DATA_DIR=/data \
 #     charging-pile-server
+#
+# 镜像里 NODE_ENV=production，缺 JWT_SECRET 或微信凭证都会拒绝启动。
+# 只是想起个演示实例的话，用 -e ALLOW_MOCK_LOGIN=1 显式放行 mock 登录。
 #
 # 只跑后端。小程序前端由微信客户端加载，不进这个镜像。
 # 完整上线步骤见 docs/PRODUCTION.md。

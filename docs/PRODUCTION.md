@@ -51,7 +51,7 @@
 
 | 变量 | 默认 | 生产建议 | 说明 |
 | --- | --- | --- | --- |
-| `NODE_ENV` | `development` | `production` | 生产模式会强制要求 `JWT_SECRET`、CORS 默认不放通配、关闭演示接口 |
+| `NODE_ENV` | `development` | `production` | 生产模式会强制要求 `JWT_SECRET` 与微信凭证、CORS 默认不放通配、关闭演示接口 |
 | `HOST` | `127.0.0.1` | `0.0.0.0`（容器）或 `127.0.0.1`（同机反代） | 监听地址 |
 | `PORT` | `3000` | 按部署环境 | 监听端口 |
 | `DATA_DIR` | `./.data` | 独立数据卷，如 `/var/lib/charging` | 持久化目录，**必须可写且被备份** |
@@ -59,7 +59,8 @@
 | `PERSIST_FLUSH_MS` | `200` | `200` | 写入后最多延迟多久落盘 |
 | `JWT_SECRET` | 随机 | **必填**，≥ 32 位随机串 | 令牌签名密钥。生产不填直接启动失败；换掉它会让全部已签发令牌失效 |
 | `TOKEN_TTL_SEC` | `604800` | 按风险偏好 | 令牌有效期（秒） |
-| `WX_APPID` / `WX_SECRET` | 空 | **必填** | 填上后登录才真的走微信 `code2session`；留空是 mock 登录 |
+| `WX_APPID` / `WX_SECRET` | 空 | **必填** | 填上后登录才真的走微信 `code2session`；生产模式留空直接启动失败 |
+| `ALLOW_MOCK_LOGIN` | `0` | `0` | 生产模式下明知故犯地放行 mock 登录（只适合公开演示环境），设 `1` 才允许缺微信凭证启动 |
 | `CORS_ORIGIN` | 开发 `*` / 生产 空 | 通常留空 | 小程序不受同源策略约束，只有浏览器端管理台才需要白名单 |
 | `MAX_BODY_BYTES` | `262144` | 保持 | 单请求体上限 |
 | `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX` | `60000` / `240` | 按流量调 | 单 IP 固定窗口限流；设 `RATE_LIMIT_MAX=0` 关闭 |
@@ -75,6 +76,12 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 > `JWT_SECRET` 一定要显式配置。不配的话进程每次启动都会随机生成一把，
 > 结果是**每次重启所有用户都被踢下线**（小程序会自动重新登录，但这不是你想要的行为）。
+
+> `WX_APPID` / `WX_SECRET` 同理：生产模式下缺了它们，登录会退化成 mock ——
+> **任何 code 都换到同一个演示账号**，也就是所有用户共享同一份订单和钱包数据。
+> 这类事故靠一条 `[warn]` 兜不住，所以缺配置时进程**直接拒绝启动**。
+> 只有确实要拿 mock 登录跑一个公开演示环境（没有真实用户、没有真实钱）时，
+> 才显式设置 `ALLOW_MOCK_LOGIN=1` 放行——放行之后启动日志里的告警仍然会一直在。
 
 ## 三、部署
 
@@ -338,7 +345,7 @@ docker run -d ... charging-pile-server:<上一个 tag>
 
 - [ ] `NODE_ENV=production`，启动日志里 `[warn]` 为空
 - [ ] `JWT_SECRET` 是显式配置的 ≥ 32 位随机串，且已存进密钥管理
-- [ ] `WX_APPID` / `WX_SECRET` 已配置，`/api/health` 的 `auth.mode` 是 `wechat`
+- [ ] `WX_APPID` / `WX_SECRET` 已配置，`/api/health` 的 `auth.mode` 是 `wechat`，且**没有**设置 `ALLOW_MOCK_LOGIN`
 - [ ] `DATA_DIR` 指向持久卷，`persistence.writable` 为 `true`，定时备份已生效
 - [ ] `DEMO_MODE=0`（沙箱支付、演示重置已关闭）
 - [ ] HTTPS 证书有效且自动续期，`X-Forwarded-For` 已透传

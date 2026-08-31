@@ -48,10 +48,13 @@ jobs:
       - name: 构建镜像
         run: docker build -t charging-pile-server:ci .
 
+      # 镜像里 NODE_ENV=production，缺微信凭证会拒绝启动；CI 验的是镜像能不能跑起来，
+      # 所以显式打开 mock 登录，而不是往仓库里塞一对假 appid/secret
       - name: 起容器并检查健康检查
         run: |
           docker run -d --name charging-api-ci -p 3000:3000 \
             -e JWT_SECRET=ci-only-secret-0123456789abcdef \
+            -e ALLOW_MOCK_LOGIN=1 \
             charging-pile-server:ci
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:3000/api/health > /tmp/health.json; then break; fi

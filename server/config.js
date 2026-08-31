@@ -5,9 +5,9 @@
  * 本机/自托管场景下用来省去 export，容器与托管平台请直接注入环境变量。
  * 变量清单见 server/.env.example 与 docs/PRODUCTION.md。
  *
- * 这里同时承担「配置体检」：把不适合生产的取值（CORS 通配、缺 JWT_SECRET、
- * 没配微信 appid）收集成 warnings，由 server/index.js 在启动时打印出来，
- * 避免带着开发配置上线还毫无察觉。
+ * 这里同时承担「配置体检」：把不适合生产的取值（CORS 通配等）收集成 warnings，
+ * 由 server/index.js 在启动时打印出来，避免带着开发配置上线还毫无察觉；
+ * 其中缺 JWT_SECRET、缺微信凭证这两项在生产模式下不是告警而是直接拒绝启动。
  */
 
 const fs = require('fs');
@@ -118,10 +118,20 @@ function load(overrides) {
     warnings.push('生产模式下 CORS_ORIGIN 被设为 *，任何站点都能带凭证调用本服务');
   }
 
+  // mock 登录把任何 code 都换到同一个演示账号（server/auth.js 的 resolveIdentity），
+  // 上了生产就是所有人共用一份订单和钱包——危害不亚于缺 JWT_SECRET，所以同样拒绝启动。
+  // 只有把「就是要拿 mock 登录跑线上演示」这句话显式写成开关，才放行。
+  const allowMockLogin = toBool(env.ALLOW_MOCK_LOGIN, false);
   if (!wxConfigured) {
+    if (isProduction && !allowMockLogin) {
+      throw new Error(
+        '生产模式必须配置 WX_APPID / WX_SECRET，否则登录走 mock，所有用户会共享同一个演示账号；' +
+          '确实要以 mock 登录上线（仅限公开演示环境）请显式设置 ALLOW_MOCK_LOGIN=1'
+      );
+    }
     warnings.push(
       isProduction
-        ? '未配置 WX_APPID / WX_SECRET，登录接口仍在 mock 模式：任何 code 都会换到同一个演示账号'
+        ? '已设置 ALLOW_MOCK_LOGIN=1：生产模式下登录仍是 mock，任何 code 都会换到同一个演示账号'
         : '未配置 WX_APPID / WX_SECRET，登录走 mock（开发模式下这是预期行为）'
     );
   }
@@ -142,6 +152,7 @@ function load(overrides) {
     wxAppId,
     wxSecret,
     wxConfigured,
+    allowMockLogin,
     wxPayConfigured,
     wxPayMchId: env.WXPAY_MCHID || '',
     corsOrigins,
