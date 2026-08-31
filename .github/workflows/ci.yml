@@ -24,6 +24,21 @@ jobs:
       - name: 校验 + 测试
         run: npm run check
 
+  coverage:
+    name: 测试覆盖率
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --test-coverage-exclude 要 Node 22+；覆盖率只是度量，没必要在三个版本上都跑
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 只出报告、不设门槛：阈值定低了没意义，定高了会在无关改动上误伤 CI
+      - name: 测试覆盖率报告
+        run: npm run coverage
+
   smoke:
     name: 本地后端冒烟
     runs-on: ubuntu-latest

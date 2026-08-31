@@ -408,7 +408,7 @@ utils/repo.js ──── dataSource === 'local'  ──▶ utils/mock.js + uti
 
 ```bash
 npm start        # 启动，默认 http://127.0.0.1:3000，数据落到 ./.data/store.json
-npm run smoke    # 41 项检查的冒烟脚本，走一遍完整闭环（含登录与重启后数据仍在）
+npm run smoke    # 42 项检查的冒烟脚本，走一遍完整闭环（含登录与重启后数据仍在）
 ```
 
 数据用 JSON 文件持久化（原子落盘，`DATA_DIR` 可配），进程重启不丢；每个登录账号的订单、钱包、
@@ -504,7 +504,8 @@ SOC = 100%  : 功率 = 0，自动结束充电并进入结算
 npm start             # 启动后端（server/），默认 http://127.0.0.1:3000
 npm run smoke         # 后端冒烟：起一个临时实例走完 health → 登录 → 启停 → 支付 → 重启后数据仍在
 npm run validate      # 工程静态校验：JSON / JS 语法 / 页面四件套 / 组件引用 / WXML / 静态资源
-npm test              # 运行 144 个测试用例
+npm test              # 运行 149 个测试用例
+npm run coverage      # 带覆盖率报告地跑一遍测试（Node 内置能力，同样零依赖；需 Node 22+）
 npm run check         # 上面两项一起跑（CI 跑的就是这个）
 npm run assets        # 重新生成 tabBar 与 marker 图标（改图标只需改 tools/gen-assets.js）
 npm run preview       # 重新生成 docs/preview 静态预览页
@@ -520,6 +521,7 @@ npm run build:assets  # assets + preview（CI 用它校验生成物是否与仓�
 | Job | 内容 |
 | --- | --- |
 | `check` | 在 Node 18 / 20 / 22 三个版本上跑 `npm run check` |
+| `coverage` | 跑 `npm run coverage` 输出覆盖率报告（只度量，不设阈值） |
 | `smoke` | 跑 `npm run smoke`，验证后端的完整闭环 |
 | `docker` | 构建 `Dockerfile`、起容器并打健康检查——上线手册的第一条路径，坏了要在合并前就知道 |
 | `assets` | 重跑 `npm run build:assets`，若生成物与仓库内容有 diff 则失败，保证提交的图标与预览页没有过期 |

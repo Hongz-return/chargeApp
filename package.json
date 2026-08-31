@@ -15,6 +15,7 @@
     "docs": "npm run preview && npm run screenshots",
     "validate": "node tools/validate.js",
     "test": "node --test",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-exclude=\"tests/**\"",
     "check": "npm run validate && npm test"
   },
   "engines": {
